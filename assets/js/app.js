@@ -67,7 +67,7 @@
   function sum(rows, k) { return rows.reduce(function (a, r) { return a + (Number(r[k]) || 0); }, 0); }
   function firstWord(s) { return String(s || "").trim().split(/\s+/)[0] || ""; }
   function joinNames(names) {
-    return names.length < 2 ? names.join("") : names.slice(0, -1).join(", ") + " & " + names[names.length - 1];
+    return names.length < 2 ? names.join("") : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
   }
 
   var toastTimer;
@@ -182,22 +182,35 @@
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + (ICONS[name] || "") + "</svg>";
   }
 
-  /* Dhu'l-Fiqar: the two-pointed blade, gold guard and grip. */
-  function emblem(cls) {
-    return (
-      '<svg class="' + cls + '" viewBox="0 0 64 120" aria-hidden="true" focusable="false">' +
-        '<defs>' +
-          '<linearGradient id="zf-blade" x1="0" x2="1"><stop offset="0" stop-color="#8f96a3"/><stop offset=".5" stop-color="#f4f1ea"/><stop offset="1" stop-color="#9aa1ad"/></linearGradient>' +
-          '<linearGradient id="zf-gold" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f6cf8a"/><stop offset="1" stop-color="#a8752f"/></linearGradient>' +
-        '</defs>' +
-        '<polygon points="24,82 22,36 25,3 30,17 32,24 34,17 39,3 42,36 40,82" fill="url(#zf-blade)"/>' +
-        '<line x1="32" y1="30" x2="32" y2="80" stroke="#7d8490" stroke-width="1"/>' +
-        '<rect x="8" y="81" width="48" height="8" rx="4" fill="url(#zf-gold)"/>' +
-        '<circle cx="8" cy="85" r="4.5" fill="url(#zf-gold)"/><circle cx="56" cy="85" r="4.5" fill="url(#zf-gold)"/>' +
-        '<rect x="28" y="89" width="8" height="21" rx="2" fill="url(#zf-gold)"/>' +
-        '<circle cx="32" cy="114" r="5" fill="none" stroke="url(#zf-gold)" stroke-width="2.5"/>' +
-      "</svg>"
-    );
+  /* ---- mountain scenes ------------------------------------------------ */
+  // Each page has its own time of day behind it.
+  var SCENES = {
+    landing: "dusk", home: "dawn", sessions: "ember", homework: "night",
+    feedback: "dusk", payments: "day", members: "day", account: "night",
+  };
+  function setScene(key) {
+    var host = document.getElementById("scene");
+    var mood = SCENES[key] || "dusk";
+    if (!window.ZScenery || !host || host.getAttribute("data-mood") === mood) return;
+    host.setAttribute("data-mood", mood);
+    var layer = document.createElement("div");
+    layer.className = "scene__layer";
+    layer.innerHTML = ZScenery.svg("zulfiqar-" + key, mood);
+    host.appendChild(layer);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { layer.classList.add("is-on"); }); });
+    Array.prototype.slice.call(host.children, 0, -1).forEach(function (old) {
+      setTimeout(function () { old.remove(); }, 900);
+    });
+  }
+  /* A small landscape of its own for each session recap. */
+  function recapArt(session) { return artFor(session.id); }
+  function artFor(seed, mood) {
+    if (!window.ZScenery) return "";
+    var moods = ["ember", "dusk", "night", "dawn", "dusk", "ember"];
+    var h = 0;
+    for (var i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    // framed on the ridges and treeline rather than empty sky
+    return '<div class="art">' + ZScenery.svg(seed, mood || moods[h % moods.length], { layers: 4, fit: "xMidYMid slice", viewBox: "0 280 1600 620" }) + "</div>";
   }
 
   function pillarMeta(key) {
@@ -239,14 +252,12 @@
     var n = nextSession();
     if (!n) return "";
     return (
-      '<div class="card next-up">' +
-        '<p class="eyebrow">Next session</p>' +
-        '<div class="next-up__when">' + (n.today ? "Tonight" : esc(fmtDate(isoDate(n.date), true))) + "</div>" +
-        '<div class="row soft" style="margin-top:.4rem">' +
-          '<span class="row" style="gap:.3rem"><span style="width:18px;display:inline-flex">' + icon("clock") + "</span>" +
-            esc(time12(n.slot.start)) + " – " + esc(time12(n.slot.end)) + "</span>" +
-          '<span class="row" style="gap:.3rem"><span style="width:18px;display:inline-flex">' + icon("pin") + "</span>" +
-            esc((P.locations || []).join(" / ")) + "</span>" +
+      '<div class="card card--art">' + artFor("next-" + isoDate(n.date), "dusk") +
+        '<p class="label">Next session</p>' +
+        '<div class="next-up__when">' + (n.today ? "Tonight" : esc(fmtDate(isoDate(n.date), true).replace(/ \d{4}$/, ""))) + "</div>" +
+        '<div class="next-up__meta">' +
+          "<span>" + icon("clock") + esc(time12(n.slot.start)) + " to " + esc(time12(n.slot.end)) + "</span>" +
+          "<span>" + icon("pin") + esc((P.locations || []).join(" or ")) + "</span>" +
         "</div>" +
       "</div>"
     );
@@ -321,8 +332,8 @@
 
     var html =
       '<div class="topbar__inner">' +
-        '<a class="brand" href="#/home" aria-label="' + esc(P.name) + ' home">' + emblem("brand__emblem") +
-          '<span class="brand__word">PROJECT<span class="arabic">' + esc(P.arabic) + "</span></span></a>";
+        '<a class="brand" href="#/home" aria-label="' + esc(P.name) + ' home">' +
+          '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>";
     if (nav.length) {
       html += '<nav class="nav" aria-label="Main">' + nav.map(function (n) {
         return '<a href="#/' + n.path + '"' + (n.path === path ? ' aria-current="page"' : "") + ">" +
@@ -334,7 +345,7 @@
     document.getElementById("topbar").innerHTML = html + "</div>";
 
     document.getElementById("foot").innerHTML =
-      '<div class="values" style="margin:0 0 .6rem">' + esc((P.values || []).join(", ").toUpperCase()) + "</div>" +
+      '<div class="values-line" style="margin:0 0 .3rem">' + esc((P.values || []).join(" · ")) + "</div>" +
       "<div>" + esc(P.name) + " · " + esc(P.ages) + "</div>";
   }
 
@@ -360,8 +371,10 @@
     var r = parseHash();
     state.me = D.me();
     renderChrome(r.path);
-    if (r.path !== state.lastPath) window.scrollTo(0, 0);
-    state.lastPath = r.path;
+    var where = (state.me ? "in:" : "out:") + r.path;
+    if (where !== state.lastPath) window.scrollTo(0, 0);
+    setScene(state.me ? r.path : "landing");
+    state.lastPath = where;
 
     if (!state.me) return viewLanding(r);
     if (!state.me.profile) {
@@ -408,7 +421,7 @@
   function viewLanding(r) {
     var tab = r.path === "register" ? "register" : r.path === "forgot" ? "forgot" : "signin";
     var pillars = (CFG.pillars || []).map(function (p) {
-      return '<div class="pillar"><div class="pillar__icon">' + icon(p.key) + "</div><strong>" + esc(p.label) + "</strong><span>" + esc(p.blurb) + "</span></div>";
+      return "<li><strong>" + esc(p.label) + "</strong> " + esc(p.blurb) + "</li>";
     }).join("");
     var schedule = (P.schedule || []).map(function (s) {
       return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][s.day];
@@ -461,7 +474,7 @@
           '<div class="row row--between small"><a href="#/forgot">Forgot password?</a><a href="#/register">New here? Register</a></div>' +
         "</form>" +
         (D.mode === "demo"
-          ? '<hr class="divider"><p class="eyebrow">Try the demo</p>' +
+          ? '<hr class="divider"><p class="label">Or have a look around first</p>' +
             '<div class="grid" style="grid-template-columns:1fr 1fr">' +
               '<button class="btn" type="button" data-action="demo-as" data-role="family">As a family</button>' +
               '<button class="btn" type="button" data-action="demo-as" data-role="coach">As a coach</button>' +
@@ -471,28 +484,34 @@
     }
 
     $main.innerHTML =
-      '<span class="hero__kanji" aria-hidden="true">改善</span>' +
       '<div class="landing">' +
-        "<section>" +
-          '<div class="hero">' + emblem("hero__emblem") +
-            '<p class="hero__word">PROJECT</p>' +
-            '<h1 class="hero__arabic" lang="ar" title="' + esc(P.name) + '">' + esc(P.arabic) + "</h1>" +
-            '<p class="lede">' + esc(P.tagline).replace("holistic growth", "<em>holistic growth</em>") + "</p>" +
+        '<section class="intro">' +
+          '<h1 class="intro__title"><span class="intro__project">Project</span>' +
+            '<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></h1>" +
+          '<p class="intro__lede">' + esc(P.tagline) + "</p>" +
+          '<div class="row jump">' +
+            '<button class="btn btn--primary" type="button" data-action="to-auth">Sign in</button>' +
+            '<a class="btn" href="#/register">Register your son</a>' +
           "</div>" +
-          '<div class="pillars">' + pillars + "</div>" +
-          '<div class="facts">' +
-            '<div class="fact">' + icon("users") + "<span>" + esc(P.ages) + "</span></div>" +
-            '<div class="fact">' + icon("calendar") + "<span>" + esc(schedule.join(" & ")) + "<br>" +
-              (first ? esc(time12(first.start) + " – " + time12(first.end)) : "") + "</span></div>" +
-            '<div class="fact">' + icon("pin") + "<span>" + esc((P.locations || []).join(" / ")) + "</span></div>" +
-            '<div class="fact">' + icon("coins") + "<span>" + money(P.prices.sessionPence) + " per session<br>" + money(P.prices.monthPence) + " per month</span></div>" +
-          "</div>" +
-          '<p class="values">' + esc((P.values || []).join(", ").toUpperCase()) + "</p>" +
-          '<p style="text-align:center"><a class="poster-link" href="assets/img/flyer.webp" target="_blank" rel="noopener">View the programme poster ↗</a></p>' +
+          '<dl class="facts">' +
+            "<div><dt>When</dt><dd>" + esc(schedule.join(" and ")) + (first ? ", " + esc(time12(first.start) + " to " + time12(first.end)) : "") + "</dd></div>" +
+            "<div><dt>Where</dt><dd>" + esc((P.locations || []).join(" or ")) + "</dd></div>" +
+            "<div><dt>Who</dt><dd>" + esc(P.ages) + "</dd></div>" +
+            "<div><dt>Cost</dt><dd>" + money(P.prices.sessionPence) + " a session, or " + money(P.prices.monthPence) + " a month</dd></div>" +
+          "</dl>" +
+          '<ul class="pillars">' + pillars + "</ul>" +
+          '<p class="values-line">' + esc((P.values || []).join(" · ")) + ' <span class="kanji" lang="ja" title="Kaizen: continual improvement">改善</span></p>' +
+          '<p><a class="poster-link" href="assets/img/flyer.webp" target="_blank" rel="noopener">See the poster</a></p>' +
         "</section>" +
-        '<section class="card card--gold auth-card" aria-label="Account">' + auth + "</section>" +
+        '<section class="card card--strong auth-card" aria-label="Account">' + auth + "</section>" +
       "</div>";
 
+    actions["to-auth"] = function () {
+      var card = document.querySelector(".auth-card");
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+      var first = card.querySelector("input");
+      if (first) first.focus({ preventScroll: true });
+    };
     actions["demo-as"] = async function (el) {
       await D.loginAs(el.getAttribute("data-role"));
       go("#/home");
@@ -537,7 +556,7 @@
       });
       var res = await D.signUp({ email: f.email, password: f.password, parent_name: f.parent_name, phone: f.phone, boys: boys });
       if (res.needsConfirmation) {
-        $main.innerHTML = '<div class="card card--gold" style="max-width:520px;margin:2rem auto;text-align:center">' + emblem("hero__emblem") +
+        $main.innerHTML = '<div class="card" style="max-width:520px;margin:2rem auto;text-align:center">' +
           "<h1>Check your email</h1><p class=\"soft\">We've sent a confirmation link to <strong>" + esc(f.email) +
           "</strong>. Click it to finish setting up your account, then sign in.</p></div>";
         return;
@@ -593,21 +612,21 @@
     }).slice(0, 4);
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">Salaam</p><h1>' +
+      '<div class="page-head"><div><h1>Salaam, ' +
         esc(boys.length ? joinNames(boys.map(function (b) { return b.first_name; })) : firstWord(state.me.profile.parent_name)) +
-      "</h1></div></div>" +
+      '</h1><p class="sub">Here\'s what\'s coming up and what you\'ve got left to do.</p></div></div>' +
       '<div class="grid grid-2">' + nextSessionCard() +
         (latest
-          ? '<a class="card" href="#/sessions" style="text-decoration:none;color:inherit">' +
-              '<p class="eyebrow">Latest recap · ' + esc(fmtDate(latest.date)) + "</p>" +
+          ? '<a class="card card--art card--link" href="#/sessions">' + recapArt(latest) +
+              '<p class="label">Latest recap, ' + esc(fmtDate(latest.date)) + "</p>" +
               "<h3>" + esc(latest.title) + "</h3>" +
               '<p class="soft small" style="margin:.3rem 0 .6rem">' + esc(String(latest.recap || "").slice(0, 160)) + (String(latest.recap || "").length > 160 ? "…" : "") + "</p>" +
               pillarChips(latest.pillars) + "</a>"
-          : '<div class="card"><p class="eyebrow">Recaps</p><p class="muted">Session recaps will appear here after each evening.</p></div>') +
+          : '<div class="card"><p class="label">Recaps</p><p class="muted">Session recaps will appear here after each evening.</p></div>') +
       "</div>" +
-      '<h2 style="margin-top:1.8rem">Your boys</h2>' +
+      '<h2 class="section-title">Your boys</h2>' +
       (boys.length ? '<div class="grid grid-2">' + boyCards + "</div>" : noBoys()) +
-      '<h2 style="margin-top:1.8rem">Homework</h2>' +
+      '<h2 class="section-title">Homework</h2>' +
       (dueSoon.length
         ? '<div class="grid grid-2">' + dueSoon.map(function (h) {
             return '<a class="card" href="#/homework" style="text-decoration:none;color:inherit"><div class="row row--between"><h3 style="margin:0">' + esc(h.title) + "</h3>" +
@@ -621,7 +640,7 @@
     var d = await load(["students", "sessions", "attendance", "homework"]);
     var boys = d.students;
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">What we did</p><h1>Session recaps</h1></div></div>' +
+      '<div class="page-head"><div><h1>Session recaps</h1><p class="sub">What we got up to each evening, written up by the coaches.</p></div></div>' +
       (d.sessions.length ? '<div class="stack">' + d.sessions.map(function (s) {
         var att = boys.map(function (b) {
           var a = d.attendance.find(function (x) { return x.session_id === s.id && x.student_id === b.id; });
@@ -629,12 +648,12 @@
         }).join(" ");
         var hw = d.homework.filter(function (h) { return h.session_id === s.id; });
         return (
-          '<article class="card">' +
+          '<article class="card card--art">' + recapArt(s) +
             '<div class="card__meta"><span>' + esc(fmtDate(s.date, true)) + "</span><span>" + esc(s.location) + "</span></div>" +
             "<h2>" + esc(s.title) + "</h2>" +
             '<div style="margin-bottom:.7rem">' + pillarChips(s.pillars) + "</div>" +
             (s.recap ? '<p class="recap__body">' + esc(s.recap) + "</p>" : "") +
-            ((s.takeaways || []).length ? '<p class="eyebrow" style="margin-top:.8rem">Key takeaways</p><ul class="takeaways">' +
+            ((s.takeaways || []).length ? '<p class="label" style="margin-top:1rem">Worth remembering</p><ul class="takeaways">' +
               s.takeaways.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>" : "") +
             (hw.length ? '<p class="small" style="margin-top:.8rem">Homework set: ' + hw.map(function (h) { return '<a href="#/homework">' + esc(h.title) + "</a>"; }).join(", ") + "</p>" : "") +
             '<hr class="divider"><div class="row row--between"><div class="row">' + att + "</div>" +
@@ -671,8 +690,8 @@
           (h.pillar ? '<div style="margin-bottom:.6rem">' + pillarChips([h.pillar]) + "</div>" : "") +
           '<p class="recap__body">' + esc(h.instructions) + "</p>" +
           (sub && sub.status === "reviewed"
-            ? '<p class="eyebrow" style="margin-top:.8rem">Your answer</p><div class="quote">' + esc(sub.answer) + "</div>" +
-              (sub.coach_comment ? '<p class="eyebrow" style="margin-top:.8rem">Coach says</p><div class="quote" style="border-color:var(--ember)">' + esc(sub.coach_comment) + "</div>" : "") +
+            ? '<p class="label" style="margin-top:1rem">Your answer</p><div class="quote">' + esc(sub.answer) + "</div>" +
+              (sub.coach_comment ? '<p class="label" style="margin-top:1rem">From the coach</p><div class="quote quote--coach">' + esc(sub.coach_comment) + "</div>" : "") +
               '<details class="disclose"><summary>Edit my answer</summary><div>' + form + "</div></details>"
             : '<hr class="divider">' + form) +
         "</article>"
@@ -680,7 +699,7 @@
     }).join("") : '<div class="empty">No homework has been set yet.</div>';
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">Keep growing</p><h1>Homework' + (boy && boys.length > 1 ? " · " + esc(boy.first_name) : "") + "</h1></div>" + switcher + "</div>" +
+      '<div class="page-head"><div><h1>Homework' + (boy && boys.length > 1 ? " for " + esc(boy.first_name) : "") + '</h1><p class="sub">Write your answer, hand it in, and the coaches will get back to you.</p></div>' + switcher + "</div>" +
       '<div class="stack">' + list + "</div>";
 
     Array.prototype.forEach.call($main.querySelectorAll(".hw-form"), function (form) {
@@ -725,9 +744,9 @@
     }).join("");
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">Your voice matters</p><h1>Feedback</h1></div>' + switcher + "</div>" +
+      '<div class="page-head"><div><h1>Feedback</h1><p class="sub">Tell us what worked and what didn\'t. We read every one.</p></div>' + switcher + "</div>" +
       '<div class="grid grid-2" style="align-items:start">' +
-        '<form class="card card--gold form" id="feedback-form">' +
+        '<form class="card card--accent form" id="feedback-form">' +
           "<h2>How was it" + (state.activeBoy && boys.length ? ", " + esc((boys.find(function (b) { return b.id === state.activeBoy; }) || {}).first_name) : "") + "?</h2>" +
           '<label class="field"><span>Which session?</span><select name="session_id">' + sessionOpts + "</select></label>" +
           '<div class="field"><span>Rating <span class="req">*</span></span><div class="stars">' + starInputs + "</div></div>" +
@@ -787,9 +806,9 @@
     }).join("");
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">' + money(P.prices.sessionPence) + " per session · " + money(P.prices.monthPence) + " per month</p><h1>Payments</h1></div></div>" +
+      '<div class="page-head"><div><h1>Payments</h1><p class="sub">' + money(P.prices.sessionPence) + " a session, or " + money(P.prices.monthPence) + ' for the whole month.</p></div></div>' +
       (boys.length ? '<div class="grid grid-2">' + cards + "</div>" : noBoys()) +
-      '<h2 style="margin-top:1.8rem">History</h2>' +
+      '<h2 class="section-title">History</h2>' +
       (rows ? '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Boy</th><th>For</th><th>Amount</th><th>Method</th></tr></thead><tbody>' + rows + "</tbody></table></div>"
             : '<div class="empty">No payments yet.</div>');
 
@@ -853,8 +872,8 @@
     var p = state.me.profile;
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">' + esc(state.me.user.email) + "</p><h1>Account</h1></div></div>" +
-      (params.recover ? '<div class="card card--gold" style="margin-bottom:1rem">Choose a new password below to finish resetting it.</div>' : "") +
+      '<div class="page-head"><div><h1>Account</h1><p class="sub">Signed in as ' + esc(state.me.user.email) + "</p></div></div>" +
+      (params.recover ? '<div class="card card--accent" style="margin-bottom:1rem">Choose a new password below to finish resetting it.</div>' : "") +
       '<div class="grid grid-2" style="align-items:start">' +
         '<div class="stack">' +
           '<form class="card form" id="profile-form"><h2>' + (isCoach ? "Your details" : "Parent / guardian") + "</h2>" +
@@ -872,7 +891,7 @@
           boys.map(function (b) {
             return '<div class="card"><details class="disclose"><summary><strong>' + esc(fullName(b)) + "</strong> · Year " + esc(b.year_group) + "</summary><div>" + boyEditForm(b) + "</div></details></div>";
           }).join("") +
-          '<div class="card card--gold"><details class="disclose"' + (boys.length ? "" : " open") + "><summary><strong>Add a boy</strong></summary><div>" +
+          '<div class="card card--accent"><details class="disclose"' + (boys.length ? "" : " open") + "><summary><strong>Add a boy</strong></summary><div>" +
             boyEditForm({ emergency_name: p.parent_name, emergency_phone: p.phone }) + "</div></details></div>" +
         "</div>") +
       "</div>";
@@ -917,7 +936,7 @@
     var drafts = d.sessions.filter(function (s) { return !s.published; });
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">Coach</p><h1>Dashboard</h1></div>' +
+      '<div class="page-head"><div><h1>Dashboard</h1><p class="sub">The state of things at a glance.</p></div>' +
         '<div class="row"><a class="btn btn--primary" href="#/sessions?new=1">' + icon("plus") + "Session recap</a>" +
         '<a class="btn" href="#/homework?new=1">' + icon("plus") + "Set homework</a></div></div>" +
       '<div class="grid grid-4">' +
@@ -960,7 +979,7 @@
     var s = editing || { date: todayISO(), location: (P.locations || [])[0], pillars: [], takeaways: [], published: true };
 
     var editor = !showEditor ? "" :
-      '<form class="card card--gold form" id="session-form" style="margin-bottom:1.5rem">' +
+      '<form class="card card--accent form" id="session-form" style="margin-bottom:1.5rem">' +
         "<h2>" + (editing ? "Edit recap" : "New session recap") + "</h2>" +
         '<div class="cols-2">' +
           '<label class="field"><span>Date</span><input type="date" name="date" required value="' + esc(s.date) + '"></label>' +
@@ -1002,7 +1021,7 @@
     }).join("");
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">Recaps & register</p><h1>Sessions</h1></div>' +
+      '<div class="page-head"><div><h1>Sessions</h1><p class="sub">Write up each evening and take the register.</p></div>' +
         (showEditor ? "" : '<a class="btn btn--primary" href="#/sessions?new=1">' + icon("plus") + "New recap</a>") + "</div>" +
       editor + '<div class="stack">' + (list || '<div class="empty">No sessions yet. Write your first recap after tonight.</div>') + "</div>";
 
@@ -1044,7 +1063,7 @@
     var h = editing || { pillar: "", due_date: "", session_id: d.sessions[0] ? d.sessions[0].id : "" };
 
     var editor = !showEditor ? "" :
-      '<form class="card card--gold form" id="hw-form" style="margin-bottom:1.5rem">' +
+      '<form class="card card--accent form" id="hw-form" style="margin-bottom:1.5rem">' +
         "<h2>" + (editing ? "Edit homework" : "Set homework") + "</h2>" +
         '<label class="field"><span>Title</span><input type="text" name="title" required value="' + esc(h.title) + '"></label>' +
         '<div class="cols-2">' +
@@ -1093,7 +1112,7 @@
     }).join("");
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">Set & mark</p><h1>Homework</h1></div>' +
+      '<div class="page-head"><div><h1>Homework</h1><p class="sub">Set work and mark what comes back.</p></div>' +
         (showEditor ? "" : '<a class="btn btn--primary" href="#/homework?new=1">' + icon("plus") + "Set homework</a>") + "</div>" +
       editor + '<div class="stack">' + (list || '<div class="empty">No homework set yet.</div>') + "</div>";
 
@@ -1132,7 +1151,7 @@
     }).filter(Boolean);
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">From families</p><h1>Feedback</h1></div>' +
+      '<div class="page-head"><div><h1>Feedback</h1><p class="sub">What families and boys are saying.</p></div>' +
         '<label class="field" style="min-width:240px"><span>Show</span><select id="fb-filter"><option value="">All feedback</option><option value="general"' + (filter === "general" ? " selected" : "") + ">General</option>" +
         d.sessions.map(function (s) { return '<option value="' + esc(s.id) + '"' + (filter === s.id ? " selected" : "") + ">" + esc(fmtDate(s.date) + " — " + s.title) + "</option>"; }).join("") +
         "</select></label></div>" +
@@ -1197,13 +1216,13 @@
     }).join("");
 
     $main.innerHTML =
-      '<div class="page-head"><div><p class="eyebrow">' + d.students.length + " boys</p><h1>Members</h1></div>" +
+      '<div class="page-head"><div><h1>Members</h1><p class="sub">' + d.students.length + " boys registered</p></div>" +
         '<div class="row"><label class="field"><span>Month</span><input type="month" id="month-pick" value="' + month + '"></label>' +
         '<button class="btn" type="button" data-action="export" style="align-self:flex-end">' + icon("download") + "Export CSV</button></div></div>" +
       (rows ? '<div class="table-wrap"><table><thead><tr><th>Boy</th><th>Year</th><th>Parent</th><th>Attended</th><th>' + esc(monthLabel(month)) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>"
             : '<div class="empty">Nobody has registered yet. Share the portal link with families.</div>') +
       '<div class="grid grid-2" style="margin-top:1.5rem;align-items:start">' +
-        '<form class="card card--gold form" id="pay-form"><h2>Record a cash or bank payment</h2>' +
+        '<form class="card card--accent form" id="pay-form"><h2>Record a cash or bank payment</h2>' +
           '<label class="field"><span>Boy</span><select name="student_id" required><option value="">Choose…</option>' +
             boys.map(function (b) { return '<option value="' + esc(b.id) + '">' + esc(fullName(b)) + " (Y" + esc(b.year_group) + ")</option>"; }).join("") + "</select></label>" +
           '<div class="cols-2">' +

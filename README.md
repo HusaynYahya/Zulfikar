@@ -129,10 +129,11 @@ Netlify, Cloudflare Pages or your own domain.
 ```
 ├── index.html                         the single page
 ├── assets/
-│   ├── css/portal.css                 styles; colour tokens are at the top
+│   ├── css/portal.css                 styles; glass and colour settings are at the top
 │   ├── js/config.js                   ← your settings
 │   ├── js/data.js                     storage: Supabase (live) or localStorage (demo)
 │   ├── js/app.js                      screens for families and coaches
+│   ├── js/scenery.js                  draws the mountain landscapes behind each page
 │   └── img/flyer.webp                 the programme poster
 └── supabase/
     ├── schema.sql                     tables, sign-up trigger, access rules
