@@ -22,28 +22,31 @@
   // A karate exchange after the choreography of The Karate Kid — ready stance,
   // guard, a blocked strike, the one-legged crane stance, the leaping crane
   // kick, and the finish. A (left) is the hero who throws the crane kick.
+  // A Brazilian jiu-jitsu flow: standing grips, a guard pull, closed guard,
+  // then an armbar from the guard and the tap. A (gold) works from the back
+  // and finishes; B (slate) is kept on their knees — the classic submission.
   var POSES = [
-    // 0 — ready / bow
-    { a: F([80,146],[80,114],[80,95],[92,132],[90,144],[72,GROUND],[88,GROUND]),
-      b: F([160,146],[160,114],[160,95],[148,132],[150,144],[152,GROUND],[168,GROUND]) },
-    // 1 — fighting stance, guard up
-    { a: F([86,146],[88,114],[90,95],[106,110],[99,120],[74,GROUND],[98,178]),
-      b: F([154,146],[152,114],[150,95],[134,110],[141,120],[166,GROUND],[142,178]) },
-    // 2 — B strikes, A blocks
-    { a: F([90,146],[92,114],[94,96],[113,103],[105,116],[78,GROUND],[100,178]),
-      b: F([150,146],[146,116],[142,98],[119,107],[150,120],[168,GROUND],[146,176]) },
-    // 3 — the crane stance: balanced on one leg, arms spread like wings
-    { a: F([86,138],[86,102],[86,82],[64,90],[112,88],[110,116],[84,GROUND]),
-      b: F([156,146],[154,114],[152,96],[140,118],[146,124],[168,GROUND],[150,178]) },
-    // 4 — the crane kick: airborne, leg driving forward, arms drawn back
-    { a: F([104,120],[99,96],[97,78],[84,94],[88,104],[134,108],[94,138]),
-      b: F([158,146],[156,116],[153,100],[142,120],[148,126],[170,GROUND],[152,178]) },
-    // 5 — the strike lands, B is driven back
-    { a: F([112,150],[112,120],[112,101],[100,112],[126,116],[100,GROUND],[126,176]),
-      b: F([168,148],[163,120],[156,106],[178,126],[150,118],[184,GROUND],[170,176]) },
-    // 6 — the finish, back to guard (loops to 1)
-    { a: F([100,146],[102,114],[104,95],[120,110],[113,120],[88,GROUND],[110,178]),
-      b: F([156,146],[154,114],[152,95],[138,110],[145,120],[168,GROUND],[146,178]) },
+    // 0 — standing collar-and-sleeve grips
+    { a: F([100,146],[101,114],[102,94],[117,106],[112,118],[90,182],[108,182]),
+      b: F([140,146],[139,114],[138,94],[123,106],[128,118],[152,182],[134,182]) },
+    // 1 — A pulls guard, sitting to the mat; B is drawn onto a knee
+    { a: F([104,170],[99,156],[96,149],[118,150],[109,161],[128,154],[120,163]),
+      b: F([142,168],[139,144],[137,130],[124,152],[131,148],[150,180],[140,178]) },
+    // 2 — closed guard: A on their back, legs framing B who postures up
+    { a: F([108,172],[101,161],[97,155],[122,152],[112,162],[134,152],[127,162]),
+      b: F([144,170],[141,146],[139,132],[126,154],[133,150],[152,181],[142,179]) },
+    // 3 — armbar set-up: A isolates B's arm, hips angling, a leg climbing high
+    { a: F([112,172],[106,163],[102,157],[126,150],[118,160],[138,146],[124,166]),
+      b: F([146,170],[140,148],[135,135],[122,156],[150,152],[154,181],[144,179]) },
+    // 4 — A swings the top leg over B's head, hips turning under
+    { a: F([114,173],[108,165],[104,160],[124,152],[116,162],[140,138],[126,166]),
+      b: F([146,172],[139,152],[133,140],[120,158],[148,156],[154,181],[144,179]) },
+    // 5 — the armbar: legs clamped over B, the arm pulled straight, B bent in
+    { a: F([116,174],[110,167],[106,162],[122,156],[116,163],[138,140],[128,150]),
+      b: F([148,172],[140,154],[133,143],[120,160],[150,158],[156,181],[146,179]) },
+    // 6 — the tap: B's free hand slaps the mat
+    { a: F([116,174],[110,167],[106,162],[122,156],[116,163],[138,140],[128,150]),
+      b: F([148,172],[140,154],[133,143],[120,160],[156,177],[156,181],[146,179]) },
   ];
 
   function lerpP(a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]; }
@@ -136,21 +139,10 @@
     t = Math.max(0, Math.min(1, t));
     var span = POSES.length - 1;
     var f = t * span, i = Math.min(span - 1, Math.floor(f));
-    var step = Math.round((f - i) * 4);          // quantise → stop-motion steps
-    var k = step / 4;
+    var k = f - i;
+    k = k * k * (3 - 2 * k);                     // smoothstep → lifelike easing
     var A = lerpF(POSES[i].a, POSES[i + 1].a, k);
     var B = lerpF(POSES[i].b, POSES[i + 1].b, k);
-
-    // boil: jitter every vertex a little, reseeded each displayed frame
-    var rnd = mulberry(i * 97 + step * 13 + 7);
-    function boil(fig) {
-      var out = {};
-      ["p","n","h","lh","rh","lf","rf"].forEach(function (key) {
-        out[key] = [fig[key][0] + (rnd() - 0.5) * 2.4, fig[key][1] + (rnd() - 0.5) * 2.4];
-      });
-      return out;
-    }
-    A = boil(A); B = boil(B);
 
     svg.innerHTML =
       '<ellipse cx="120" cy="' + (GROUND + 7) + '" rx="80" ry="8" fill="rgba(0,0,0,.26)"/>' +
