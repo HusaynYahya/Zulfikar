@@ -345,6 +345,8 @@
     }
     document.getElementById("topbar").innerHTML = html + "</div>";
 
+    document.getElementById("topbar").hidden = !nav.length;
+    document.getElementById("foot").hidden = !nav.length;
     document.getElementById("foot").innerHTML =
       '<div class="values-line" style="margin:0 0 .3rem">' + esc((P.values || []).join(" · ")) + "</div>" +
       "<div>" + esc(P.name) + " · " + esc(P.ages) + "</div>";
@@ -421,14 +423,6 @@
 
   function viewLanding(r) {
     var tab = r.path === "register" ? "register" : r.path === "forgot" ? "forgot" : "signin";
-    var pillars = (CFG.pillars || []).map(function (p) {
-      return "<li><strong>" + esc(p.label) + "</strong> " + esc(p.blurb) + "</li>";
-    }).join("");
-    var schedule = (P.schedule || []).map(function (s) {
-      return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][s.day];
-    });
-    var first = (P.schedule || [])[0];
-
     var auth;
     if (tab === "register") {
       auth =
@@ -485,33 +479,15 @@
     }
 
     $main.innerHTML =
-      '<div class="landing">' +
-        '<section class="intro">' +
-          '<h1 class="intro__title"><img class="intro__logo" src="assets/img/logo.webp" width="720" height="721" alt="' + esc(P.name) + '"></h1>' +
-          '<p class="intro__lede">' + esc(P.tagline) + "</p>" +
-          '<div class="row jump">' +
-            '<button class="btn btn--primary" type="button" data-action="to-auth">Sign in</button>' +
-            '<a class="btn" href="#/register">Register your son</a>' +
-          "</div>" +
-          '<dl class="facts">' +
-            "<div><dt>When</dt><dd>" + esc(schedule.join(" and ")) + (first ? ", " + esc(time12(first.start) + " to " + time12(first.end)) : "") + "</dd></div>" +
-            "<div><dt>Where</dt><dd>" + esc((P.locations || []).join(" or ")) + "</dd></div>" +
-            "<div><dt>Who</dt><dd>" + esc(P.ages) + "</dd></div>" +
-            "<div><dt>Cost</dt><dd>" + money(P.prices.sessionPence) + " a session, or " + money(P.prices.monthPence) + " a month</dd></div>" +
-          "</dl>" +
-          '<ul class="pillars">' + pillars + "</ul>" +
-          '<p class="values-line">' + esc((P.values || []).join(" · ")) + ' <span class="kanji" lang="ja" title="Kaizen: continual improvement">改善</span></p>' +
-          '<p><a class="poster-link" href="assets/img/flyer.webp" target="_blank" rel="noopener">See the poster</a></p>' +
-        "</section>" +
+      '<div class="login">' +
         '<section class="card card--strong auth-card" aria-label="Account">' + auth + "</section>" +
+        '<section class="login-brand">' +
+          '<h1><img class="login-brand__logo" src="assets/img/logo.webp" width="720" height="721" alt="' + esc(P.name) + '"></h1>' +
+          '<p class="kaizen" lang="ja" title="Kaizen: continual improvement">改善</p>' +
+          '<p class="kaizen__word">Kaizen</p>' +
+        "</section>" +
       "</div>";
 
-    actions["to-auth"] = function () {
-      var card = document.querySelector(".auth-card");
-      card.scrollIntoView({ behavior: "smooth", block: "start" });
-      var first = card.querySelector("input");
-      if (first) first.focus({ preventScroll: true });
-    };
     actions["demo-as"] = async function (el) {
       await D.loginAs(el.getAttribute("data-role"));
       go("#/home");

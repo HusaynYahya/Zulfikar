@@ -246,6 +246,7 @@ input[type="date"], input[type="month"] { color-scheme: dark; }
 .check input { margin-top: .28rem; accent-color: var(--accent); width: 1rem; height: 1rem; flex: none; }
 .checks { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; }
 .form-status { font-size: .9rem; min-height: 1.2em; margin: 0; }
+.form-status:empty { display: none; }
 .form-status.is-error { color: var(--bad); }
 .form-status.is-ok { color: var(--ok); }
 
@@ -282,31 +283,28 @@ details.disclose > div { margin-top: .7rem; }
 .quote { padding: .7rem .95rem; background: rgba(6, 9, 15, .3); border-radius: 12px; margin: .3rem 0; white-space: pre-line; border: 1px solid var(--hair); }
 .quote--coach { border-color: rgba(233, 180, 111, .3); background: var(--accent-soft); }
 
-/* ---- landing --------------------------------------------------------- */
-.landing { display: grid; gap: 2.5rem; grid-template-columns: 1.15fr .85fr; align-items: start; padding-top: 1.5rem; }
-@media (max-width: 900px) { .landing { grid-template-columns: 1fr; padding-top: .5rem; } }
-.intro { text-shadow: 0 1px 18px rgba(0, 0, 0, .45); }
-.intro__title { margin: -1rem 0 .4rem; line-height: 1; }
-.intro__logo { width: min(400px, 78vw); height: auto; margin-left: -1.2rem; filter: drop-shadow(0 6px 30px rgba(0, 0, 0, .45)); }
-.intro__lede { font-family: var(--font-head); font-size: clamp(1.2rem, 1vw + 1rem, 1.5rem); line-height: 1.4; color: var(--ink); max-width: 30ch; margin-bottom: 1.6rem; }
+/* ---- sign-in screen --------------------------------------------------- */
+.login {
+  min-height: calc(100vh - 7rem); display: grid; align-items: center;
+  grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: clamp(2rem, 6vw, 5rem);
+}
+.login-brand { text-align: center; }
+.login-brand h1 { margin: 0; line-height: 0; }
+.login-brand__logo { width: min(460px, 100%); height: auto; margin: 0 auto; filter: drop-shadow(0 8px 34px rgba(0, 0, 0, .5)); }
+.kaizen {
+  font-family: "Noto Serif JP", serif; font-size: clamp(2.8rem, 5vw, 4.2rem); line-height: 1.1;
+  color: var(--accent); letter-spacing: .18em; margin: .4rem 0 0; padding-left: .18em;
+  text-shadow: 0 2px 22px rgba(0, 0, 0, .5);
+}
+.kaizen__word { color: var(--ink-mute); font-size: .85rem; letter-spacing: .3em; text-transform: lowercase; margin: .2rem 0 0; padding-left: .3em; }
+@media (max-width: 860px) {
+  .login { grid-template-columns: 1fr; min-height: 0; gap: 1.2rem; }
+  .login-brand { order: -1; }
+  .login-brand__logo { width: min(240px, 64vw); }
+  .kaizen { font-size: 2.2rem; }
+}
 
-.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem 1.5rem; margin: 0 0 1.6rem; max-width: 34rem; }
-.facts dt { font-size: .82rem; color: var(--ink-mute); }
-.facts dd { margin: 0; }
-@media (max-width: 420px) { .facts { grid-template-columns: 1fr; } }
-
-.pillars { list-style: none; padding: 0; margin: 0 0 1.4rem; display: grid; gap: .45rem; max-width: 36rem; color: var(--ink-soft); }
-.pillars strong { color: var(--ink); font-weight: 600; margin-right: .2rem; }
-
-.values-line { color: var(--ink-soft); font-size: .92rem; }
-.kanji { font-family: "Noto Serif JP", serif; color: var(--accent); margin-left: .5rem; }
-.poster-link { font-size: .92rem; }
-
-.jump { display: none; margin-bottom: 1.6rem; }
-@media (max-width: 900px) { .jump { display: flex; } }
-
-.auth-card { position: sticky; top: 6rem; scroll-margin-top: 5.5rem; }
-@media (max-width: 900px) { .auth-card { position: static; } }
+.auth-card { width: 100%; }
 .boy-block { position: relative; }
 .boy-block .remove-boy { position: absolute; top: .4rem; right: .6rem; }
 
