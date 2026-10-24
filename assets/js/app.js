@@ -781,7 +781,7 @@
         '</h3><p class="soft small" style="margin:0">' + esc(blurbs[pl.key] || pl.blurb) + "</p></div></div>";
     }).join("");
 
-    var stage = '<div class="scrolly__stage"><svg id="wrestlers" aria-hidden="true"></svg><p class="scrolly__hint">grips, guard, the armbar — scroll on</p></div>';
+    var stage = '<div class="scrolly__stage"><svg id="wrestlers" aria-hidden="true"></svg><p class="scrolly__hint">circle, shoot, lift — scroll on</p></div>';
 
     $main.innerHTML =
       '<section class="mkt-hero">' +
