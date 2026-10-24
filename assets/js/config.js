@@ -51,10 +51,6 @@ window.ZULFIQAR = {
       { time: "21:30", activity: "Collection" },
     ],
     defaultBring: ["Water bottle", "Trainers and sports kit", "Notebook and pen", "A light snack"],
-    // Stop-motion frames on the landing page: assets/img/bjj/frame-00.webp …
-    // (run scripts/fetch-bjj-frames.sh). If they're missing, the drawn figures show.
-    flipFrames: 12,
-    flipVersion: 1,
     contactEmail: "",  // shown on the sign-in page if set
   },
 

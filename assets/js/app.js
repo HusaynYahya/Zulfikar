@@ -781,10 +781,7 @@
         '</h3><p class="soft small" style="margin:0">' + esc(blurbs[pl.key] || pl.blurb) + "</p></div></div>";
     }).join("");
 
-    var stage = '<div class="scrolly__stage">' +
-      '<img id="flip" class="flip" alt="" aria-hidden="true" hidden>' +
-      '<svg id="wrestlers" aria-hidden="true"></svg>' +
-      '<p class="scrolly__hint">grips, guard, the armbar — scroll on</p></div>';
+    var stage = '<div class="scrolly__stage"><svg id="wrestlers" aria-hidden="true"></svg><p class="scrolly__hint">grips, guard, the armbar — scroll on</p></div>';
 
     $main.innerHTML =
       '<section class="mkt-hero">' +
@@ -836,40 +833,16 @@
       '<footer class="foot" style="display:block">' + esc(P.name) +
         (P.contactEmail ? ' · <a href="mailto:' + esc(P.contactEmail) + '">' + esc(P.contactEmail) + "</a>" : "") + "</footer>";
 
-    // Drive the animation from scroll position over the three sections. The
-    // hand-illustrated stop-motion frames are used when they're present;
-    // otherwise the code-drawn figures stand in.
+    // drive the wrestlers from scroll position over the three sections
     var svg = document.getElementById("wrestlers");
-    var flip = document.getElementById("flip");
     var scrolly = $main.querySelector(".scrolly");
-    var frames = (P.flipFrames || 0);
-    var useFlip = false, shown = -1;
-    function progress() {
-      var r = scrolly.getBoundingClientRect(), total = r.height - window.innerHeight;
-      return total > 0 ? Math.max(0, Math.min(1, -r.top / total)) : 0;
-    }
-    function frameSrc(i) { return "assets/img/bjj/frame-" + (i < 10 ? "0" : "") + i + ".webp?v=" + (P.flipVersion || 1); }
-    if (scrolly && (svg || flip)) {
-      if (window.ZWrestle && svg) ZWrestle.init(svg);
-      if (frames && flip) {
-        var probe = new Image();
-        probe.onload = function () {
-          useFlip = true; flip.hidden = false; if (svg) svg.style.display = "none";
-          for (var i = 1; i < frames; i++) { new Image().src = frameSrc(i); }   // preload the rest
-          onScroll();
-        };
-        probe.src = frameSrc(0);
-      }
+    if (svg && scrolly && window.ZWrestle) {
+      ZWrestle.init(svg);
       var onScroll = function () {
-        if (!document.body.contains(scrolly)) { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); return; }
-        var t = progress();
-        if (useFlip) {
-          // stepped, one drawing per position — stop-motion
-          var i = Math.min(frames - 1, Math.floor(t * frames));
-          if (i !== shown) { shown = i; flip.src = frameSrc(i); }
-        } else if (window.ZWrestle && svg) {
-          ZWrestle.frame(svg, t);
-        }
+        if (!document.body.contains(svg)) { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); return; }
+        var r = scrolly.getBoundingClientRect(), total = r.height - window.innerHeight;
+        var t = total > 0 ? Math.max(0, Math.min(1, -r.top / total)) : 0;
+        ZWrestle.frame(svg, t);
       };
       window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("resize", onScroll);
