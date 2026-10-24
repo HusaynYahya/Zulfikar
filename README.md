@@ -124,6 +124,14 @@ In this repository on GitHub, go to **Settings → Pages**. Set the source to th
 `https://husaynyahya.github.io/Zulfikar/`. Any static host also works, such as
 Netlify, Cloudflare Pages or your own domain.
 
+## After changing a file
+
+`index.html` loads the stylesheet and scripts with a version tag
+(`portal.css?v=8`, `app.js?v=8` and so on). When you change any of those
+files, raise the number on every line, e.g. to `?v=9`. Browsers then fetch
+the new files straight away instead of showing a cached copy for up to 10
+minutes.
+
 ## Files
 
 ```
