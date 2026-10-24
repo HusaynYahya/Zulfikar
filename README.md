@@ -134,7 +134,11 @@ Netlify, Cloudflare Pages or your own domain.
 │   ├── js/data.js                     storage: Supabase (live) or localStorage (demo)
 │   ├── js/app.js                      screens for families and coaches
 │   ├── js/scenery.js                  draws the mountain landscapes behind each page
-│   └── img/flyer.webp                 the programme poster
+│   └── img/
+│       ├── logo.webp, logo-small.png  the logo with its background removed
+│       ├── logo-original.png          the logo as supplied
+│       ├── favicon.png, apple-touch-icon.png
+│       └── flyer.webp                 the programme poster
 └── supabase/
     ├── schema.sql                     tables, sign-up trigger, access rules
     └── functions/stripe-webhook/      records Stripe payments

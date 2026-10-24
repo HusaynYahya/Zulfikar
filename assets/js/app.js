@@ -333,6 +333,7 @@
     var html =
       '<div class="topbar__inner">' +
         '<a class="brand" href="#/home" aria-label="' + esc(P.name) + ' home">' +
+          '<img class="brand__logo" src="assets/img/logo-small.png" alt="" width="44" height="44">' +
           '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>";
     if (nav.length) {
       html += '<nav class="nav" aria-label="Main">' + nav.map(function (n) {
@@ -486,8 +487,7 @@
     $main.innerHTML =
       '<div class="landing">' +
         '<section class="intro">' +
-          '<h1 class="intro__title"><span class="intro__project">Project</span>' +
-            '<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></h1>" +
+          '<h1 class="intro__title"><img class="intro__logo" src="assets/img/logo.webp" width="720" height="721" alt="' + esc(P.name) + '"></h1>' +
           '<p class="intro__lede">' + esc(P.tagline) + "</p>" +
           '<div class="row jump">' +
             '<button class="btn btn--primary" type="button" data-action="to-auth">Sign in</button>' +
@@ -557,6 +557,7 @@
       var res = await D.signUp({ email: f.email, password: f.password, parent_name: f.parent_name, phone: f.phone, boys: boys });
       if (res.needsConfirmation) {
         $main.innerHTML = '<div class="card" style="max-width:520px;margin:2rem auto;text-align:center">' +
+          '<img src="assets/img/logo.webp" alt="" width="160" height="160" style="margin:0 auto .5rem;width:160px;height:auto">' +
           "<h1>Check your email</h1><p class=\"soft\">We've sent a confirmation link to <strong>" + esc(f.email) +
           "</strong>. Click it to finish setting up your account, then sign in.</p></div>";
         return;

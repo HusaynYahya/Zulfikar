@@ -120,7 +120,8 @@ p  { margin: 0 0 .8rem; }
   max-width: var(--max); margin: 0 auto; padding: .45rem .5rem .45rem 1.1rem;
   display: flex; align-items: center; gap: 1rem; border-radius: 999px;
 }
-.brand { display: flex; align-items: baseline; gap: .45rem; text-decoration: none; color: var(--ink); white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: .55rem; text-decoration: none; color: var(--ink); white-space: nowrap; }
+.brand__logo { width: 44px; height: 44px; object-fit: contain; margin: -.35rem 0 -.35rem -.5rem; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .4)); }
 .brand__word { font-family: var(--font-head); font-size: 1.05rem; }
 .brand__word .arabic { font-size: 1.35rem; margin-left: .3rem; }
 
@@ -285,9 +286,8 @@ details.disclose > div { margin-top: .7rem; }
 .landing { display: grid; gap: 2.5rem; grid-template-columns: 1.15fr .85fr; align-items: start; padding-top: 1.5rem; }
 @media (max-width: 900px) { .landing { grid-template-columns: 1fr; padding-top: .5rem; } }
 .intro { text-shadow: 0 1px 18px rgba(0, 0, 0, .45); }
-.intro__title { margin: 0 0 .8rem; line-height: 1; }
-.intro__project { display: block; font-size: clamp(1.1rem, 1vw + .9rem, 1.4rem); color: var(--ink-soft); margin-bottom: .1rem; }
-.intro__title .arabic { font-size: clamp(3.6rem, 8vw, 5.6rem); line-height: 1.2; }
+.intro__title { margin: -1rem 0 .4rem; line-height: 1; }
+.intro__logo { width: min(400px, 78vw); height: auto; margin-left: -1.2rem; filter: drop-shadow(0 6px 30px rgba(0, 0, 0, .45)); }
 .intro__lede { font-family: var(--font-head); font-size: clamp(1.2rem, 1vw + 1rem, 1.5rem); line-height: 1.4; color: var(--ink); max-width: 30ch; margin-bottom: 1.6rem; }
 
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem 1.5rem; margin: 0 0 1.6rem; max-width: 34rem; }
