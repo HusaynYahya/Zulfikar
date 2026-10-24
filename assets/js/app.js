@@ -400,26 +400,39 @@
     return "ZF-" + date.replace(/-/g, "").slice(2) + "-" + String(boy.id).replace(/[^a-z0-9]/gi, "").slice(-4).toUpperCase();
   }
 
-  /* One boy's reply for an upcoming evening, with payment and confirmation. */
+  /* One boy's reply for an upcoming evening. Once answered it collapses to a
+     clear state with a "Change" link; the two choices only show when needed. */
   function replyRow(boy, date, d) {
     var r = rsvpOf(boy, date, d), cov = coverage(boy, date, d);
-    var status = !r ? badge("No reply yet", "warn") : r.going ? badge("Coming", "ok") : badge("Not coming", "mute");
-    var confirmed = r && r.going && cov.paid;
+    var answered = !!r, going = r && r.going, confirmed = going && cov.paid;
+    var key = ' data-boy="' + esc(boy.id) + '" data-date="' + esc(date) + '"';
+
+    var options =
+      '<div class="rsvp-options' + (answered ? " is-collapsed" : "") + '"' + key + ">" +
+        '<button class="btn btn--sm' + (going ? " btn--primary is-on" : "") + '" type="button" data-action="rsvp-yes"' + key + ' data-covered="' + cov.paid + '">Yes, he\'s coming</button>' +
+        '<button class="btn btn--sm' + (answered && !going ? " is-on" : "") + '" type="button" data-action="rsvp-no"' + key + ">Can't make it</button>" +
+      "</div>";
+
+    var stateLabel = !answered ? badge("Not answered yet", "warn")
+      : going ? '<span class="rsvp-state rsvp-state--yes">' + icon("check") + "Coming</span>"
+              : '<span class="rsvp-state rsvp-state--no">Not coming</span>';
+
     return (
       '<div class="reply">' +
-        '<div class="row row--between"><div class="row"><strong>' + esc(boy.first_name) + "</strong>" + status +
+        '<div class="row row--between"><div class="row"><strong>' + esc(boy.first_name) + "</strong>" + stateLabel +
           (confirmed ? badge("Booking confirmed", "ok") : "") + "</div>" +
-          '<div class="row">' +
-            '<button class="btn btn--sm' + (r && r.going ? " is-on" : "") + '" type="button" data-action="rsvp-yes" data-boy="' + esc(boy.id) + '" data-date="' + esc(date) + '">Coming</button>' +
-            '<button class="btn btn--sm' + (r && !r.going ? " is-on" : "") + '" type="button" data-action="rsvp-no" data-boy="' + esc(boy.id) + '" data-date="' + esc(date) + '">Can\'t make it</button>' +
-          "</div></div>" +
-        (r && !r.going && r.reason ? '<p class="small muted" style="margin:.4rem 0 0">' + esc(r.reason) + "</p>" : "") +
-        '<form class="form inline-form rsvp-form" data-boy="' + esc(boy.id) + '" data-date="' + esc(date) + '" hidden>' +
+          (answered ? '<button class="linklike small" type="button" data-action="rsvp-change"' + key + ">Change</button>" : "") +
+        "</div>" +
+        options +
+        (answered && !going && r.reason ? '<p class="small muted" style="margin:.5rem 0 0">' + esc(r.reason) + "</p>" : "") +
+        '<form class="form inline-form rsvp-form"' + key + ' hidden>' +
           '<label class="field"><span>Reason (helps the coaches plan)</span><input type="text" name="reason" value="' + esc(r && r.reason) + '"></label>' +
           '<div><button class="btn btn--primary btn--sm" type="submit">Save</button></div><p class="form-status" aria-live="polite"></p>' +
         "</form>" +
-        (r && r.going
-          ? '<p class="small" style="margin:.5rem 0 0">' + (cov.paid ? '<span class="soft">' + esc(cov.text) + "</span>" : esc(cov.text) + ' · <a href="#/payments">Pay now</a>') +
+        (going
+          ? '<p class="small" style="margin:.6rem 0 0">' + (cov.paid
+              ? '<span class="soft">' + esc(cov.text) + "</span>"
+              : "<strong>" + esc(cov.text) + '</strong> · <a href="#/payments?boy=' + esc(boy.id) + '">Pay now</a>') +
             ' · <a href="#/confirmation?boy=' + esc(boy.id) + "&date=" + esc(date) + '">' + (confirmed ? "Booking confirmation" : "Booking status") + "</a></p>"
           : "") +
       "</div>"
@@ -511,13 +524,27 @@
       if (!form.hidden) { var f = form.querySelector("input,textarea"); if (f) f.focus(); }
     }
     actions["rsvp-yes"] = async function (el) {
-      await D.upsert("rsvps", { family_id: uid, student_id: el.getAttribute("data-boy"), date: el.getAttribute("data-date"),
+      var boyId = el.getAttribute("data-boy");
+      await D.upsert("rsvps", { family_id: uid, student_id: boyId, date: el.getAttribute("data-date"),
         going: true, reason: null, updated_at: new Date().toISOString() }, "student_id,date");
-      toast("Thanks, we'll see him there.");
-      render();
+      // Attendance confirmed — now make sure it's paid for.
+      if (el.getAttribute("data-covered") === "true") {
+        toast("Confirmed — he's all set.");
+        render();
+      } else {
+        toast("Confirmed. Now choose how to pay.");
+        go("#/payments?boy=" + encodeURIComponent(boyId));
+      }
     };
     actions["rsvp-no"] = function (el) {
+      // make sure the choices are visible, then open the reason box
+      var opts = $main.querySelector('.rsvp-options[data-boy="' + el.getAttribute("data-boy") + '"][data-date="' + el.getAttribute("data-date") + '"]');
+      if (opts) opts.classList.remove("is-collapsed");
       reveal('.rsvp-form[data-boy="' + el.getAttribute("data-boy") + '"][data-date="' + el.getAttribute("data-date") + '"]');
+    };
+    actions["rsvp-change"] = function (el) {
+      var opts = $main.querySelector('.rsvp-options[data-boy="' + el.getAttribute("data-boy") + '"][data-date="' + el.getAttribute("data-date") + '"]');
+      if (opts) opts.classList.toggle("is-collapsed");
     };
     actions["review-ok"] = async function (el) {
       await D.upsert("attendance_reviews", { family_id: uid, session_id: el.getAttribute("data-session"), student_id: el.getAttribute("data-boy"),
@@ -1121,6 +1148,7 @@
     if (params.paid) toast("Thank you! Your payment can take a minute to appear here.");
     var d = await load(["students", "sessions", "attendance", "payments"]);
     var boys = d.students, month = thisMonth();
+    var focusBoy = params.boy;
     var linksReady = D.mode === "demo" || (CFG.stripe && (CFG.stripe.sessionLink || CFG.stripe.monthLink));
     var monthOpts = [0, 1].map(function (n) {
       var m = addMonths(month, n);
@@ -1130,15 +1158,15 @@
     var cards = boys.map(function (b) {
       var st = payStatus(b.id, month, d);
       return (
-        '<div class="card">' +
+        '<div class="card' + (b.id === focusBoy ? " card--accent pay-focus" : "") + '" id="pay-' + esc(b.id) + '">' +
           '<div class="row row--between"><h3 style="margin:0">' + esc(fullName(b)) + "</h3>" + payBadge(st) + "</div>" +
           '<p class="small muted" style="margin:.4rem 0 .9rem">' + esc(monthLabel(month)) + ": attended " + st.attended + " session" + (st.attended === 1 ? "" : "s") +
             (st.monthPaid ? " — covered by the monthly pass." : st.attended * P.prices.sessionPence > P.prices.monthPence ? " — a monthly pass would have been cheaper." : ".") + "</p>" +
           (linksReady
             ? '<div class="pay-actions">' +
-                '<button class="btn" type="button" data-action="pay" data-kind="session" data-boy="' + esc(b.id) + '">Pay for one session · ' + money(P.prices.sessionPence) + "</button>" +
+                '<button class="btn" type="button" data-action="pay" data-kind="session" data-boy="' + esc(b.id) + '">Pay as you go · ' + money(P.prices.sessionPence) + "/session</button>" +
                 '<div class="row"><select aria-label="Month for the monthly pass" data-month-for="' + esc(b.id) + '">' + monthOpts + "</select>" +
-                '<button class="btn btn--primary" type="button" data-action="pay" data-kind="month" data-boy="' + esc(b.id) + '">Monthly · ' + money(P.prices.monthPence) + "</button></div>" +
+                '<button class="btn btn--primary" type="button" data-action="pay" data-kind="month" data-boy="' + esc(b.id) + '">Monthly pass · ' + money(P.prices.monthPence) + "</button></div>" +
               "</div>"
             : '<p class="small soft" style="margin:0">Online payment isn\'t switched on yet — please pay the coaches in person.</p>') +
         "</div>"
