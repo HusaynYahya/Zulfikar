@@ -10,6 +10,10 @@ with no build step, so it can be hosted free on GitHub Pages.
 |---|---|---|
 | **Sign up** | A parent registers with their details, one or more sons (year group, date of birth, medical needs, photo consent) and agrees to the programme values | Sees the full roster, with medical flags, emergency contacts and parent details. Can export it as CSV |
 | **Payments** | £10 per session or £50 per month, paid by card through Stripe. Each boy's balance for the month and full payment history are shown | Records cash and bank payments, and can see who owes what each month |
+| **Session plans** | Sees each upcoming evening's theme, its timetable and a what-to-bring checklist (ticks are remembered on their device) | Plans each session ahead: theme, timetable and kit list. The defaults are in `config.js` |
+| **Coming or not** | Says whether each son is coming to the next sessions, with a reason if not | Sees who's coming, who isn't (and why) and who hasn't replied. Saying "coming" pre-ticks the register |
+| **Booking confirmation** | Gets a formal confirmation for each evening (signed up, paid, a reference number) that can be printed or saved as a PDF | Can open any boy's confirmation |
+| **Register check** | After each session, confirms the register is right, or flags a mistake with a note. Anything waiting is shown at the top of Home | Sees who has confirmed, who hasn't, and every flag. Can fix the register and mark the flag resolved with a reply |
 | **Session recaps** | Reads what happened each evening: pillars covered, key takeaways, whether each son attended, and any homework set | Writes the recap, takes the register and publishes it |
 | **Feedback** | Gives a star rating and comments on a session (or general feedback), with an option to hide their name | Sees all feedback, average ratings and a breakdown per session |
 | **Homework** | Each boy reads the task, writes an answer and hands it in, then sees the coach's comment | Sets work linked to a session, sees who has handed it in and who hasn't, and writes reviews |
@@ -61,6 +65,10 @@ change is in [`assets/js/config.js`](assets/js/config.js).
    ```
    The anon key is designed to be public. The database rules decide what each
    person can see.
+   If you ran `schema.sql` before session plans and attendance checks
+   existed, also run
+   [`supabase/updates/001-session-plans-and-attendance.sql`](supabase/updates/001-session-plans-and-attendance.sql)
+   once.
 4. Under **Authentication → URL Configuration**, set **Site URL** to the
    portal's address, e.g. `https://husaynyahya.github.io/Zulfikar/`.
 5. **Make yourself a coach.** Register through the portal like a parent would.
@@ -127,8 +135,8 @@ Netlify, Cloudflare Pages or your own domain.
 ## After changing a file
 
 `index.html` loads the stylesheet and scripts with a version tag
-(`portal.css?v=8`, `app.js?v=8` and so on). When you change any of those
-files, raise the number on every line, e.g. to `?v=9`. Browsers then fetch
+(`portal.css?v=9`, `app.js?v=9` and so on). When you change any of those
+files, raise the number on every line, e.g. to `?v=10`. Browsers then fetch
 the new files straight away instead of showing a cached copy for up to 10
 minutes.
 
@@ -149,6 +157,7 @@ minutes.
 │       └── flyer.webp                 the programme poster
 └── supabase/
     ├── schema.sql                     tables, sign-up trigger, access rules
+    ├── updates/                       changes to run on an existing database
     └── functions/stripe-webhook/      records Stripe payments
 ```
 

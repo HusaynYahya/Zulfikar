@@ -12,7 +12,8 @@
    one is running.
 
    Tables: profiles, students, sessions, attendance, homework, submissions,
-           feedback, payments
+           feedback, payments, rsvps (coming or not, before a session),
+           attendance_reviews (parent confirms or flags the register after)
    ============================================================================ */
 (function () {
   "use strict";
@@ -146,6 +147,13 @@
     function load() {
       try { db = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { db = null; }
       if (!db || !db.tables) { db = seed(); save(); }
+      // demo data saved by an older version may lack newer tables
+      ["rsvps", "attendance_reviews"].forEach(function (t) { db.tables[t] = db.tables[t] || []; });
+      db.tables.sessions.forEach(function (s) {
+        if (s.register_taken === undefined) s.register_taken = s.date < isoDate(new Date());
+        s.timetable = s.timetable || [];
+        s.bring = s.bring || [];
+      });
     }
     function current() {
       var u = db.users.find(function (x) { return x.id === db.sessionUser; });
@@ -169,7 +177,9 @@
         case "attendance":
         case "submissions": return mine.indexOf(row.student_id) !== -1;
         case "feedback":
-        case "payments":    return row.family_id === uid;
+        case "payments":
+        case "rsvps":
+        case "attendance_reviews": return row.family_id === uid;
         default:            return false;
       }
     }
@@ -267,6 +277,7 @@
       d.setDate(d.getDate() - 1);
     }
     var due = new Date(); due.setDate(due.getDate() + 5);
+    var joined = new Date(); joined.setDate(joined.getDate() - 60);
     var past = new Date(); past.setDate(past.getDate() - 3);
 
     var sessions = [
@@ -283,7 +294,11 @@
         recap: "A 30-minute bodyweight circuit in teams, then we sat together and reflected on a few lines of Du'a Kumayl and why we ask for forgiveness.",
         takeaways: ["Consistency beats intensity", "Thursday night: Du'a Kumayl with family"] },
     ].map(function (s, i) {
-      return Object.assign({ id: "demo-session-" + i, date: dates[i], published: true, created_by: coachId, created_at: nowISO() }, s);
+      return Object.assign({
+        id: "demo-session-" + i, date: dates[i], published: true, register_taken: true,
+        timetable: CFG.programme.defaultTimetable || [], bring: CFG.programme.defaultBring || [],
+        created_by: coachId, created_at: nowISO(),
+      }, s);
     });
 
     var attendance = [];
@@ -293,6 +308,28 @@
     });
 
     var month = isoDate(new Date()).slice(0, 7);
+    // the next scheduled evening, for a sample reply
+    var nextDates = [];
+    var n = new Date(); n.setHours(12, 0, 0, 0);
+    while (!nextDates.length) {
+      if (days.indexOf(n.getDay()) !== -1) nextDates.push(isoDate(n));
+      n.setDate(n.getDate() + 1);
+    }
+    // a planned session for the next evening: theme, timetable and kit list
+    sessions.unshift({
+      id: "demo-session-next", date: nextDates[0], published: true, register_taken: false,
+      title: "Grip strength & the story of Khaybar", location: "Harefield", pillars: ["physical", "spiritual"],
+      recap: "", takeaways: [], created_by: coachId, created_at: nowISO(),
+      timetable: [
+        { time: "19:00", activity: "Arrive, salaam and mobility warm-up" },
+        { time: "19:20", activity: "Grip and pulling circuit in pairs" },
+        { time: "20:10", activity: "Break and water" },
+        { time: "20:20", activity: "Story circle: the gate of Khaybar" },
+        { time: "21:10", activity: "Du'a and close" },
+        { time: "21:30", activity: "Collection" },
+      ],
+      bring: ["Water bottle", "Trainers and sports kit", "Towel", "Notebook and pen"],
+    });
     return {
       users: [
         { id: famId, email: "parent@demo.local", password: "demo1234" },
@@ -305,16 +342,16 @@
           { id: coachId, email: "coach@demo.local", parent_name: "Coach", phone: "", role: "coach", created_at: nowISO() },
         ],
         students: [
-          { id: ali, family_id: famId, first_name: "Ali", last_name: "Sample", year_group: 8, date_of_birth: "2013-03-14", school: "", medical_notes: "Mild asthma — inhaler in bag", emergency_name: "Sample Parent", emergency_phone: "07700 900000", photo_consent: true, created_at: nowISO() },
-          { id: mahdi, family_id: famId, first_name: "Mahdi", last_name: "Sample", year_group: 7, date_of_birth: "2014-09-02", school: "", medical_notes: "", emergency_name: "Sample Parent", emergency_phone: "07700 900000", photo_consent: true, created_at: nowISO() },
+          { id: ali, family_id: famId, first_name: "Ali", last_name: "Sample", year_group: 8, date_of_birth: "2013-03-14", school: "", medical_notes: "Mild asthma — inhaler in bag", emergency_name: "Sample Parent", emergency_phone: "07700 900000", photo_consent: true, created_at: joined.toISOString() },
+          { id: mahdi, family_id: famId, first_name: "Mahdi", last_name: "Sample", year_group: 7, date_of_birth: "2014-09-02", school: "", medical_notes: "", emergency_name: "Sample Parent", emergency_phone: "07700 900000", photo_consent: true, created_at: joined.toISOString() },
         ],
         sessions: sessions,
         attendance: attendance,
         homework: [
-          { id: "demo-hw-0", session_id: sessions[0].id, pillar: "spiritual", title: "One act of sabr",
+          { id: "demo-hw-0", session_id: "demo-session-0", pillar: "spiritual", title: "One act of sabr",
             instructions: "This week, notice one moment where you chose patience instead of reacting. Write 3–5 sentences: what happened, what you felt, and what you did.",
             due_date: isoDate(due), created_at: nowISO() },
-          { id: "demo-hw-1", session_id: sessions[1].id, pillar: "intellectual", title: "Your line from the letter",
+          { id: "demo-hw-1", session_id: "demo-session-1", pillar: "intellectual", title: "Your line from the letter",
             instructions: "Pick one sentence from the letter to Malik al-Ashtar. Explain it in your own words and give one example of living it at school.",
             due_date: isoDate(past), created_at: nowISO() },
         ],
@@ -322,7 +359,17 @@
           { id: uuid(), homework_id: "demo-hw-1", student_id: ali, answer: "\"Do not be like a beast of prey\" — it means don't take advantage of people who are weaker. At school I stopped a group from laughing at a Year 7.", status: "reviewed", coach_comment: "Excellent example, Ali. That is exactly the spirit of the letter.", submitted_at: nowISO(), reviewed_at: nowISO() },
         ],
         feedback: [
-          { id: uuid(), family_id: famId, student_id: ali, session_id: sessions[0].id, rating: 5, enjoyed: "The takedown drills!", improve: "More time for sparring.", anonymous: false, created_at: nowISO() },
+          { id: uuid(), family_id: famId, student_id: ali, session_id: "demo-session-0", rating: 5, enjoyed: "The takedown drills!", improve: "More time for sparring.", anonymous: false, created_at: nowISO() },
+        ],
+        // Ali's register is confirmed for the older sessions; Mahdi's parent
+        // has flagged the hike prep evening, where he was marked absent.
+        attendance_reviews: [
+          { id: uuid(), family_id: famId, session_id: "demo-session-3", student_id: ali, status: "confirmed", seen_present: true, note: null, coach_note: null, reviewed_at: nowISO() },
+          { id: uuid(), family_id: famId, session_id: "demo-session-2", student_id: ali, status: "confirmed", seen_present: true, note: null, coach_note: null, reviewed_at: nowISO() },
+          { id: uuid(), family_id: famId, session_id: "demo-session-2", student_id: mahdi, status: "disputed", seen_present: false, note: "He was there — he arrived late, about 7:20.", coach_note: null, reviewed_at: nowISO() },
+        ],
+        rsvps: [
+          { id: uuid(), family_id: famId, student_id: ali, date: nextDates[0], going: true, reason: null, updated_at: nowISO() },
         ],
         payments: [
           { id: uuid(), family_id: famId, student_id: ali, kind: "month", period: month, amount_pence: 5000, method: "stripe", status: "paid", created_at: nowISO() },

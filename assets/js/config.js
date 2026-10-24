@@ -41,6 +41,16 @@ window.ZULFIQAR = {
     locations: ["Harefield", "Zahra Centre"],
     prices: { sessionPence: 1000, monthPence: 5000 },
     values: ["Integrity", "Respect", "Discipline", "Brotherhood"],
+    // Starting point for each new session plan. Coaches can change it per session.
+    defaultTimetable: [
+      { time: "19:00", activity: "Arrive, salaam and warm-up" },
+      { time: "19:20", activity: "Main activity" },
+      { time: "20:15", activity: "Break and water" },
+      { time: "20:25", activity: "Circle: reflection and discussion" },
+      { time: "21:15", activity: "Du'a and close" },
+      { time: "21:30", activity: "Collection" },
+    ],
+    defaultBring: ["Water bottle", "Trainers and sports kit", "Notebook and pen", "A light snack"],
     contactEmail: "",  // shown on the sign-in page if set
   },
 
