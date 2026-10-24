@@ -142,6 +142,11 @@ begin
           new.raw_user_meta_data ->> 'phone',
           'family');
 
+  -- a family registers a handful of sons at most; stops bulk junk sign-ups
+  if jsonb_array_length(coalesce(new.raw_user_meta_data -> 'boys', '[]'::jsonb)) > 6 then
+    raise exception 'Too many boys on one registration';
+  end if;
+
   for b in select * from jsonb_array_elements(coalesce(new.raw_user_meta_data -> 'boys', '[]'::jsonb)) loop
     insert into public.students (family_id, first_name, last_name, year_group, date_of_birth,
                                  school, medical_notes, emergency_name, emergency_phone, photo_consent)

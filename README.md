@@ -103,8 +103,8 @@ change is in [`assets/js/config.js`](assets/js/config.js).
    ```
 4. In Stripe, go to **Developers → Webhooks → Add endpoint**:
    - URL: `https://<your-project-ref>.supabase.co/functions/v1/stripe-webhook`
-   - Events: `checkout.session.completed` and
-     `checkout.session.async_payment_succeeded`
+   - Events: `checkout.session.completed`,
+     `checkout.session.async_payment_succeeded` and `charge.refunded`
 
    Copy the endpoint's signing secret (`whsec_…`) into the secret from step 3.
 
@@ -135,8 +135,8 @@ Netlify, Cloudflare Pages or your own domain.
 ## After changing a file
 
 `index.html` loads the stylesheet and scripts with a version tag
-(`portal.css?v=9`, `app.js?v=9` and so on). When you change any of those
-files, raise the number on every line, e.g. to `?v=10`. Browsers then fetch
+(`portal.css?v=10`, `app.js?v=10` and so on). When you change any of those
+files, raise the number on every line, e.g. to `?v=11`. Browsers then fetch
 the new files straight away instead of showing a cached copy for up to 10
 minutes.
 

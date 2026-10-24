@@ -12,6 +12,13 @@
 (function () {
   "use strict";
 
+  // Refuse to run inside another site's frame, so nobody can overlay the
+  // portal and trick a coach into clicking (GitHub Pages can't send the header).
+  if (window.top !== window.self) {
+    document.body.innerHTML = '<p style="padding:2rem;font-family:sans-serif">Please <a href="' + location.href + '" target="_top">open the portal directly</a>.</p>';
+    return;
+  }
+
   var CFG = window.ZULFIQAR || {};
   var P = CFG.programme || {};
   var D = window.ZData;
@@ -1119,7 +1126,7 @@
     var rows = d.payments.map(function (p) {
       return "<tr><td>" + esc(fmtStamp(p.created_at)) + "</td><td>" + esc(boyNames[p.student_id] ? boyNames[p.student_id].first_name : "—") + "</td><td>" +
         esc(p.kind === "month" ? "Monthly pass · " + monthLabel(p.period) : "Session · " + monthLabel(p.period)) + "</td><td>" +
-        money(p.amount_pence) + "</td><td>" + esc(methodLabel(p.method)) + "</td></tr>";
+        money(p.amount_pence) + (p.status === "refunded" ? " " + badge("Refunded", "mute") : "") + "</td><td>" + esc(methodLabel(p.method)) + "</td></tr>";
     }).join("");
 
     $main.innerHTML =

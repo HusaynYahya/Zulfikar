@@ -2,7 +2,8 @@
 // PROJECT ZULFIQAR — Stripe webhook (Supabase Edge Function)
 // ----------------------------------------------------------------------------
 // Stripe calls this after every completed Payment Link checkout. It records
-// the payment against the right boy and month so it shows in the portal.
+// the payment against the right boy and month so it shows in the portal,
+// and marks it refunded if it is later fully refunded in Stripe.
 //
 // The portal opens each Payment Link with
 //     ?client_reference_id=<student uuid>_<YYYY-MM>
@@ -34,6 +35,21 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     return new Response(`Bad signature: ${(err as Error).message}`, { status: 400 });
+  }
+
+  // A refund in Stripe marks the matching payment as refunded in the portal.
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    if (!charge.refunded || typeof charge.payment_intent !== "string") return new Response("partial or unknown refund");
+    const sessions = await stripe.checkout.sessions.list({ payment_intent: charge.payment_intent, limit: 1 });
+    const checkout = sessions.data[0];
+    if (!checkout) return new Response("no checkout for this charge");
+    const { error } = await db.from("payments").update({ status: "refunded" }).eq("stripe_session_id", checkout.id);
+    if (error) {
+      console.error(error);
+      return new Response("db error", { status: 500 }); // Stripe will retry
+    }
+    return new Response("refunded");
   }
 
   if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") {
