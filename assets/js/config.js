@@ -13,8 +13,8 @@ window.ZULFIQAR = {
 
   /* ---- backend ------------------------------------------------------- */
   supabase: {
-    url: "",       // e.g. "https://abcdefghijkl.supabase.co"
-    anonKey: "",   // the "anon public" key from Supabase → Project Settings → API
+    url: "https://kfakrrmuujleeyvalhqm.supabase.co",
+    anonKey: "sb_publishable_d4sp294oCRy3a_XAuqxmIQ_cm-ySyXJ",  // publishable key — safe to be public
   },
 
   /* ---- payments ------------------------------------------------------ */
