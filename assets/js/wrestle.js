@@ -71,37 +71,64 @@
       '" stroke="' + col + '" stroke-width="' + w + '" stroke-linecap="round"' + (extra || "") + "/>";
   }
 
-  // Build a figure as outline layer + fill layer, so the whole body keeps a
-  // clean ink edge (the illustrated look).
+  function unit(a, b) { var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; }
+  // A tapered body part: a quad from a (width wa) to b (width wb).
+  function quad(a, b, wa, wb) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+    return [[a[0] + nx * wa / 2, a[1] + ny * wa / 2], [b[0] + nx * wb / 2, b[1] + ny * wb / 2],
+      [b[0] - nx * wb / 2, b[1] - ny * wb / 2], [a[0] - nx * wa / 2, a[1] - ny * wa / 2]];
+  }
+  function poly(pts) { return "M" + pts.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" L") + " Z"; }
+
+  // A realistically-proportioned figure: small head on a neck, shaped torso
+  // with shoulders and hips, tapered limbs, hands and feet. Drawn as an ink
+  // layer under a skin layer so the whole body keeps one clean outline.
   function figure(f, face, skin, ink, hair, lw) {
-    var le = elbow(f.n, f.lh, 1), re = elbow(f.n, f.rh, -1);
-    var lk = elbow(f.p, f.lf, face), rk = elbow(f.p, f.rf, -face);
-    // [a, b, bodyWidth]
-    var bones = [
-      [f.n, f.p, 15], [f.h, f.n, 8],
-      [f.n, le, 9], [le, f.lh, 7], [f.n, re, 9], [re, f.rh, 7],
-      [f.p, lk, 12], [lk, f.lf, 9], [f.p, rk, 12], [rk, f.rf, 9],
+    // shoulders and hips sit to each side of the neck / pelvis
+    var tp = unit(f.p, f.n);              // torso up-direction
+    var sx = -tp[1], sy = tp[0];          // across the shoulders
+    var LSh = [f.n[0] + sx * 9, f.n[1] + sy * 9], RSh = [f.n[0] - sx * 9, f.n[1] - sy * 9];
+    var LHp = [f.p[0] + sx * 6, f.p[1] + sy * 6], RHp = [f.p[0] - sx * 6, f.p[1] - sy * 6];
+    var hr = 6.6, neckTop = [f.h[0] + (f.n[0] - f.h[0]) * 0.4, f.h[1] + (f.n[1] - f.h[1]) * 0.4];
+
+    var le = elbow(LSh, f.lh, 1), re = elbow(RSh, f.rh, -1);
+    var lk = elbow(LHp, f.lf, face), rk = elbow(RHp, f.rf, -face);
+    var lToe = [f.lf[0] + unit(lk, f.lf)[0] * 7 + face * 2, f.lf[1] + 1];
+    var rToe = [f.rf[0] + unit(rk, f.rf)[0] * 7 + face * 2, f.rf[1] + 1];
+
+    var parts = [
+      quad(LSh, RSh, 4, 4),                 // shoulder line (fills the gap)
+      [[LSh[0],LSh[1]],[RSh[0],RSh[1]],[RHp[0],RHp[1]],[LHp[0],LHp[1]]], // torso
+      quad(neckTop, f.n, 6, 10),            // neck
+      quad(LSh, le, 7, 5.2), quad(le, f.lh, 5.2, 3.6),   // left arm
+      quad(RSh, re, 7, 5.2), quad(re, f.rh, 5.2, 3.6),   // right arm
+      quad(LHp, lk, 10, 7), quad(lk, f.lf, 7, 5),        // left leg
+      quad(RHp, rk, 10, 7), quad(rk, f.rf, 7, 5),        // right leg
+      quad(f.lf, lToe, 5.5, 4.5), quad(f.rf, rToe, 5.5, 4.5), // feet
     ];
-    var hr = 11;
     var ol = "", fl = "";
-    bones.forEach(function (bo) {
-      ol += seg(bo[0], bo[1], bo[2] + lw * 2, ink);
-      fl += seg(bo[0], bo[1], bo[2], skin);
+    parts.forEach(function (pp) {
+      ol += '<path d="' + poly(pp) + '" fill="' + ink + '" stroke="' + ink + '" stroke-width="' + (lw * 2) + '" stroke-linejoin="round" stroke-linecap="round"/>';
+      fl += '<path d="' + poly(pp) + '" fill="' + skin + '"/>';
     });
-    // head: ink ring, skin fill
+    // hands and the head, as circles joined into the same silhouette
+    [f.lh, f.rh].forEach(function (hnd) {
+      ol += '<circle cx="' + hnd[0].toFixed(1) + '" cy="' + hnd[1].toFixed(1) + '" r="' + (3.2 + lw) + '" fill="' + ink + '"/>';
+      fl += '<circle cx="' + hnd[0].toFixed(1) + '" cy="' + hnd[1].toFixed(1) + '" r="3.2" fill="' + skin + '"/>';
+    });
     ol += '<circle cx="' + f.h[0].toFixed(1) + '" cy="' + f.h[1].toFixed(1) + '" r="' + (hr + lw) + '" fill="' + ink + '"/>';
     fl += '<circle cx="' + f.h[0].toFixed(1) + '" cy="' + f.h[1].toFixed(1) + '" r="' + hr + '" fill="' + skin + '"/>';
-    // hair: a cap swept to the back (away from facing), with a couple of tufts
-    var bx = f.h[0] - face * 3;
-    fl += '<path d="M' + (f.h[0] - hr) + "," + (f.h[1] - 1) +
-      " Q" + (bx) + "," + (f.h[1] - hr * 2.1) + " " + (f.h[0] + hr) + "," + (f.h[1] - 2) +
-      " Q" + (f.h[0] + face * 2) + "," + (f.h[1] - hr * 0.8) + " " + (bx - face * hr * 0.8) + "," + (f.h[1] - hr * 0.5) +
+    // hair swept back, away from the facing direction
+    var bx = f.h[0] - face * 2;
+    fl += '<path d="M' + (f.h[0] - hr * 0.95) + "," + (f.h[1] - 0.5) +
+      " Q" + bx + "," + (f.h[1] - hr * 2) + " " + (f.h[0] + hr * 0.95) + "," + (f.h[1] - 1.5) +
+      " Q" + (f.h[0] - face * hr * 0.3) + "," + (f.h[1] - hr * 0.7) + " " + (bx - face * hr) + "," + (f.h[1] - hr * 0.2) +
       ' Z" fill="' + hair + '"/>';
-    // face: a determined brow + eye line, toward the opponent
-    var ex = f.h[0] + face * 3.4;
-    fl += seg([ex - face * 1, f.h[1] - 1.5], [ex + face * 4, f.h[1] - 0.5], 1.4, ink);
-    fl += seg([ex, f.h[1] + 2.6], [ex + face * 3.4, f.h[1] + 2.6], 1.6, ink);
-    return '<g>' + ol + fl + "</g>";
+    // face: a brow and an eye line toward the opponent
+    var ex = f.h[0] + face * 2;
+    fl += seg([ex - face * 0.5, f.h[1] - 1], [ex + face * 3, f.h[1] - 0.2], 1.1, ink);
+    fl += seg([ex, f.h[1] + 1.8], [ex + face * 2.6, f.h[1] + 1.8], 1.2, ink);
+    return "<g>" + ol + fl + "</g>";
   }
 
   function frame(svg, t) {
