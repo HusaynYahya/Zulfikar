@@ -160,7 +160,7 @@
 
   function init(svg) {
     svg.setAttribute("viewBox", "0 0 " + VW + " " + VH);
-    svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
     frame(svg, 0);
   }
 

@@ -421,8 +421,8 @@ body.has-nav .foot { padding-bottom: 7rem; }
 @keyframes cue-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
 
 .scrolly { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 4vw, 3rem); align-items: start; }
-.scrolly__stage { position: sticky; top: 12vh; height: 72vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-#wrestlers { width: min(520px, 92%); height: 86%; }
+.scrolly__stage { position: sticky; top: 6vh; height: 80vh; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; }
+#wrestlers { width: min(440px, 100%); height: 66%; }
 .scrolly__hint { font-size: .78rem; color: var(--ink-mute); letter-spacing: .02em; margin: .4rem 0 0; }
 .scrolly__step { min-height: 78vh; display: flex; align-items: center; }
 .scrolly__step .card { width: 100%; }
