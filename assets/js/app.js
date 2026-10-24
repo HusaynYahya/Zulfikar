@@ -784,7 +784,6 @@
     var stage = '<div class="scrolly__stage"><svg id="wrestlers" aria-hidden="true"></svg><p class="scrolly__hint">a hold, a shot, a scramble — scroll on</p></div>';
 
     $main.innerHTML =
-      publicHeader("signin") +
       '<section class="mkt-hero">' +
         '<img class="mkt-hero__logo" src="assets/img/logo.webp" width="720" height="721" alt="' + esc(P.name) + '">' +
         '<p class="mkt-hero__lede">' + esc(P.tagline) + "</p>" +
