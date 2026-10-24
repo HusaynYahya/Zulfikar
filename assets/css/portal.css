@@ -423,7 +423,6 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .scrolly { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 4vw, 3rem); align-items: start; }
 .scrolly__stage { position: sticky; top: 6vh; height: 80vh; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; }
 #wrestlers { width: min(440px, 100%); height: 66%; }
-.scrolly__hint { font-size: .78rem; color: var(--ink-mute); letter-spacing: .02em; margin: .4rem 0 0; }
 .scrolly__step { min-height: 78vh; display: flex; align-items: center; }
 .scrolly__step .card { width: 100%; }
 .scrolly__step h2 { font-size: clamp(1.5rem, 1.6vw + 1rem, 2.1rem); }
@@ -445,6 +444,5 @@ body.has-nav .foot { padding-bottom: 7rem; }
     -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
   }
   #wrestlers { height: 78%; }
-  .scrolly__hint { display: none; }
   .scrolly__step { min-height: auto; padding: 1rem 0 1.4rem; }
 }
