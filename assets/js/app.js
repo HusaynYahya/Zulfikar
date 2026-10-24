@@ -199,6 +199,7 @@
 
   // Each page keeps its own place and time of day.
   var SCENES = {
+    marketing:{ scene: "mountains", mood: "dawn" },
     landing:  { scene: "mountains", mood: "dusk" },
     home:     { scene: "lake",      mood: "dawn" },
     sessions: { scene: "foothills", mood: "ember" },
@@ -709,10 +710,12 @@
     renderChrome(r.path);
     var where = (state.me ? "in:" : "out:") + r.path;
     if (where !== state.lastPath) window.scrollTo(0, 0);
-    setScene(state.me ? r.path : "landing");
+    setScene(state.me ? r.path : (({ signin: 1, register: 1, forgot: 1 }[r.path]) ? "landing" : "marketing"));
     state.lastPath = where;
 
-    if (!state.me) return viewLanding(r);
+    if (!state.me) {
+      return ({ signin: 1, register: 1, forgot: 1 }[r.path]) ? viewLanding(r) : viewMarketing();
+    }
     if (!state.me.profile) {
       $main.innerHTML = '<div class="card"><h1>Almost there</h1><p>Your account exists but its profile is missing. Please contact the coaches.</p></div>';
       return;
@@ -752,6 +755,100 @@
         '<label class="check"><input type="checkbox" name="photo_consent"> I consent to photos of my son being used in programme updates.</label>' +
       "</fieldset>"
     );
+  }
+
+  function publicHeader(cta) {
+    return (
+      '<header class="site-top"><div class="site-top__inner">' +
+        '<a class="brand" href="#/" aria-label="' + esc(P.name) + '"><img class="brand__logo" src="assets/img/logo-small.png" alt="" width="40" height="40">' +
+          '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>" +
+        (cta === "home" ? '<a class="btn btn--sm" href="#/">← Home</a>' : '<a class="btn btn--sm btn--primary" href="#/signin">Member sign in</a>') +
+      "</div></header>"
+    );
+  }
+
+  function viewMarketing() {
+    var sched = (P.schedule || []).map(function (x) { return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][x.day]; });
+    var first = (P.schedule || [])[0];
+    var blurbs = {
+      physical: "Strength, conditioning and grappling — we help each boy become fit, resilient and sure of himself.",
+      spiritual: "Qur'an, du'a and the example of the Ahl al-Bayt. Time each week to reflect and to build character that lasts.",
+      intellectual: "Reading, history and real discussion. We teach our boys to think, to question, and to speak with confidence.",
+      outdoors: "Hikes, camps and teamwork — the lessons that can only be learned in the open air, shoulder to shoulder.",
+    };
+    var pillarCards = (CFG.pillars || []).map(function (pl) {
+      return '<div class="mkt-pillar"><div class="mkt-pillar__icon">' + icon(pl.key) + "</div><div><h3>" + esc(pl.label) +
+        '</h3><p class="soft small" style="margin:0">' + esc(blurbs[pl.key] || pl.blurb) + "</p></div></div>";
+    }).join("");
+
+    var stage = '<div class="scrolly__stage"><svg id="wrestlers" aria-hidden="true"></svg><p class="scrolly__hint">a hold, a shot, a scramble — scroll on</p></div>';
+
+    $main.innerHTML =
+      publicHeader("signin") +
+      '<section class="mkt-hero">' +
+        '<img class="mkt-hero__logo" src="assets/img/logo.webp" width="720" height="721" alt="' + esc(P.name) + '">' +
+        '<p class="mkt-hero__lede">' + esc(P.tagline) + "</p>" +
+        '<div class="row" style="justify-content:center;gap:.6rem">' +
+          '<a class="btn btn--primary" href="#/register">Join Project Zulfiqar</a>' +
+          '<a class="btn" href="#/signin">Member sign in</a>' +
+        "</div>" +
+        '<p class="kaizen__word" style="margin-top:1.4rem">改善 · kaizen · continual improvement</p>' +
+        '<p class="scrolly__cue" aria-hidden="true">↓</p>' +
+      "</section>" +
+
+      '<div class="scrolly">' + stage +
+        '<div class="scrolly__steps">' +
+
+          '<section class="scrolly__step"><div class="card card--strong">' +
+            '<p class="label">Why we exist</p>' +
+            '<h2>To raise young men of purpose</h2>' +
+            "<p class=\"soft\">Too many of our boys grow up pulled in every direction but their own. Project Zulfiqar exists to raise a generation of Muslim young men who are strong in body, grounded in faith and sharp in mind.</p>" +
+            "<p class=\"soft\">Young men of <strong>integrity, respect, discipline and brotherhood</strong> — who know who they are, carry themselves with purpose, and lift up those around them.</p>" +
+          "</div></section>" +
+
+          '<section class="scrolly__step"><div class="card card--strong">' +
+            '<p class="label">How we do it</p>' +
+            '<h2>We train the whole person</h2>' +
+            "<p class=\"soft\">Twice a week, every member trains across four pillars — never just one. A boy who is only strong, or only studious, is only half-formed.</p>" +
+            '<div class="mkt-pillars">' + pillarCards + "</div>" +
+            "<p class=\"soft small\" style=\"margin-top:.9rem\">Each evening follows a clear plan and theme, led by committed coaches and mentors. Afterwards parents get a written recap, homework to carry the growth home, and a members' portal to follow it all.</p>" +
+          "</div></section>" +
+
+          '<section class="scrolly__step"><div class="card card--strong">' +
+            '<p class="label">What it is</p>' +
+            '<h2>A programme for the next generation</h2>' +
+            "<p class=\"soft\">Project Zulfiqar is a youth development programme for Muslim boys in Years 7 to 10, meeting twice a week.</p>" +
+            '<dl class="facts" style="max-width:none;margin:1.1rem 0 0">' +
+              "<div><dt>Who</dt><dd>" + esc(P.ages) + "</dd></div>" +
+              "<div><dt>When</dt><dd>" + esc(sched.join(" & ")) + (first ? ", " + esc(time12(first.start) + "–" + time12(first.end)) : "") + "</dd></div>" +
+              "<div><dt>Where</dt><dd>" + esc((P.locations || []).join(" / ")) + "</dd></div>" +
+              "<div><dt>Cost</dt><dd>" + money(P.prices.sessionPence) + " / session · " + money(P.prices.monthPence) + " / month</dd></div>" +
+            "</dl>" +
+            '<div class="row" style="margin-top:1.2rem;gap:.6rem"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn" href="#/signin">Member sign in</a></div>' +
+          "</div></section>" +
+
+        "</div>" +
+      "</div>" +
+
+      '<p class="values-line" style="text-align:center;margin:1rem 0 0">' + esc((P.values || []).join("  ·  ")) + "</p>" +
+      '<footer class="foot" style="display:block">' + esc(P.name) +
+        (P.contactEmail ? ' · <a href="mailto:' + esc(P.contactEmail) + '">' + esc(P.contactEmail) + "</a>" : "") + "</footer>";
+
+    // drive the wrestlers from scroll position over the three sections
+    var svg = document.getElementById("wrestlers");
+    var scrolly = $main.querySelector(".scrolly");
+    if (svg && scrolly && window.ZWrestle) {
+      ZWrestle.init(svg);
+      var onScroll = function () {
+        if (!document.body.contains(svg)) { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); return; }
+        var r = scrolly.getBoundingClientRect(), total = r.height - window.innerHeight;
+        var t = total > 0 ? Math.max(0, Math.min(1, -r.top / total)) : 0;
+        ZWrestle.frame(svg, t);
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll);
+      onScroll();
+    }
   }
 
   function viewLanding(r) {
@@ -812,6 +909,7 @@
     }
 
     $main.innerHTML =
+      publicHeader("home") +
       '<div class="login">' +
         '<section class="card card--strong auth-card" aria-label="Account">' + auth + "</section>" +
         '<section class="login-brand">' +
