@@ -306,3 +306,15 @@ create policy "add review"     on public.attendance_reviews for insert with chec
 create policy "change review"  on public.attendance_reviews for update using (family_id = auth.uid() or public.is_coach())
                                                               with check ((family_id = auth.uid() and public.is_my_student(student_id)) or public.is_coach());
 create policy "coach removes review" on public.attendance_reviews for delete using (public.is_coach());
+
+-- ---- table privileges (also in updates/002-grants.sql) ---------------------
+-- Grant the signed-in role access to the tables; row-level security above
+-- still decides which rows each person sees. Without this, some projects
+-- return "permission denied for table ...".
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to authenticated;
+-- a family may change only its name and phone, never its role
+revoke update on public.profiles from authenticated;
+grant update (parent_name, phone) on public.profiles to authenticated;

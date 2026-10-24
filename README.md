@@ -69,6 +69,8 @@ change is in [`assets/js/config.js`](assets/js/config.js).
    existed, also run
    [`supabase/updates/001-session-plans-and-attendance.sql`](supabase/updates/001-session-plans-and-attendance.sql)
    once.
+   If you see "permission denied for table ..." after connecting, run
+   [`supabase/updates/002-grants.sql`](supabase/updates/002-grants.sql) once.
 4. Under **Authentication → URL Configuration**, set **Site URL** to the
    portal's address, e.g. `https://husaynyahya.github.io/Zulfikar/`.
 5. **Make yourself a coach.** Register through the portal like a parent would.
