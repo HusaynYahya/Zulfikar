@@ -192,17 +192,21 @@
   }
 
   /* ---- scenery --------------------------------------------------------- */
-  // Each page has its own place and time of day behind it. The sign-in page
-  // and the spiritual corners of the portal look onto a gilded shrine.
+  // Twelve natural places, each drawn in code. Pages and recaps draw from them
+  // in rotation, so the portal keeps changing scene without repeating itself.
+  var ALL_SCENES = window.ZScenery ? ZScenery.scenes.slice()
+    : ["mountains", "alpine", "foothills", "forest", "hills", "meadow", "desert", "lake", "coast", "river", "marsh"];
+
+  // Each page keeps its own place and time of day.
   var SCENES = {
-    landing:  { scene: "shrine",    mood: "dusk",  domes: 2 },
-    home:     { scene: "mountains", mood: "dawn" },
-    sessions: { scene: "mountains", mood: "ember" },
-    homework: { scene: "lake",      mood: "night" },
-    feedback: { scene: "desert",    mood: "dusk" },
-    payments: { scene: "mountains", mood: "day" },
-    members:  { scene: "shrine",    mood: "day" },
-    account:  { scene: "lake",      mood: "night" },
+    landing:  { scene: "mountains", mood: "dusk" },
+    home:     { scene: "lake",      mood: "dawn" },
+    sessions: { scene: "foothills", mood: "ember" },
+    homework: { scene: "forest",    mood: "night" },
+    feedback: { scene: "meadow",    mood: "dusk" },
+    payments: { scene: "coast",     mood: "day" },
+    members:  { scene: "hills",     mood: "day" },
+    account:  { scene: "river",     mood: "night" },
   };
   function setScene(key) {
     var host = document.getElementById("scene");
@@ -212,7 +216,7 @@
     host.setAttribute("data-scene", tag);
     var layer = document.createElement("div");
     layer.className = "scene__layer";
-    layer.innerHTML = ZScenery.svg("zulfiqar-" + key, def.mood, { scene: def.scene, domes: def.domes });
+    layer.innerHTML = ZScenery.svg("zulfiqar-" + key, def.mood, { scene: def.scene });
     host.appendChild(layer);
     requestAnimationFrame(function () { requestAnimationFrame(function () { layer.classList.add("is-on"); }); });
     Array.prototype.slice.call(host.children, 0, -1).forEach(function (old) {
@@ -220,24 +224,25 @@
     });
   }
 
-  // Which place suits a session: its pillars choose the scene, its id the hour.
-  var PILLAR_SCENE = { spiritual: "shrine", intellectual: "lake", outdoors: "desert", physical: "mountains" };
-  function sceneFor(session) {
-    for (var i = 0; i < (session.pillars || []).length; i++) {
-      if (PILLAR_SCENE[session.pillars[i]]) return PILLAR_SCENE[session.pillars[i]];
-    }
-    return "mountains";
+  function hashOf(seed) {
+    var h = 0;
+    for (var i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return h;
   }
+  // A session's place and the small landscapes rotate through all the scenes,
+  // keyed on the id so each one keeps the same place every time.
+  function artScene(seed) { return ALL_SCENES[hashOf(seed) % ALL_SCENES.length]; }
+  function sceneFor(session) { return artScene(session.id); }
   /* A small landscape of its own for each session recap. */
   function recapArt(session) { return artFor(session.id, null, sceneFor(session)); }
   function artFor(seed, mood, scene) {
     if (!window.ZScenery) return "";
     var moods = ["ember", "dusk", "night", "dawn", "dusk", "ember"];
-    var h = 0;
-    for (var i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-    // the shrine and desert sit lower, so show more of the sky above them
-    var box = scene === "shrine" ? "0 180 1600 620" : scene === "desert" ? "0 330 1600 570" : "0 280 1600 620";
-    return '<div class="art">' + ZScenery.svg(seed, mood || moods[h % moods.length], { scene: scene || "mountains", layers: 4, fit: "xMidYMid slice", viewBox: box }) + "</div>";
+    var h = hashOf(seed);
+    scene = scene || artScene(seed);
+    // the flatter, low-horizon scenes show more sky above them
+    var box = (scene === "desert" || scene === "meadow" || scene === "marsh") ? "0 330 1600 570" : "0 280 1600 620";
+    return '<div class="art">' + ZScenery.svg(seed, mood || moods[h % moods.length], { scene: scene, layers: 4, fit: "xMidYMid slice", viewBox: box }) + "</div>";
   }
 
   function pillarMeta(key) {
@@ -425,7 +430,7 @@
     var plan = planFor(u.date, d.sessions);
     var tt = plan && plan.timetable && plan.timetable.length ? plan.timetable : null;
     return (
-      '<article class="card card--art">' + artFor("next-" + u.date, "dusk", plan ? sceneFor(plan) : "shrine") +
+      '<article class="card card--art">' + artFor("next-" + u.date, "dusk", plan ? sceneFor(plan) : artScene("next-" + u.date)) +
         '<p class="label">' + esc(label || "Next session") + "</p>" +
         '<div class="next-up__when">' + esc(whenLabel(u)) + "</div>" +
         (plan && plan.title ? '<p class="theme">' + esc(plan.title) + "</p>" : "") +
@@ -1292,7 +1297,7 @@
       "</div>" +
       '<div class="grid grid-2" style="margin-top:1rem;align-items:start">' +
         '<div class="stack">' + (next
-          ? '<div class="card card--art">' + artFor("next-" + next.date, "dusk", nextPlan ? sceneFor(nextPlan) : "shrine") +
+          ? '<div class="card card--art">' + artFor("next-" + next.date, "dusk", nextPlan ? sceneFor(nextPlan) : artScene("next-" + next.date)) +
               '<p class="label">Next session</p><div class="next-up__when">' + esc(whenLabel(next)) + "</div>" +
               (nextPlan && nextPlan.title ? '<p class="theme">' + esc(nextPlan.title) + "</p>" : '<p class="small muted">No plan yet.</p>') +
               replySummary(next.date, d, sortBoys(d.students)) +

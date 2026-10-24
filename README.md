@@ -135,8 +135,8 @@ Netlify, Cloudflare Pages or your own domain.
 ## After changing a file
 
 `index.html` loads the stylesheet and scripts with a version tag
-(`portal.css?v=11`, `app.js?v=11` and so on). When you change any of those
-files, raise the number on every line, e.g. to `?v=12`. Browsers then fetch
+(`portal.css?v=12`, `app.js?v=12` and so on). When you change any of those
+files, raise the number on every line, e.g. to `?v=13`. Browsers then fetch
 the new files straight away instead of showing a cached copy for up to 10
 minutes.
 

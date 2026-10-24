@@ -5,15 +5,10 @@
    same scene. Several kinds of place:
 
      mountains  ridgelines, valley mist and a pine treeline      (the default)
-     shrine     a golden-domed shrine with minarets, over a city
      desert     rolling dunes under a wide sky
      lake       hills mirrored in still water
 
-   The shrine scene honours the holy shrines of the Ahl al-Bayt — a grand gilded
-   dome and minarets catching the light above a quiet skyline. Pass
-   { domes: 2 } for a twin-shrine skyline (as at Karbala).
-
-   ZScenery.svg(seed, mood, { scene, layers, fit, viewBox, domes })  → SVG string
+   ZScenery.svg(seed, mood, { scene, layers, fit, viewBox })  → SVG string
    moods: "dusk", "dawn", "day", "night", "ember"
    ============================================================================ */
 (function () {
@@ -92,164 +87,128 @@
     return out;
   }
 
-  /* ---- architecture (the shrine scene) --------------------------------- */
-
-  /* An onion dome on its drum, with ribs and a finial. cx = centre, by = base
-     line (springing), r = dome radius. Returns a path-group string. */
-  function dome(cx, by, r, gold, rib, lit) {
-    var dh = r * 1.5;                 // dome height above the springing line
-    var top = by - dh, neck = by - r * 0.1;
-    // onion profile: bulge out past r, then draw to a point
-    var o = r * 1.18;
-    var d =
-      "M" + fx(cx - r) + "," + fx(by) +
-      " C" + fx(cx - o) + "," + fx(by - r * 0.5) + " " + fx(cx - o) + "," + fx(by - r * 1.0) + " " + fx(cx - r * 0.42) + "," + fx(by - r * 1.3) +
-      " C" + fx(cx - r * 0.18) + "," + fx(by - r * 1.42) + " " + fx(cx) + "," + fx(top) + " " + fx(cx) + "," + fx(top) +
-      " C" + fx(cx) + "," + fx(top) + " " + fx(cx + r * 0.18) + "," + fx(by - r * 1.42) + " " + fx(cx + r * 0.42) + "," + fx(by - r * 1.3) +
-      " C" + fx(cx + o) + "," + fx(by - r * 1.0) + " " + fx(cx + o) + "," + fx(by - r * 0.5) + " " + fx(cx + r) + "," + fx(by) + " Z";
-    var g = '<path d="' + d + '" fill="' + gold + '"/>';
-    // a vertical seam of shadow/highlight so the dome reads as round
-    g += '<path d="M' + fx(cx) + "," + fx(top) + " C" + fx(cx + r * 0.1) + "," + fx(by - r) + " " + fx(cx + o * 0.6) + "," + fx(by - r * 0.5) + " " + fx(cx + r * 0.5) + "," + fx(by) +
-      '" fill="none" stroke="' + lit + '" stroke-width="' + fx(r * 0.12) + '" stroke-linecap="round" opacity=".5"/>';
-    g += '<path d="M' + fx(cx) + "," + fx(top) + " C" + fx(cx - r * 0.1) + "," + fx(by - r) + " " + fx(cx - o * 0.55) + "," + fx(by - r * 0.5) + " " + fx(cx - r * 0.55) + "," + fx(by) +
-      '" fill="none" stroke="' + rib + '" stroke-width="' + fx(r * 0.1) + '" stroke-linecap="round" opacity=".45"/>';
-    // drum under the dome
-    g += '<rect x="' + fx(cx - r * 0.92) + '" y="' + fx(by) + '" width="' + fx(r * 1.84) + '" height="' + fx(r * 0.9) + '" fill="' + rib + '"/>';
-    g += '<rect x="' + fx(cx - r * 0.92) + '" y="' + fx(by) + '" width="' + fx(r * 1.84) + '" height="' + fx(r * 0.22) + '" fill="' + gold + '" opacity=".7"/>';
-    // finial: little ball and spike
-    g += '<circle cx="' + fx(cx) + '" cy="' + fx(top - r * 0.12) + '" r="' + fx(r * 0.1) + '" fill="' + gold + '"/>';
-    g += '<line x1="' + fx(cx) + '" y1="' + fx(top - r * 0.2) + '" x2="' + fx(cx) + '" y2="' + fx(top - r * 0.46) + '" stroke="' + gold + '" stroke-width="' + fx(r * 0.045) + '"/>';
-    g += '<circle cx="' + fx(cx) + '" cy="' + fx(top - r * 0.5) + '" r="' + fx(r * 0.05) + '" fill="' + gold + '"/>';
-    return g;
-  }
-
-  /* A minaret: tapering shaft, a gallery band, upper shaft and a gold cap. */
-  function minaret(cx, by, h, w, stone, gold, lit) {
-    var gy = by - h * 0.62;           // gallery height
-    var topY = by - h;
-    var g = "";
-    // lower shaft (slightly tapered)
-    g += '<path d="M' + fx(cx - w / 2) + "," + fx(by) + " L" + fx(cx - w * 0.4) + "," + fx(gy) + " L" + fx(cx + w * 0.4) + "," + fx(gy) + " L" + fx(cx + w / 2) + "," + fx(by) + ' Z" fill="' + stone + '"/>';
-    g += '<rect x="' + fx(cx - w * 0.18) + '" y="' + fx(gy) + '" width="' + fx(w * 0.36) + '" height="' + fx(by - gy) + '" fill="' + lit + '" opacity=".18"/>';
-    // gallery / balcony
-    g += '<rect x="' + fx(cx - w * 0.6) + '" y="' + fx(gy - h * 0.06) + '" width="' + fx(w * 1.2) + '" height="' + fx(h * 0.09) + '" rx="' + fx(w * 0.1) + '" fill="' + gold + '"/>';
-    // upper shaft
-    g += '<rect x="' + fx(cx - w * 0.32) + '" y="' + fx(topY + h * 0.12) + '" width="' + fx(w * 0.64) + '" height="' + fx(gy - h * 0.06 - (topY + h * 0.12)) + '" fill="' + stone + '"/>';
-    // small gold cap dome + finial
-    g += dome(cx, topY + h * 0.12, w * 0.34, gold, mix(gold, "#000000", 0.35), lit).replace(/<rect[^>]*\/>/g, ""); // cap without a drum
-    return g;
-  }
-
-  /* A quiet skyline: flat rooftops, the odd small dome and minaret spike. */
-  function cityline(rand, baseY, col, gold) {
-    var g = "", x = -20;
-    while (x < W + 20) {
-      var w = 24 + rand() * 70, h = 16 + rand() * 60, y = baseY - h;
-      g += '<rect x="' + fx(x) + '" y="' + fx(y) + '" width="' + fx(w) + '" height="' + fx(baseY - y + 2) + '" fill="' + col + '"/>';
-      var roll = rand();
-      if (roll > 0.82) {               // a small dome on top
-        g += '<path d="M' + fx(x) + "," + fx(y) + " C" + fx(x) + "," + fx(y - w * 0.5) + " " + fx(x + w) + "," + fx(y - w * 0.5) + " " + fx(x + w) + "," + fx(y) + ' Z" fill="' + col + '"/>';
-        if (roll > 0.93) g += '<circle cx="' + fx(x + w / 2) + '" cy="' + fx(y - w * 0.52) + '" r="3" fill="' + gold + '" opacity=".8"/>';
-      } else if (roll > 0.7) {         // a thin minaret spike
-        g += '<rect x="' + fx(x + w / 2 - 3) + '" y="' + fx(y - h * 0.7) + '" width="6" height="' + fx(h * 0.7) + '" fill="' + col + '"/>';
-        g += '<circle cx="' + fx(x + w / 2) + '" cy="' + fx(y - h * 0.7) + '" r="4" fill="' + gold + '" opacity=".75"/>';
-      }
-      x += w + rand() * 10;
-    }
-    return g;
-  }
-
   /* ---- scene builders -------------------------------------------------- */
+  /* Terrain as a stack of ridgelines. A preset (cfg) tunes the land shape and
+     colour; the natural scenes below are all variations on this, some with
+     water, snow, a river or reeds added. */
 
-  function layersBackdrop(rand, m, id, count, topBias) {
-    var s = "", prev = null;
+  function terrain(rand, m, id, cfg) {
+    cfg = cfg || {};
+    var count = cfg.layers || 5;
+    var haze = cfg.haze ? mix(m.haze, cfg.haze[0], cfg.haze[1]) : m.haze;
+    var near = cfg.near ? mix(m.near, cfg.near[0], cfg.near[1]) : m.near;
+    var s = "", prev = null, all = [];
     for (var L = 0; L < count; L++) {
-      var t = L / (count - 1);
-      var base = H * ((topBias || 0.52) + t * 0.3);
-      var amp = H * (0.34 - t * 0.2);
-      var pts = ridge(rand, base, amp, 0.64 - t * 0.16);
-      var col = mix(m.haze, m.near, Math.pow(t, 0.75));
-      if (prev) {
+      var t = count > 1 ? L / (count - 1) : 1;
+      var base = H * ((cfg.base || 0.52) + t * (cfg.spread == null ? 0.3 : cfg.spread));
+      var amp = H * ((cfg.amp == null ? 0.34 : cfg.amp) - t * (cfg.ampFall == null ? 0.2 : cfg.ampFall));
+      var rough = (cfg.rough == null ? 0.64 : cfg.rough) - t * (cfg.roughFall == null ? 0.14 : cfg.roughFall);
+      var pts = ridge(rand, base, amp, rough);
+      var col = mix(haze, near, Math.pow(t, 0.75));
+      // snowy caps on the far, high peaks
+      if (cfg.snow && t < 0.5) col = mix(col, "#eef3f6", (0.5 - t) * 0.9);
+      if (prev && cfg.mist !== false) {
         var top = Math.min.apply(null, pts.map(function (p) { return p[1]; }));
         s += '<rect x="0" y="' + fx(top - 70) + '" width="' + W + '" height="170" fill="url(#' + id + 'mist)"/>';
       }
       var op = L === 0 ? 0.5 : L === 1 ? 0.82 : 1;
       s += '<path d="' + fillPath(pts) + '" fill="' + col + '"' + (op < 1 ? ' fill-opacity="' + op + '"' : "") + "/>";
-      if (L >= count - 2) s += '<path d="' + pines(rand, pts, L === count - 1 ? 46 : 22, L === count - 1 ? 0.9 : 1.6) + '" fill="' + col + '"/>';
-      prev = pts;
-    }
-    return s;
-  }
-
-  function sceneMountains(rand, m, id, opts) {
-    return layersBackdrop(rand, m, id, opts.layers || 5);
-  }
-
-  function sceneShrine(rand, m, id, opts) {
-    var s = "";
-    // soft distant hills, kept low and hazy
-    var hills = ridge(rand, H * 0.62, H * 0.14, 0.6);
-    s += '<path d="' + fillPath(hills) + '" fill="' + mix(m.haze, m.near, 0.35) + '" fill-opacity=".6"/>';
-    var horizon = H * 0.72;
-    // the town, in silhouette
-    s += '<g>' + cityline(rand, horizon, mix(m.near, "#000000", 0.1), m.sun || "#e9c27a") + "</g>";
-    // gilding that catches the evening light
-    var gold = "url(#" + id + "gold)", stone = mix(m.near, m.haze, 0.5), lit = m.sun || "#ffe9c0";
-    var domes = opts.domes || 1;
-    if (domes >= 2) {
-      // twin shrines, as the sanctuaries of Imam Husayn and al-Abbas stand facing
-      s += '<g>' + minaret(W * 0.26, horizon, 240, 26, stone, gold, lit) + minaret(W * 0.44, horizon, 240, 26, stone, gold, lit) + dome(W * 0.35, horizon - 150, 78, gold, mix(m.near, m.haze, 0.6), lit) + "</g>";
-      s += '<g>' + minaret(W * 0.58, horizon, 230, 25, stone, gold, lit) + minaret(W * 0.74, horizon, 230, 25, stone, gold, lit) + dome(W * 0.66, horizon - 140, 74, gold, mix(m.near, m.haze, 0.6), lit) + "</g>";
-    } else {
-      // a grand shrine: one great gilded dome between two tall minarets,
-      // over a pointed portal (iwan) — as at Najaf and Karbala
-      var cx = W * (0.42 + rand() * 0.16);
-      var drum = mix(m.near, m.haze, 0.55);
-      // the sanctuary block the dome sits on
-      s += '<rect x="' + fx(cx - 150) + '" y="' + fx(horizon - 120) + '" width="300" height="120" fill="' + stone + '"/>';
-      s += minaret(cx - 205, horizon, 265, 30, stone, gold, lit);
-      s += minaret(cx + 205, horizon, 265, 30, stone, gold, lit);
-      // a tall pointed portal recessed in the façade
-      s += '<path d="M' + fx(cx - 52) + "," + fx(horizon) + " L" + fx(cx - 52) + "," + fx(horizon - 70) + " Q" + fx(cx) + "," + fx(horizon - 142) + " " + fx(cx + 52) + "," + fx(horizon - 70) + " L" + fx(cx + 52) + "," + fx(horizon) + ' Z" fill="' + mix(m.near, "#000000", 0.3) + '"/>';
-      s += '<path d="M' + fx(cx - 52) + "," + fx(horizon - 70) + " Q" + fx(cx) + "," + fx(horizon - 142) + " " + fx(cx + 52) + "," + fx(horizon - 70) + '" fill="none" stroke="' + gold + '" stroke-width="5" opacity=".8"/>';
-      s += dome(cx, horizon - 120, 104, gold, drum, lit);
-    }
-    // a faint reflected glow on the ground before the shrine
-    s += '<rect x="0" y="' + fx(horizon) + '" width="' + W + '" height="' + fx(H - horizon) + '" fill="' + mix(m.near, "#000000", 0.2) + '"/>';
-    return s;
-  }
-
-  function sceneDesert(rand, m, id) {
-    var s = "", prev = null;
-    for (var L = 0; L < 5; L++) {
-      var t = L / 4;
-      var base = H * (0.55 + t * 0.32);
-      // smooth, rolling dunes: low roughness
-      var pts = ridge(rand, base, H * (0.16 - t * 0.08), 0.42);
-      var col = mix(mix(m.haze, "#d9a878", 0.4), m.near, Math.pow(t, 0.8));
-      if (prev) {
-        var top = Math.min.apply(null, pts.map(function (p) { return p[1]; }));
-        s += '<rect x="0" y="' + fx(top - 60) + '" width="' + W + '" height="150" fill="url(#' + id + 'mist)"/>';
+      if (cfg.pines && L >= count - (cfg.pines === "dense" ? 3 : 2)) {
+        var sz = L === count - 1 ? 46 : 24, dn = (L === count - 1 ? 0.9 : 1.6) * (cfg.pines === "dense" ? 1.7 : 1);
+        s += '<path d="' + pines(rand, pts, sz, dn) + '" fill="' + col + '"/>';
       }
-      s += '<path d="' + fillPath(pts) + '" fill="' + col + '"' + (L === 0 ? ' fill-opacity=".6"' : "") + "/>";
+      all.push({ pts: pts, col: col });
       prev = pts;
     }
-    return s;
+    return { markup: s, layers: all, near: near, haze: haze };
   }
 
-  function sceneLake(rand, m, id, opts) {
-    var waterY = H * 0.68;
-    var s = layersBackdrop(rand, m, id, opts.layers || 4, 0.4);
-    // mirror the lower half into still water
-    s = '<g>' + s + "</g>" +
-      '<g transform="translate(0,' + fx(2 * waterY) + ') scale(1,-1)" opacity=".5"><g>' + s + "</g></g>";
-    // water plane and a line of light where the sky meets it
-    s += '<rect x="0" y="' + fx(waterY) + '" width="' + W + '" height="' + fx(H - waterY) + '" fill="' + mix(m.near, m.haze, 0.3) + '" fill-opacity=".55"/>';
+  // Reflect a built terrain into still water at waterY, with a light line.
+  function withWater(rand, m, id, built, waterY, tint) {
+    var water = tint ? mix(m.near, tint[0], tint[1]) : mix(m.near, m.haze, 0.3);
+    var s = '<g>' + built.markup + "</g>" +
+      '<g transform="translate(0,' + fx(2 * waterY) + ') scale(1,-1)" opacity=".45"><g>' + built.markup + "</g></g>";
+    s += '<rect x="0" y="' + fx(waterY) + '" width="' + W + '" height="' + fx(H - waterY) + '" fill="' + water + '" fill-opacity=".55"/>';
     s += '<rect x="0" y="' + fx(waterY - 2) + '" width="' + W + '" height="4" fill="' + (m.sun || "#cfe0e6") + '" opacity=".4"/>';
     return s;
   }
 
-  var SCENES = { mountains: sceneMountains, shrine: sceneShrine, desert: sceneDesert, lake: sceneLake };
+  // Presets for each natural place.
+  var PRESETS = {
+    mountains: { rough: 0.64, roughFall: 0.14, pines: true, layers: 5 },
+    alpine:    { rough: 0.82, roughFall: 0.12, base: 0.44, spread: 0.34, amp: 0.46, ampFall: 0.26, snow: true, pines: true, layers: 5, haze: ["#9fb3c4", 0.3] },
+    foothills: { rough: 0.5, roughFall: 0.14, base: 0.56, amp: 0.26, ampFall: 0.16, pines: true, layers: 6 },
+    forest:    { rough: 0.5, roughFall: 0.12, base: 0.5, amp: 0.3, pines: "dense", layers: 6, haze: ["#3f6b4e", 0.28], near: ["#0c160f", 0.4] },
+    hills:     { rough: 0.34, roughFall: 0.1, base: 0.58, amp: 0.2, ampFall: 0.1, layers: 5, haze: ["#86a06a", 0.3], near: ["#12180e", 0.3] },
+    meadow:    { rough: 0.3, roughFall: 0.1, base: 0.66, amp: 0.14, ampFall: 0.07, layers: 4, haze: ["#9bad73", 0.28], near: ["#141a0f", 0.3] },
+    desert:    { rough: 0.42, roughFall: 0.1, base: 0.55, amp: 0.16, ampFall: 0.08, layers: 5, haze: ["#d9a878", 0.4], near: ["#2a1d12", 0.2] },
+  };
+
+  function sceneMountains(rand, m, id, opts) { return terrain(rand, m, id, Object.assign({}, PRESETS.mountains, { layers: opts.layers || 5 })).markup; }
+  function sceneAlpine(rand, m, id) { return terrain(rand, m, id, PRESETS.alpine).markup; }
+  function sceneFoothills(rand, m, id) { return terrain(rand, m, id, PRESETS.foothills).markup; }
+  function sceneForest(rand, m, id) { return terrain(rand, m, id, PRESETS.forest).markup; }
+  function sceneHills(rand, m, id) { return terrain(rand, m, id, PRESETS.hills).markup; }
+  function sceneMeadow(rand, m, id) { return terrain(rand, m, id, PRESETS.meadow).markup; }
+  function sceneDesert(rand, m, id) { return terrain(rand, m, id, PRESETS.desert).markup; }
+  function sceneLake(rand, m, id) {
+    var waterY = H * 0.68;
+    var built = terrain(rand, m, id, { rough: 0.5, roughFall: 0.14, base: 0.4, amp: 0.3, pines: true, layers: 4 });
+    return withWater(rand, m, id, built, waterY);
+  }
+
+  function sceneCoast(rand, m, id) {
+    var seaY = H * 0.6;
+    // a low headland on one side, otherwise open sea to the horizon
+    var side = rand() < 0.5;
+    var built = terrain(rand, m, id, { base: 0.42, amp: 0.22, ampFall: 0.12, rough: 0.5, pines: side ? "dense" : true, layers: 3, mist: false });
+    var s = withWater(rand, m, id, built, seaY, ["#20506a", 0.5]);
+    // a few shimmer lines on the water
+    for (var i = 0; i < 5; i++) {
+      var y = seaY + 20 + i * ((H - seaY) / 6), w = W * (0.3 + rand() * 0.4), x = rand() * (W - w);
+      s += '<rect x="' + fx(x) + '" y="' + fx(y) + '" width="' + fx(w) + '" height="2" fill="' + (m.sun || "#cfe0e6") + '" opacity="' + (0.18 - i * 0.02).toFixed(2) + '"/>';
+    }
+    return s;
+  }
+
+  function sceneRiver(rand, m, id) {
+    var built = terrain(rand, m, id, { rough: 0.6, roughFall: 0.14, base: 0.46, amp: 0.34, pines: true, layers: 5 });
+    var s = built.markup;
+    // a river widening from the horizon toward the viewer, catching the light
+    var hx = W * (0.4 + rand() * 0.2), hy = H * 0.6;
+    var water = mix(m.near, m.haze, 0.4), lit = m.sun || "#cfe0e6";
+    s += '<path d="M' + fx(hx - 6) + "," + fx(hy) + " L" + fx(hx + 6) + "," + fx(hy) +
+      " C" + fx(hx + 60) + "," + fx(H * 0.8) + " " + fx(W * 0.72) + "," + fx(H * 0.9) + " " + fx(W * 0.85) + "," + fx(H) +
+      " L" + fx(W * 0.2) + "," + fx(H) +
+      " C" + fx(W * 0.4) + "," + fx(H * 0.88) + " " + fx(hx - 55) + "," + fx(H * 0.8) + " " + fx(hx - 6) + "," + fx(hy) + ' Z" fill="' + water + '" fill-opacity=".7"/>';
+    s += '<path d="M' + fx(hx) + "," + fx(hy) + " C" + fx(hx + 30) + "," + fx(H * 0.82) + " " + fx(W * 0.55) + "," + fx(H * 0.9) + " " + fx(W * 0.52) + "," + fx(H) +
+      '" fill="none" stroke="' + lit + '" stroke-width="3" opacity=".35"/>';
+    return s;
+  }
+
+  function sceneMarsh(rand, m, id) {
+    var waterY = H * 0.74;
+    var built = terrain(rand, m, id, { rough: 0.4, roughFall: 0.12, base: 0.5, amp: 0.18, ampFall: 0.1, layers: 4, haze: ["#7f9166", 0.3], near: ["#11160d", 0.3] });
+    var s = withWater(rand, m, id, built, waterY, ["#2a3a30", 0.5]);
+    // reeds in small clumps along the near bank
+    var col = mix(built.near, "#000000", 0.15), x = 20 + rand() * 40;
+    while (x < W) {
+      var blades = 3 + (rand() * 4 | 0), by = H - 20 - rand() * 40;
+      for (var k = 0; k < blades; k++) {
+        var h = 34 + rand() * 60, bx = x + (k - blades / 2) * 6, lean = (rand() - 0.5) * 10;
+        s += '<path d="M' + fx(bx) + "," + fx(by) + " Q" + fx(bx + lean) + "," + fx(by - h * 0.55) + " " + fx(bx + lean * 1.8) + "," + fx(by - h) + '" fill="none" stroke="' + col + '" stroke-width="1.6" stroke-linecap="round"/>';
+      }
+      x += 70 + rand() * 150;
+    }
+    return s;
+  }
+
+  var SCENES = {
+    mountains: sceneMountains, alpine: sceneAlpine, foothills: sceneFoothills,
+    forest: sceneForest, hills: sceneHills, meadow: sceneMeadow,
+    desert: sceneDesert, lake: sceneLake,
+    coast: sceneCoast, river: sceneRiver, marsh: sceneMarsh,
+  };
 
   function svg(seed, moodName, opts) {
     opts = opts || {};
@@ -266,9 +225,6 @@
       s += '<radialGradient id="' + id + 'glow"><stop offset="0" stop-color="' + m.sun + '" stop-opacity=".75"/><stop offset=".25" stop-color="' + m.sun + '" stop-opacity=".22"/><stop offset="1" stop-color="' + m.sun + '" stop-opacity="0"/></radialGradient>';
     }
     s += '<linearGradient id="' + id + 'mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + m.haze + '" stop-opacity="0"/><stop offset=".6" stop-color="' + m.haze + '" stop-opacity=".38"/><stop offset="1" stop-color="' + m.haze + '" stop-opacity="0"/></linearGradient>';
-    // gilding for the shrine, warmed by the mood's light
-    var g1 = mix("#f7d58a", m.sun || "#f7d58a", 0.3), g2 = mix("#9c6a2a", m.near, 0.3);
-    s += '<linearGradient id="' + id + 'gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + mix(g1, "#ffffff", 0.3) + '"/><stop offset=".45" stop-color="' + g1 + '"/><stop offset="1" stop-color="' + g2 + '"/></linearGradient>';
     s += "</defs>";
     s += '<rect width="' + W + '" height="' + H + '" fill="url(#' + id + 'sky)"/>';
 
