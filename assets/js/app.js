@@ -3,8 +3,8 @@
    ----------------------------------------------------------------------------
    A small hash-routed single-page app. Two experiences share one shell:
 
-     Families  #/home  #/sessions  #/homework  #/feedback  #/payments  #/account
-     Coaches   #/home  #/sessions  #/homework  #/feedback  #/members   #/account
+     Families  #/home  #/sessions  #/feedback  #/account  (payments & homework live within these)
+     Coaches   #/home  #/sessions  #/feedback  #/members  #/account
 
    All reads and writes go through window.ZData (data.js). Wording about the
    programme comes from window.ZULFIQAR (config.js).
@@ -640,15 +640,12 @@
   var FAMILY_NAV = [
     { path: "home", label: "Home", icon: "home" },
     { path: "sessions", label: "Sessions", icon: "calendar" },
-    { path: "homework", label: "Homework", icon: "book" },
     { path: "feedback", label: "Feedback", icon: "chat" },
-    { path: "payments", label: "Payments", icon: "card" },
     { path: "account", label: "Account", icon: "user" },
   ];
   var COACH_NAV = [
     { path: "home", label: "Dashboard", icon: "home" },
     { path: "sessions", label: "Sessions", icon: "calendar" },
-    { path: "homework", label: "Homework", icon: "book" },
     { path: "feedback", label: "Feedback", icon: "chat" },
     { path: "members", label: "Members", icon: "users" },
     { path: "account", label: "Account", icon: "user" },
@@ -658,6 +655,8 @@
     var me = state.me;
     var role = me && me.profile && me.profile.role;
     var nav = role === "coach" ? COACH_NAV : role ? FAMILY_NAV : [];
+    // payments and confirmation live under Account now, so light that tab
+    if (path === "payments" || path === "confirmation") path = "account";
     document.body.classList.toggle("has-nav", nav.length > 0);
 
     document.getElementById("banner").innerHTML = D.mode === "demo"
@@ -945,10 +944,10 @@
         : "") +
       '<h2 class="section-title">Your boys</h2>' +
       (boys.length ? '<div class="grid grid-2">' + boyCards + "</div>" : noBoys()) +
-      '<h2 class="section-title">Homework</h2>' +
+      '<h2 class="section-title">Homework to hand in</h2>' +
       (dueSoon.length
         ? '<div class="grid grid-2">' + dueSoon.map(function (h) {
-            return '<a class="card card--link" href="#/homework"><div class="row row--between"><h3 style="margin:0">' + esc(h.title) + "</h3>" +
+            return '<a class="card card--link" href="#/sessions"><div class="row row--between"><h3 style="margin:0">' + esc(h.title) + "</h3>" +
               (h.due_date ? '<span class="small muted">Due ' + esc(fmtDate(h.due_date)) + "</span>" : "") + "</div>" +
               '<div style="margin-top:.5rem">' + pillarChips(h.pillar ? [h.pillar] : []) + "</div></a>";
           }).join("") + "</div>"
@@ -956,15 +955,66 @@
     bindFamilyAttendance();
   }
 
+  /* Homework now lives under the session it was set in. */
+  function familyHwAnswer(h, boy, subs, multi) {
+    var sub = subs.find(function (x) { return x.homework_id === h.id && x.student_id === boy.id; });
+    var st = hwStatus(h, sub);
+    var form =
+      '<form class="form hw-form inline-form" data-hw="' + esc(h.id) + '" data-boy="' + esc(boy.id) + '">' +
+        '<label class="field"><span>' + (multi ? esc(boy.first_name) + "'s answer" : "Your answer") + '</span><textarea name="answer" required rows="4">' + esc(sub ? sub.answer : "") + "</textarea></label>" +
+        '<div class="row"><button class="btn btn--primary btn--sm" type="submit">' + icon("check") + (sub ? "Update answer" : "Hand in") + "</button>" +
+        (sub && sub.status === "reviewed" ? '<span class="small muted">Updating sends it back to the coach.</span>' : "") + "</div>" +
+        '<p class="form-status" aria-live="polite"></p>' +
+      "</form>";
+    return (
+      '<div class="hw-answer">' +
+        '<div class="row row--between" style="margin-top:.5rem">' + (multi ? "<strong class=\"small\">" + esc(boy.first_name) + "</strong>" : "<span></span>") + badge(st.label, st.kind) + "</div>" +
+        (sub && sub.status === "reviewed"
+          ? '<div class="quote small">' + esc(sub.answer) + "</div>" +
+            (sub.coach_comment ? '<p class="label" style="margin-top:.6rem">From the coach</p><div class="quote quote--coach small">' + esc(sub.coach_comment) + "</div>" : "") +
+            '<details class="disclose"><summary>Edit answer</summary><div>' + form + "</div></details>"
+          : form) +
+      "</div>"
+    );
+  }
+  function familyHwBlock(s, boys, hwList, subs) {
+    var items = hwList.filter(function (h) { return h.session_id === s.id; });
+    if (!items.length) return "";
+    var multi = boys.length > 1;
+    return '<hr class="divider"><p class="label">Homework</p>' + items.map(function (h) {
+      return (
+        '<div class="hw-item">' +
+          '<div class="row row--between"><strong>' + esc(h.title) + "</strong>" + (h.due_date ? '<span class="small muted">Due ' + esc(fmtDate(h.due_date)) + "</span>" : "") + "</div>" +
+          (h.pillar ? '<div style="margin:.3rem 0">' + pillarChips([h.pillar]) + "</div>" : "") +
+          '<p class="recap__body small">' + esc(h.instructions) + "</p>" +
+          boys.map(function (b) { return familyHwAnswer(h, b, subs, multi); }).join("") +
+        "</div>"
+      );
+    }).join("");
+  }
+  function bindFamilyHw() {
+    Array.prototype.forEach.call($main.querySelectorAll(".hw-form"), function (form) {
+      onSubmit(form, async function (f) {
+        if (!f.answer) throw new Error("Write something before handing in.");
+        var boyId = form.getAttribute("data-boy");
+        await D.upsert("submissions", {
+          homework_id: form.getAttribute("data-hw"), student_id: boyId, answer: f.answer,
+          status: "submitted", coach_comment: null, reviewed_at: null, submitted_at: new Date().toISOString(),
+        }, "homework_id,student_id");
+        toast("Handed in — nice work!");
+        render();
+      });
+    });
+  }
+
   async function familySessions() {
-    var d = await load(["students", "sessions", "attendance", "homework", "payments", "rsvps", "attendance_reviews"]);
+    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "payments", "rsvps", "attendance_reviews"]);
     var boys = d.students;
     var coming = upcomingDates(2);
     var pending = pendingReviews(d, boys);
     var past = d.sessions.filter(function (s) { return s.published && isPast(s); });
 
     var recaps = past.map(function (s) {
-      var hw = d.homework.filter(function (h) { return h.session_id === s.id; });
       var checks = boys.filter(function (b) { return needsReview(s, b); }).map(function (b) { return reviewRow(s, b, reviewOf(s, b, d)); }).join("");
       return (
         '<article class="card card--art">' + recapArt(s) +
@@ -974,8 +1024,8 @@
           (s.recap ? '<p class="recap__body">' + esc(s.recap) + "</p>" : '<p class="muted small">The coaches haven\'t written this one up yet.</p>') +
           ((s.takeaways || []).length ? '<p class="label" style="margin-top:1rem">Worth remembering</p><ul class="takeaways">' +
             s.takeaways.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>" : "") +
-          (hw.length ? '<p class="small" style="margin-top:.8rem">Homework set: ' + hw.map(function (h) { return '<a href="#/homework">' + esc(h.title) + "</a>"; }).join(", ") + "</p>" : "") +
           (checks ? '<hr class="divider"><p class="label">Register</p><div class="stack stack--tight">' + checks + "</div>" : "") +
+          familyHwBlock(s, boys, d.homework, d.submissions) +
           '<div class="row" style="margin-top:1rem"><a class="btn btn--sm" href="#/feedback?session=' + esc(s.id) + '">' + icon("chat") + "Give feedback</a></div>" +
         "</article>"
       );
@@ -993,6 +1043,7 @@
       '<h2 class="section-title">Past sessions</h2>' +
       (recaps ? '<div class="stack">' + recaps + "</div>" : '<div class="empty">No sessions yet. Check back after the first one.</div>');
     bindFamilyAttendance();
+    bindFamilyHw();
   }
 
   /* A formal confirmation that a boy is signed up for an evening and it's paid. */
@@ -1035,58 +1086,6 @@
           '<a class="btn btn--ghost" href="#/sessions">Back to sessions</a></div>' +
       "</div>";
     actions.print = function () { window.print(); };
-  }
-
-  async function familyHomework() {
-    var d = await load(["students", "sessions", "homework", "submissions"]);
-    var boys = d.students;
-    var switcher = boySwitcher(boys);
-    var boy = boys.find(function (b) { return b.id === state.activeBoy; });
-    var sessions = byId(d.sessions);
-
-    var list = !boy ? noBoys() : d.homework.length ? d.homework.map(function (h) {
-      var sub = d.submissions.find(function (s) { return s.homework_id === h.id && s.student_id === boy.id; });
-      var st = hwStatus(h, sub);
-      var form =
-        '<form class="form hw-form" data-hw="' + esc(h.id) + '">' +
-          '<label class="field"><span>' + (sub ? "Your answer" : "Write your answer") + '</span><textarea name="answer" required rows="5">' + esc(sub ? sub.answer : "") + "</textarea></label>" +
-          '<div class="row"><button class="btn btn--primary btn--sm" type="submit">' + icon("check") + (sub ? "Update answer" : "Hand in") + "</button>" +
-          (sub && sub.status === "reviewed" ? '<span class="small muted">Updating sends it back to the coach for review.</span>' : "") + "</div>" +
-          '<p class="form-status" aria-live="polite"></p>' +
-        "</form>";
-      return (
-        '<article class="card">' +
-          '<div class="row row--between"><h2 style="margin:0">' + esc(h.title) + "</h2>" + badge(st.label, st.kind) + "</div>" +
-          '<div class="card__meta" style="margin-top:.4rem">' +
-            (h.due_date ? "<span>Due " + esc(fmtDate(h.due_date, true)) + "</span>" : "") +
-            (h.session_id && sessions[h.session_id] ? "<span>From: " + esc(sessions[h.session_id].title) + "</span>" : "") +
-          "</div>" +
-          (h.pillar ? '<div style="margin-bottom:.6rem">' + pillarChips([h.pillar]) + "</div>" : "") +
-          '<p class="recap__body">' + esc(h.instructions) + "</p>" +
-          (sub && sub.status === "reviewed"
-            ? '<p class="label" style="margin-top:1rem">Your answer</p><div class="quote">' + esc(sub.answer) + "</div>" +
-              (sub.coach_comment ? '<p class="label" style="margin-top:1rem">From the coach</p><div class="quote quote--coach">' + esc(sub.coach_comment) + "</div>" : "") +
-              '<details class="disclose"><summary>Edit my answer</summary><div>' + form + "</div></details>"
-            : '<hr class="divider">' + form) +
-        "</article>"
-      );
-    }).join("") : '<div class="empty">No homework has been set yet.</div>';
-
-    $main.innerHTML =
-      '<div class="page-head"><div><h1>Homework' + (boy && boys.length > 1 ? " for " + esc(boy.first_name) : "") + '</h1><p class="sub">Write your answer, hand it in, and the coaches will get back to you.</p></div>' + switcher + "</div>" +
-      '<div class="stack">' + list + "</div>";
-
-    Array.prototype.forEach.call($main.querySelectorAll(".hw-form"), function (form) {
-      onSubmit(form, async function (f) {
-        if (!f.answer) throw new Error("Write something before handing in.");
-        await D.upsert("submissions", {
-          homework_id: form.getAttribute("data-hw"), student_id: boy.id, answer: f.answer,
-          status: "submitted", coach_comment: null, reviewed_at: null, submitted_at: new Date().toISOString(),
-        }, "homework_id,student_id");
-        toast("Handed in — nice work, " + boy.first_name + "!");
-        render();
-      });
-    });
   }
 
   async function familyFeedback(params) {
@@ -1261,8 +1260,10 @@
             '<div><button class="btn btn--sm" type="submit">Change password</button></div>' +
             '<p class="form-status" aria-live="polite"></p></form>' +
         "</div>" +
-        (isCoach ? '<div class="card"><h2>Coach tools</h2><p class="soft">Write recaps in <a href="#/sessions">Sessions</a>, set and mark work in <a href="#/homework">Homework</a>, and keep the register and payments in <a href="#/members">Members</a>.</p></div>' :
-        '<div class="stack"><h2>Your boys</h2>' +
+        (isCoach ? '<div class="card"><h2>Coach tools</h2><p class="soft">Plan sessions, write recaps, take the register and set homework in <a href="#/sessions">Sessions</a>. Keep the roster and payments in <a href="#/members">Members</a>.</p></div>' :
+        '<div class="stack">' +
+          '<a class="card card--link card--accent" href="#/payments"><div class="row row--between"><div><h2 style="margin:0">Payments</h2><p class="soft small" style="margin:.2rem 0 0">Pay as you go or monthly, and see your history.</p></div><span class="btn btn--sm">Open</span></div></a>' +
+          '<h2 class="section-title" style="margin-top:.6rem">Your boys</h2>' +
           boys.map(function (b) {
             return '<div class="card"><details class="disclose"><summary><strong>' + esc(fullName(b)) + "</strong> · Year " + esc(b.year_group) + "</summary><div>" + boyEditForm(b) + "</div></details></div>";
           }).join("") +
@@ -1316,11 +1317,11 @@
     $main.innerHTML =
       '<div class="page-head"><div><h1>Dashboard</h1><p class="sub">The state of things at a glance.</p></div>' +
         '<div class="row"><a class="btn btn--primary" href="#/sessions?new=1">' + icon("plus") + "Session recap</a>" +
-        '<a class="btn" href="#/homework?new=1">' + icon("plus") + "Set homework</a></div></div>" +
+        '<a class="btn" href="#/sessions">' + icon("plus") + "Set homework</a></div></div>" +
       '<div class="grid grid-4">' +
         '<div class="card stat"><div class="stat__num">' + d.students.length + '</div><div class="stat__label">Boys registered</div></div>' +
         '<a class="card stat" href="#/members" style="text-decoration:none;color:inherit"><div class="stat__num">' + money(sum(owing, "owed")) + '</div><div class="stat__label">Owed · ' + owing.length + " boy" + (owing.length === 1 ? "" : "s") + "</div></a>" +
-        '<a class="card stat" href="#/homework" style="text-decoration:none;color:inherit"><div class="stat__num">' + toReview.length + '</div><div class="stat__label">Answers to review</div></a>' +
+        '<a class="card stat" href="#/sessions" style="text-decoration:none;color:inherit"><div class="stat__num">' + toReview.length + '</div><div class="stat__label">Answers to review</div></a>' +
         '<a class="card stat" href="#/feedback" style="text-decoration:none;color:inherit"><div class="stat__num">' + avg + '</div><div class="stat__label">Avg rating · 30 days</div></a>' +
       "</div>" +
       '<div class="grid grid-2" style="margin-top:1rem;align-items:start">' +
@@ -1344,7 +1345,7 @@
                   esc(fullName(students[r.student_id])) + "</a> — " + esc(s ? fmtDate(s.date) : "") + "</p>";
               }).join("") +
               toReview.slice(0, 6).map(function (s) {
-                return '<p class="small" style="margin:.2rem 0">' + badge("Homework", "mute") + ' <a href="#/homework?open=' + esc(s.homework_id) + '">' + esc(fullName(students[s.student_id])) + "</a> — " + esc(hw[s.homework_id] ? hw[s.homework_id].title : "") + "</p>";
+                return '<p class="small" style="margin:.2rem 0">' + badge("Homework", "mute") + ' <a href="#/sessions?hwopen=' + esc(s.homework_id) + '">' + esc(fullName(students[s.student_id])) + "</a> — " + esc(hw[s.homework_id] ? hw[s.homework_id].title : "") + "</p>";
               }).join("")
             : '<p class="muted small">All caught up.</p>') + "</div>" +
         "</div>" +
@@ -1364,9 +1365,13 @@
   }
 
   async function coachSessions(params) {
-    var d = await load(["students", "sessions", "attendance", "rsvps", "attendance_reviews"]);
+    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "rsvps", "attendance_reviews"]);
     var editing = params.edit ? d.sessions.find(function (s) { return s.id === params.edit; }) : null;
     var showEditor = params.new || editing;
+    var hwEditing = params.hwedit ? d.homework.find(function (h) { return h.id === params.hwedit; }) : null;
+    var hwSessionId = params.hw || (hwEditing && hwEditing.session_id) || null;
+    var hwSession = hwSessionId ? d.sessions.find(function (x) { return x.id === hwSessionId; }) : null;
+    var showHwEditor = !!(params.hw || hwEditing);
     var boys = sortBoys(d.students);
     var s = editing || {
       date: params.date || todayISO(), location: (P.locations || [])[0], pillars: [], takeaways: [], published: true,
@@ -1417,6 +1422,57 @@
         '<p class="form-status" aria-live="polite"></p>' +
       "</form>";
 
+    var hwEd = hwEditing || { pillar: "", due_date: "", instructions: "", title: "" };
+    var hwEditor = !showHwEditor ? "" :
+      '<form class="card card--accent form" id="hw-form" data-session="' + esc(hwSessionId || "") + '" style="margin-bottom:1.5rem">' +
+        "<h2>" + (hwEditing ? "Edit homework" : "Set homework") + "</h2>" +
+        (hwSession ? '<p class="small muted" style="margin:-.3rem 0 .4rem">For: ' + esc(fmtDate(hwSession.date) + " — " + hwSession.title) + "</p>" : "") +
+        '<label class="field"><span>Title</span><input type="text" name="title" required value="' + esc(hwEd.title) + '"></label>' +
+        '<div class="cols-2">' +
+          '<label class="field"><span>Pillar</span><select name="pillar"><option value="">—</option>' + (CFG.pillars || []).map(function (pp) {
+            return '<option value="' + esc(pp.key) + '"' + (hwEd.pillar === pp.key ? " selected" : "") + ">" + esc(pp.label) + "</option>";
+          }).join("") + "</select></label>" +
+          '<label class="field"><span>Due date</span><input type="date" name="due_date" value="' + esc(hwEd.due_date || "") + '"></label>' +
+        "</div>" +
+        '<label class="field"><span>Instructions</span><textarea name="instructions" required rows="5">' + esc(hwEd.instructions) + "</textarea></label>" +
+        '<div class="row"><button class="btn btn--primary" type="submit">Save homework</button><a class="btn btn--ghost" href="#/sessions">Cancel</a></div>' +
+        '<p class="form-status" aria-live="polite"></p>' +
+      "</form>";
+
+    function coachHwBlock(x) {
+      var items = d.homework.filter(function (h) { return h.session_id === x.id; });
+      var head = '<hr class="divider"><div class="row row--between"><p class="label" style="margin:0">Homework</p>' +
+        '<a class="btn btn--sm" href="#/sessions?hw=' + esc(x.id) + '">' + icon("plus") + "Set homework</a></div>";
+      if (!items.length) return head + '<p class="small muted" style="margin:.4rem 0 0">None set for this session.</p>';
+      return head + '<div class="stack stack--tight" style="margin-top:.6rem">' + items.map(function (hw) {
+        var subs = d.submissions.filter(function (q) { return q.homework_id === hw.id; });
+        var pend = subs.filter(function (q) { return q.status === "submitted"; }).length;
+        var missing = boys.filter(function (b) { return !subs.some(function (q) { return q.student_id === b.id; }); });
+        return (
+          '<div class="reply">' +
+            '<div class="row row--between"><strong>' + esc(hw.title) + "</strong>" +
+              '<div class="row">' + badge(subs.length + "/" + boys.length + " in", "mute") + (pend ? badge(pend + " to review", "warn") : "") + "</div></div>" +
+            '<p class="recap__body small" style="margin:.3rem 0">' + esc(hw.instructions) + "</p>" +
+            '<details class="disclose"' + (params.hwopen === hw.id ? " open" : "") + "><summary>Answers (" + subs.length + ")</summary><div class=\"stack stack--tight\">" +
+              subs.map(function (q) {
+                return (
+                  '<form class="form inline-form review-form" data-id="' + esc(q.id) + '">' +
+                    '<div class="row row--between"><strong class="small">' + esc(fullName(students[q.student_id])) + "</strong>" + badge(q.status === "reviewed" ? "Reviewed" : "To review", q.status === "reviewed" ? "ok" : "warn") + "</div>" +
+                    '<div class="quote small">' + esc(q.answer) + "</div>" +
+                    '<label class="field"><span>Your comment</span><textarea name="coach_comment" rows="2">' + esc(q.coach_comment) + "</textarea></label>" +
+                    '<div><button class="btn btn--sm btn--primary" type="submit">' + icon("check") + 'Save review</button></div><p class="form-status" aria-live="polite"></p>' +
+                  "</form>"
+                );
+              }).join("") +
+              (missing.length ? '<p class="small muted">Not handed in: ' + esc(missing.map(function (b) { return b.first_name; }).join(", ")) + "</p>" : "") +
+            "</div></details>" +
+            '<div class="row"><a class="btn btn--sm btn--ghost" href="#/sessions?hwedit=' + esc(hw.id) + '">Edit</a>' +
+              '<button class="btn btn--sm btn--danger" type="button" data-action="delete-hw" data-id="' + esc(hw.id) + '">Delete</button></div>' +
+          "</div>"
+        );
+      }).join("") + "</div>";
+    }
+
     function sessionCard(x) {
       var past = isPast(x);
       var count = d.attendance.filter(function (a) { return a.session_id === x.id && a.present; }).length;
@@ -1430,7 +1486,8 @@
             ? (x.recap || (x.takeaways || []).length ? '<details class="disclose" style="margin-top:.6rem"><summary>Recap</summary><div><p class="recap__body small">' + esc(x.recap) + "</p>" +
                 ((x.takeaways || []).length ? '<ul class="takeaways small">' + x.takeaways.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>" : "") + "</div></details>"
                 : '<p class="small muted" style="margin:.6rem 0 0">No recap written yet.</p>') +
-              (x.register_taken ? checkSummary(x, d, boys, params.open === x.id) : '<p class="small" style="margin:.6rem 0 0">' + badge("Register not taken", "warn") + "</p>")
+              (x.register_taken ? checkSummary(x, d, boys, params.open === x.id) : '<p class="small" style="margin:.6rem 0 0">' + badge("Register not taken", "warn") + "</p>") +
+              coachHwBlock(x)
             : ((x.timetable || []).length ? '<details class="disclose" style="margin-top:.6rem"><summary>Timetable and kit list</summary><div class="plan-grid">' +
                 "<div>" + timetableHtml(x.timetable) + "</div><div><ul class=\"takeaways small\">" + (x.bring || []).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></div></div></details>" : "") +
               '<div style="margin-top:.6rem">' + replySummary(x.date, d, boys) + "</div>") +
@@ -1439,6 +1496,7 @@
         "</article>"
       );
     }
+    var students = byId(d.students);
     var upcoming = d.sessions.filter(function (x) { return !isPast(x); }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     var past = d.sessions.filter(isPast);
 
@@ -1446,7 +1504,7 @@
       '<div class="page-head"><div><h1>Sessions</h1><p class="sub">Plan each evening, then write it up and take the register.</p></div>' +
         (showEditor ? "" : '<div class="row"><a class="btn btn--primary" href="' + planHref + '">' + icon("plus") + "Plan next session</a>" +
           '<a class="btn" href="#/sessions?new=1">' + icon("plus") + "Tonight's register</a></div>") + "</div>" +
-      editor +
+      (showHwEditor ? hwEditor : editor) +
       (upcoming.length ? '<h2 class="section-title" style="margin-top:0">Coming up</h2><div class="stack">' + upcoming.map(sessionCard).join("") + "</div>" : "") +
       '<h2 class="section-title">Past sessions</h2>' +
       (past.length ? '<div class="stack">' + past.map(sessionCard).join("") + "</div>" : '<div class="empty">No sessions yet.</div>');
@@ -1487,68 +1545,6 @@
       toast("Saved. Parents will be asked to confirm the register.");
       go("#/sessions");
     });
-  }
-
-  async function coachHomework(params) {
-    var d = await load(["students", "sessions", "homework", "submissions"]);
-    var editing = params.edit ? d.homework.find(function (h) { return h.id === params.edit; }) : null;
-    var showEditor = params.new || editing;
-    var students = byId(d.students);
-    var h = editing || { pillar: "", due_date: "", session_id: d.sessions[0] ? d.sessions[0].id : "" };
-
-    var editor = !showEditor ? "" :
-      '<form class="card card--accent form" id="hw-form" style="margin-bottom:1.5rem">' +
-        "<h2>" + (editing ? "Edit homework" : "Set homework") + "</h2>" +
-        '<label class="field"><span>Title</span><input type="text" name="title" required value="' + esc(h.title) + '"></label>' +
-        '<div class="cols-2">' +
-          '<label class="field"><span>Pillar</span><select name="pillar"><option value="">—</option>' + (CFG.pillars || []).map(function (p) {
-            return '<option value="' + esc(p.key) + '"' + (h.pillar === p.key ? " selected" : "") + ">" + esc(p.label) + "</option>";
-          }).join("") + "</select></label>" +
-          '<label class="field"><span>Due date</span><input type="date" name="due_date" value="' + esc(h.due_date || "") + '"></label>' +
-        "</div>" +
-        '<label class="field"><span>Linked session</span><select name="session_id"><option value="">None</option>' + d.sessions.slice(0, 20).map(function (s) {
-          return '<option value="' + esc(s.id) + '"' + (h.session_id === s.id ? " selected" : "") + ">" + esc(fmtDate(s.date) + " — " + s.title) + "</option>";
-        }).join("") + "</select></label>" +
-        '<label class="field"><span>Instructions</span><textarea name="instructions" required rows="5">' + esc(h.instructions) + "</textarea></label>" +
-        '<div class="row"><button class="btn btn--primary" type="submit">Save</button><a class="btn btn--ghost" href="#/homework">Cancel</a></div>' +
-        '<p class="form-status" aria-live="polite"></p>' +
-      "</form>";
-
-    var list = d.homework.map(function (hw) {
-      var subs = d.submissions.filter(function (s) { return s.homework_id === hw.id; });
-      var pending = subs.filter(function (s) { return s.status === "submitted"; }).length;
-      var missing = d.students.filter(function (b) { return !subs.some(function (s) { return s.student_id === b.id; }); });
-      return (
-        '<article class="card">' +
-          '<div class="row row--between"><h2 style="margin:0">' + esc(hw.title) + "</h2>" +
-            '<div class="row">' + badge(subs.length + "/" + d.students.length + " handed in", "mute") + (pending ? badge(pending + " to review", "warn") : "") + "</div></div>" +
-          '<div class="card__meta" style="margin-top:.4rem">' + (hw.due_date ? "<span>Due " + esc(fmtDate(hw.due_date)) + "</span>" : "") + (hw.pillar ? "<span>" + esc(pillarMeta(hw.pillar).label) + "</span>" : "") + "</div>" +
-          '<p class="recap__body small">' + esc(hw.instructions) + "</p>" +
-          '<details class="disclose"' + (params.open === hw.id ? " open" : "") + "><summary>Answers (" + subs.length + ")</summary><div class=\"stack\">" +
-            subs.map(function (s) {
-              return (
-                '<form class="form review-form" data-id="' + esc(s.id) + '" style="border-top:1px solid var(--hair);padding-top:.8rem">' +
-                  '<div class="row row--between"><strong>' + esc(fullName(students[s.student_id])) + ' <span class="muted small">Y' + esc(students[s.student_id] ? students[s.student_id].year_group : "") + "</span></strong>" +
-                    badge(s.status === "reviewed" ? "Reviewed" : "To review", s.status === "reviewed" ? "ok" : "warn") + "</div>" +
-                  '<div class="quote">' + esc(s.answer) + "</div>" +
-                  '<label class="field"><span>Your comment</span><textarea name="coach_comment" rows="2">' + esc(s.coach_comment) + "</textarea></label>" +
-                  '<div><button class="btn btn--sm btn--primary" type="submit">' + icon("check") + "Save review</button></div>" +
-                  '<p class="form-status" aria-live="polite"></p>' +
-                "</form>"
-              );
-            }).join("") +
-            (missing.length ? '<p class="small muted">Not handed in: ' + esc(missing.map(function (b) { return b.first_name + " " + (b.last_name || "").charAt(0); }).join(", ")) + "</p>" : "") +
-          "</div></details>" +
-          '<div class="row" style="margin-top:.7rem"><a class="btn btn--sm" href="#/homework?edit=' + esc(hw.id) + '">Edit</a>' +
-            '<button class="btn btn--sm btn--danger" type="button" data-action="delete-hw" data-id="' + esc(hw.id) + '">Delete</button></div>' +
-        "</article>"
-      );
-    }).join("");
-
-    $main.innerHTML =
-      '<div class="page-head"><div><h1>Homework</h1><p class="sub">Set work and mark what comes back.</p></div>' +
-        (showEditor ? "" : '<a class="btn btn--primary" href="#/homework?new=1">' + icon("plus") + "Set homework</a>") + "</div>" +
-      editor + '<div class="stack">' + (list || '<div class="empty">No homework set yet.</div>') + "</div>";
 
     actions["delete-hw"] = async function (el) {
       if (!confirm("Delete this homework and all answers to it?")) return;
@@ -1556,18 +1552,18 @@
       toast("Homework deleted.");
       render();
     };
-
-    onSubmit(document.getElementById("hw-form"), async function (f) {
-      var row = { title: f.title, pillar: f.pillar || null, due_date: f.due_date || null, session_id: f.session_id || null, instructions: f.instructions };
-      if (editing) await D.update("homework", editing.id, row); else await D.insert("homework", row);
-      toast(editing ? "Homework updated." : "Homework set — families can see it now.");
-      go("#/homework");
+    onSubmit(document.getElementById("hw-form"), async function (f, form) {
+      var row = { title: f.title, pillar: f.pillar || null, due_date: f.due_date || null, session_id: form.getAttribute("data-session") || null, instructions: f.instructions };
+      if (hwEditing) await D.update("homework", hwEditing.id, row); else await D.insert("homework", row);
+      toast(hwEditing ? "Homework updated." : "Homework set — families can see it now.");
+      go("#/sessions?hwopen=" + encodeURIComponent(hwEditing ? hwEditing.id : ""));
     });
     Array.prototype.forEach.call($main.querySelectorAll(".review-form"), function (form) {
       onSubmit(form, async function (f) {
+        var sub = d.submissions.find(function (q) { return q.id === form.getAttribute("data-id"); }) || {};
         await D.update("submissions", form.getAttribute("data-id"), { coach_comment: f.coach_comment, status: "reviewed", reviewed_at: new Date().toISOString() });
         toast("Review saved.");
-        go("#/homework?open=" + encodeURIComponent((d.submissions.find(function (s) { return s.id === form.getAttribute("data-id"); }) || {}).homework_id || ""));
+        go("#/sessions?hwopen=" + encodeURIComponent(sub.homework_id || ""));
       });
     });
   }
@@ -1724,11 +1720,11 @@
   }
 
   FAMILY_VIEWS = {
-    home: familyHome, sessions: familySessions, homework: familyHomework, confirmation: viewConfirmation,
+    home: familyHome, sessions: familySessions, confirmation: viewConfirmation,
     feedback: familyFeedback, payments: familyPayments, account: viewAccount,
   };
   COACH_VIEWS = {
-    home: coachHome, sessions: coachSessions, homework: coachHomework,
+    home: coachHome, sessions: coachSessions,
     feedback: coachFeedback, members: coachMembers, account: viewAccount, confirmation: viewConfirmation,
   };
 
