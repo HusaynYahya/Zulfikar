@@ -161,6 +161,18 @@ minutes.
     └── functions/stripe-webhook/      records Stripe payments
 ```
 
+## Security testing
+
+The `security/` folder has everything for a security review:
+
+- `TESTING-BRIEF.md` — what to attack, what's off limits, and what counts as a
+  finding. Hand this to a testing agent (Codex or similar), or follow it yourself.
+- `seed-test-data.mjs` — fills a **test** Supabase project with fake families,
+  so nobody tests against real children's data.
+- `FINDINGS.md` — the checks already run on the portal, and the fixes made.
+
+**Always test a throwaway copy, never the live site with real families in it.**
+
 ## Privacy notes
 
 - Medical notes, dates of birth and phone numbers are visible only to that
