@@ -290,7 +290,7 @@ details.disclose > div { margin-top: .7rem; }
 }
 .login-brand { text-align: center; }
 .login-brand h1 { margin: 0; line-height: 0; }
-.login-brand__logo { width: min(460px, 100%); height: auto; margin: 0 auto; filter: drop-shadow(0 8px 34px rgba(0, 0, 0, .5)); }
+.login-brand__logo { width: min(360px, 100%); height: auto; margin: 0 auto; filter: drop-shadow(0 8px 34px rgba(0, 0, 0, .5)); }
 .kaizen {
   font-family: "Noto Serif JP", serif; font-size: clamp(2.8rem, 5vw, 4.2rem); line-height: 1.1;
   color: var(--accent); letter-spacing: .18em; margin: .4rem 0 0; padding-left: .18em;
@@ -300,7 +300,7 @@ details.disclose > div { margin-top: .7rem; }
 @media (max-width: 860px) {
   .login { grid-template-columns: 1fr; min-height: 0; gap: 1.2rem; }
   .login-brand { order: -1; }
-  .login-brand__logo { width: min(240px, 64vw); }
+  .login-brand__logo { width: min(200px, 54vw); }
   .kaizen { font-size: 2.2rem; }
 }
 
