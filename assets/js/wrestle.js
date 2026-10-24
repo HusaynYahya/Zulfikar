@@ -83,56 +83,84 @@
   }
   function poly(pts) { return "M" + pts.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" L") + " Z"; }
 
-  // A realistically-proportioned figure: small head on a neck, shaped torso
-  // with shoulders and hips, tapered limbs, hands and feet. Drawn as an ink
-  // layer under a skin layer so the whole body keeps one clean outline.
-  function figure(f, face, skin, ink, hair, lw) {
-    // shoulders and hips sit to each side of the neck / pelvis
-    var tp = unit(f.p, f.n);              // torso up-direction
-    var sx = -tp[1], sy = tp[0];          // across the shoulders
+  // A realistically-proportioned figure in a jiu-jitsu gi: skin for head,
+  // neck, hands and feet; the gi jacket and trousers in cloth with the far
+  // arm and leg a shade darker; lapels, a belt and a knot. Drawn as an ink
+  // layer under a colour layer so the whole body keeps one clean outline.
+  function figure(f, face, c) {
+    var lw = 2.1;
+    var tp = unit(f.p, f.n), sx = -tp[1], sy = tp[0];
     var LSh = [f.n[0] + sx * 9, f.n[1] + sy * 9], RSh = [f.n[0] - sx * 9, f.n[1] - sy * 9];
-    var LHp = [f.p[0] + sx * 6, f.p[1] + sy * 6], RHp = [f.p[0] - sx * 6, f.p[1] - sy * 6];
-    var hr = 6.6, neckTop = [f.h[0] + (f.n[0] - f.h[0]) * 0.4, f.h[1] + (f.n[1] - f.h[1]) * 0.4];
-
+    var LHp = [f.p[0] + sx * 6.5, f.p[1] + sy * 6.5], RHp = [f.p[0] - sx * 6.5, f.p[1] - sy * 6.5];
+    var hr = 6.4, neckTop = [f.h[0] + (f.n[0] - f.h[0]) * 0.45, f.h[1] + (f.n[1] - f.h[1]) * 0.45];
     var le = elbow(LSh, f.lh, 1), re = elbow(RSh, f.rh, -1);
     var lk = elbow(LHp, f.lf, face), rk = elbow(RHp, f.rf, -face);
-    var lToe = [f.lf[0] + unit(lk, f.lf)[0] * 7 + face * 2, f.lf[1] + 1];
-    var rToe = [f.rf[0] + unit(rk, f.rf)[0] * 7 + face * 2, f.rf[1] + 1];
+    // sleeves and trouser legs stop short of the wrist / ankle so skin shows
+    function toward(a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]; }
+    var lCuff = toward(le, f.lh, 0.72), rCuff = toward(re, f.rh, 0.72);
+    var lHem = toward(lk, f.lf, 0.8), rHem = toward(rk, f.rf, 0.8);
+    var lToe = [f.lf[0] + unit(lk, f.lf)[0] * 6 + face * 3, f.lf[1] + 1.2];
+    var rToe = [f.rf[0] + unit(rk, f.rf)[0] * 6 + face * 3, f.rf[1] + 1.2];
+    // the waist sits a little above the hips; the jacket skirt flares past them
+    var waist = toward(f.p, f.n, 0.18);
+    var LW = [waist[0] + sx * 8, waist[1] + sy * 8], RW = [waist[0] - sx * 8, waist[1] - sy * 8];
 
+    // [polygon, fill]
     var parts = [
-      quad(LSh, RSh, 4, 4),                 // shoulder line (fills the gap)
-      [[LSh[0],LSh[1]],[RSh[0],RSh[1]],[RHp[0],RHp[1]],[LHp[0],LHp[1]]], // torso
-      quad(neckTop, f.n, 6, 10),            // neck
-      quad(LSh, le, 7, 5.2), quad(le, f.lh, 5.2, 3.6),   // left arm
-      quad(RSh, re, 7, 5.2), quad(re, f.rh, 5.2, 3.6),   // right arm
-      quad(LHp, lk, 10, 7), quad(lk, f.lf, 7, 5),        // left leg
-      quad(RHp, rk, 10, 7), quad(rk, f.rf, 7, 5),        // right leg
-      quad(f.lf, lToe, 5.5, 4.5), quad(f.rf, rToe, 5.5, 4.5), // feet
+      [quad(LHp, lk, 10.5, 8), c.shade], [quad(lk, lHem, 8, 7.4), c.shade],         // far leg (trousers)
+      [quad(lHem, f.lf, 4.6, 4), c.skin], [quad(f.lf, lToe, 4.6, 3.6), c.skin],     // far ankle + foot
+      [quad(LSh, le, 7.6, 6.4), c.shade], [quad(le, lCuff, 6.4, 6), c.shade],       // far arm (sleeve)
+      [quad(lCuff, f.lh, 3.6, 3), c.skin],                                          // far forearm
+      [quad(neckTop, f.n, 5.4, 7), c.skin],                                         // neck
+      [[LSh, RSh, RW, LW], c.gi],                                                   // jacket body
+      [[LW, RW, [RHp[0] - sx * 1.5, RHp[1] - sy * 1.5 + 3], [LHp[0] + sx * 1.5, LHp[1] + sy * 1.5 + 3]], c.gi], // jacket skirt
+      [quad(RHp, rk, 10.5, 8), c.gi], [quad(rk, rHem, 8, 7.4), c.gi],              // near leg
+      [quad(rHem, f.rf, 4.6, 4), c.skin], [quad(f.rf, rToe, 4.6, 3.6), c.skin],
+      [quad(RSh, re, 7.6, 6.4), c.gi], [quad(re, rCuff, 6.4, 6), c.gi],            // near arm
+      [quad(rCuff, f.rh, 3.6, 3), c.skin],
     ];
     var ol = "", fl = "";
     parts.forEach(function (pp) {
-      ol += '<path d="' + poly(pp) + '" fill="' + ink + '" stroke="' + ink + '" stroke-width="' + (lw * 2) + '" stroke-linejoin="round" stroke-linecap="round"/>';
-      fl += '<path d="' + poly(pp) + '" fill="' + skin + '"/>';
+      var d = poly(pp[0]);
+      ol += '<path d="' + d + '" fill="' + c.ink + '" stroke="' + c.ink + '" stroke-width="' + (lw * 2) + '" stroke-linejoin="round"/>';
+      fl += '<path d="' + d + '" fill="' + pp[1] + '"/>';
     });
-    // hands and the head, as circles joined into the same silhouette
-    [f.lh, f.rh].forEach(function (hnd) {
-      ol += '<circle cx="' + hnd[0].toFixed(1) + '" cy="' + hnd[1].toFixed(1) + '" r="' + (3.2 + lw) + '" fill="' + ink + '"/>';
-      fl += '<circle cx="' + hnd[0].toFixed(1) + '" cy="' + hnd[1].toFixed(1) + '" r="3.2" fill="' + skin + '"/>';
+    // hands
+    [f.lh, f.rh].forEach(function (hnd, i) {
+      ol += '<ellipse cx="' + hnd[0].toFixed(1) + '" cy="' + hnd[1].toFixed(1) + '" rx="' + (2.9 + lw) + '" ry="' + (3.3 + lw) + '" fill="' + c.ink + '"/>';
+      fl += '<ellipse cx="' + hnd[0].toFixed(1) + '" cy="' + hnd[1].toFixed(1) + '" rx="2.9" ry="3.3" fill="' + c.skin + '"/>';
     });
-    ol += '<circle cx="' + f.h[0].toFixed(1) + '" cy="' + f.h[1].toFixed(1) + '" r="' + (hr + lw) + '" fill="' + ink + '"/>';
-    fl += '<circle cx="' + f.h[0].toFixed(1) + '" cy="' + f.h[1].toFixed(1) + '" r="' + hr + '" fill="' + skin + '"/>';
-    // hair swept back, away from the facing direction
+    // head: slightly long oval with a jaw toward the face
+    var jaw = [f.h[0] + face * 3.2, f.h[1] + hr * 0.8];
+    ol += '<ellipse cx="' + f.h[0].toFixed(1) + '" cy="' + f.h[1].toFixed(1) + '" rx="' + (hr * 0.9 + lw) + '" ry="' + (hr * 1.08 + lw) + '" fill="' + c.ink + '"/>';
+    ol += '<path d="' + poly(quad([f.h[0], f.h[1] + 1], jaw, 7, 3.4)) + '" fill="' + c.ink + '" stroke="' + c.ink + '" stroke-width="' + (lw * 2) + '" stroke-linejoin="round"/>';
+    fl += '<ellipse cx="' + f.h[0].toFixed(1) + '" cy="' + f.h[1].toFixed(1) + '" rx="' + (hr * 0.9) + '" ry="' + (hr * 1.08) + '" fill="' + c.skin + '"/>';
+    fl += '<path d="' + poly(quad([f.h[0], f.h[1] + 1], jaw, 7, 3.4)) + '" fill="' + c.skin + '"/>';
+    // details: lapels crossing to the belt, the belt and its knot, cloth folds
+    var det = "";
+    det += seg(LSh, toward(LW, RW, 0.62), 1.3, c.ink) + seg(RSh, toward(LW, RW, 0.38), 1.3, c.ink);
+    det += seg(LSh, toward(LSh, toward(LW, RW, 0.62), 0.55), 3.2, c.lapel) + seg(RSh, toward(RSh, toward(LW, RW, 0.38), 0.55), 3.2, c.lapel);
+    det += '<path d="' + poly(quad(LW, RW, 3.6, 3.6)) + '" fill="' + c.belt + '" stroke="' + c.ink + '" stroke-width="1.1"/>';
+    var knot = toward(LW, RW, 0.5);
+    det += seg(knot, [knot[0] + face * 1.5, knot[1] + 6.5], 2.2, c.belt) + seg(knot, [knot[0] - face * 2, knot[1] + 6], 2.2, c.belt);
+    det += seg(toward(re, rCuff, 0.3), toward(re, rCuff, 0.75), 0.9, c.fold) + seg(toward(rk, rHem, 0.25), toward(rk, rHem, 0.7), 0.9, c.fold);
+    // hair, ear, and a brow / eye toward the opponent
     var bx = f.h[0] - face * 2;
-    fl += '<path d="M' + (f.h[0] - hr * 0.95) + "," + (f.h[1] - 0.5) +
-      " Q" + bx + "," + (f.h[1] - hr * 2) + " " + (f.h[0] + hr * 0.95) + "," + (f.h[1] - 1.5) +
-      " Q" + (f.h[0] - face * hr * 0.3) + "," + (f.h[1] - hr * 0.7) + " " + (bx - face * hr) + "," + (f.h[1] - hr * 0.2) +
-      ' Z" fill="' + hair + '"/>';
-    // face: a brow and an eye line toward the opponent
-    var ex = f.h[0] + face * 2;
-    fl += seg([ex - face * 0.5, f.h[1] - 1], [ex + face * 3, f.h[1] - 0.2], 1.1, ink);
-    fl += seg([ex, f.h[1] + 1.8], [ex + face * 2.6, f.h[1] + 1.8], 1.2, ink);
-    return "<g>" + ol + fl + "</g>";
+    det += '<path d="M' + (f.h[0] - hr * 0.9) + "," + (f.h[1] + 0.5) +
+      " Q" + bx + "," + (f.h[1] - hr * 2.1) + " " + (f.h[0] + hr * 0.95) + "," + (f.h[1] - 2.2) +
+      " Q" + (f.h[0] + face * 1) + "," + (f.h[1] - hr * 0.55) + " " + (f.h[0] - face * hr * 0.2) + "," + (f.h[1] - hr * 0.35) +
+      " L" + (bx - face * hr * 0.75) + "," + (f.h[1] + 1.8) + ' Z" fill="' + c.hair + '"/>';
+    det += '<ellipse cx="' + (f.h[0] - face * 1.4).toFixed(1) + '" cy="' + (f.h[1] + 0.8).toFixed(1) + '" rx="1.2" ry="1.7" fill="' + c.shadowSkin + '"/>';
+    var ex = f.h[0] + face * 3;
+    det += seg([ex - face * 0.6, f.h[1] - 1.4], [ex + face * 2.6, f.h[1] - 0.9], 1.1, c.hair);
+    det += seg([ex, f.h[1] + 0.6], [ex + face * 1.8, f.h[1] + 0.6], 1.1, c.ink);
+    return "<g>" + ol + fl + det + "</g>";
   }
+
+  var STYLE_A = { gi: "#f3efe6", shade: "#cfc8ba", lapel: "#e4ded1", fold: "#b9b1a2", belt: "#2f5fa8",
+    skin: "#d8a77f", shadowSkin: "#b8875f", hair: "#1c1a18", ink: "#151820" };
+  var STYLE_B = { gi: "#2b3a5c", shade: "#1f2a44", lapel: "#3a4b72", fold: "#16203a", belt: "#eeeae0",
+    skin: "#a8724f", shadowSkin: "#875636", hair: "#0f0e0d", ink: "#0b0d13" };
 
   function frame(svg, t) {
     if (!svg) return;
@@ -146,8 +174,8 @@
 
     svg.innerHTML =
       '<ellipse cx="120" cy="' + (GROUND + 7) + '" rx="80" ry="8" fill="rgba(0,0,0,.26)"/>' +
-      figure(B, -1, "#9fa9bb", "#12151d", "#12151d", 3) +
-      figure(A, 1, "#f2ead6", "#1b2029", "#2a2f3a", 3);
+      figure(B, -1, STYLE_B) +
+      figure(A, 1, STYLE_A);
   }
 
   function init(svg) {
