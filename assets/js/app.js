@@ -819,7 +819,7 @@
         '<div class="lpA-copy">' +
           '<img class="lpA-mark" src="assets/img/logo.webp" width="720" height="721" alt="' + esc(P.name) + '">' +
           '<h1 class="lpA-h1">' + lines.map(function (l, i) { return '<span data-line="' + i + '">' + l + "</span>"; }).join("") + "</h1>" +
-          '<p class="lpA-lede">' + esc(P.name) + " is a youth programme for Muslim boys in Years 7 to 10 — twice a week, every week.</p>" +
+          '<p class="lpA-lede">' + esc(P.name) + " is a youth programme for the Muslim youth.</p>" +
           '<div class="row" style="gap:.6rem"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn btn--ghost" href="#/signin">Member sign in</a></div>' +
         "</div>" +
         '<div class="lpA-stage"><svg id="wrestlers" aria-hidden="true"></svg></div>' +
