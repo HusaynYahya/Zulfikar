@@ -823,7 +823,7 @@
       '<section class="lpA-sec"><p class="lpA-kicker">Why we exist</p>' +
         '<p class="lpA-quote">To create a group of young men who are <em>disciplined, resilient and talented</em>, through holistic growth, brotherhood and mentorship.</p></section>' +
 
-      '<section class="lpA-sec">' +
+      '<section class="lpA-sec lpA-info">' +
         '<div class="lpA-facts">' + [["calendar", "When", F.days], ["clock", "Time", F.time], ["pin", "Where", F.where]].map(function (f) {
           return '<div class="lpA-fact">' + icon(f[0]) + '<div><p class="lpA-kicker">' + f[1] + "</p><p>" + esc(f[2]) + "</p></div></div>";
         }).join("") + "</div>" +

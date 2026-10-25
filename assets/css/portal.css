@@ -434,6 +434,7 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .lpA-quote { font-family: var(--font-head); font-size: clamp(1.7rem, 3.2vw, 2.8rem); line-height: 1.2; max-width: 22em; margin: 0; text-shadow: 0 2px 24px rgba(0,0,0,.45); }
 .lpA-quote em { color: var(--accent); font-style: italic; }
 .lpA-h2 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.08; margin: 0 0 2.2rem; }
+.lpA-info { padding: clamp(2.5rem, 6vw, 4rem) 0; }   /* same space above, between and below the two rows */
 .lpA-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; padding-bottom: clamp(2.5rem, 6vw, 4rem); border-bottom: 1px solid var(--hair); }
 .lpA-fact { display: flex; gap: .9rem; align-items: flex-start; justify-content: center; }
 .lpA-fact > svg { flex: none; width: 26px; height: 26px; color: var(--accent); margin-top: .1rem; }
