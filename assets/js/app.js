@@ -838,7 +838,7 @@
           return "<div><p class=\"lpA-kicker\">" + f[0] + "</p><p class=\"lpA-fact\">" + esc(f[1]) + "</p></div>";
         }).join("") + "</section>" +
 
-      '<section class="lpA-sec lpA-cta"><h2 class="lpA-h2">' + esc((P.values || []).join(". ")) + '.</h2>' +
+      '<section class="lpA-sec lpA-cta"><h2 class="lpA-h2 lpA-values">' + (P.values || []).map(function (v) { return "<span>" + esc(v) + "</span>"; }).join(" ") + "</h2>" +
         '<a class="btn btn--primary" href="#/register">Join Project Zulfiqar</a></section>' +
       "</div>" + lpFoot();
     var spans = $main.querySelectorAll(".lpA-h1 span");
