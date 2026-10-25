@@ -417,7 +417,7 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .lp-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .4rem 1.2rem; padding: 3rem 0 1rem; font-size: .85rem; color: var(--ink-soft); text-align: center; }
 .lp-foot img { width: 40px; height: 40px; }
 .lpA-track { height: 320vh; }
-.lpA-pin { position: sticky; top: 0; height: 100vh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(1rem, 4vw, 3rem); }
+.lpA-pin { position: sticky; top: 0; height: 100vh; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: center; gap: clamp(1rem, 4vw, 3rem); }
 .lpA-mark { width: clamp(130px, 13vw, 180px); height: auto; margin: 0 auto 1.2rem; filter: drop-shadow(0 8px 30px rgba(0,0,0,.55)); }
 .lpA-kaizen { position: absolute; top: 1.4rem; right: 0; text-align: center; }
 .lpA-kaizen .kaizen { font-size: clamp(2rem, 3vw, 2.8rem); margin: 0; }
@@ -427,8 +427,12 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .lpA-copy { text-align: center; }
 .lpA-lede { font-size: 1.12rem; color: var(--ink-soft); max-width: 30rem; margin: 0 auto 1.6rem; }
 .lpA-actions { justify-content: center; gap: .6rem; }
-.lpA-stage { height: 84vh; display: flex; align-items: center; justify-content: center; }
+.lpA-stage { height: 74vh; display: flex; align-items: center; justify-content: center; }
 .lpA-stage svg { width: 100%; height: 100%; }
+/* the wrestlers: one beat shows at a time, with a brief dissolve between */
+.lpA-stage svg { filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)); }
+.wr-beat { opacity: 0; transition: opacity .14s linear; }
+.wr-beat.is-on { opacity: 1; }
 .lpA-sec { padding: clamp(3.5rem, 9vw, 7rem) 0; border-top: 1px solid var(--hair); }
 .lpA-kicker { font-size: .78rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 1rem; }
 .lpA-quote { font-family: var(--font-head); font-size: clamp(1.7rem, 3.2vw, 2.8rem); line-height: 1.2; max-width: 22em; margin: 0; text-shadow: 0 2px 24px rgba(0,0,0,.45); }

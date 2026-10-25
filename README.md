@@ -152,11 +152,16 @@ minutes.
 │   ├── js/data.js                     storage: Supabase (live) or localStorage (demo)
 │   ├── js/app.js                      screens for families and coaches
 │   ├── js/scenery.js                  draws the landscapes (mountains, shrine, desert, lake)
+│   ├── js/wrestle.js                  plays the home-page wrestlers as you scroll
 │   └── img/
 │       ├── logo.webp, logo-small.png  the logo with its background removed
 │       ├── logo-original.png          the logo as supplied
 │       ├── favicon.png, apple-touch-icon.png
-│       └── flyer.webp                 the programme poster
+│       ├── flyer.webp                 the programme poster
+│       └── wrestle/                   the wrestlers' line-art frames and frames.json (built, don't edit)
+├── tools/wrestle/
+│   ├── raw/1.png … 9.png              the nine drawings, in action order
+│   └── build.py                       turns them into the frames: python3 tools/wrestle/build.py
 └── supabase/
     ├── schema.sql                     tables, sign-up trigger, access rules
     ├── updates/                       changes to run on an existing database

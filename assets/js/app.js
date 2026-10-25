@@ -775,7 +775,6 @@
   function wireWrestle(svg, track, onT) {
     if (!svg || !track || !window.ZWrestle) return;
     ZWrestle.init(svg);
-    svg.setAttribute("viewBox", "38 44 168 150");   // frame the action closely
     var onScroll = function () {
       if (!document.body.contains(svg)) { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); return; }
       var r = track.getBoundingClientRect(), total = r.height - window.innerHeight;
@@ -867,7 +866,7 @@
           "</fieldset>" +
           '<button class="btn btn--primary btn--block" type="submit">Create account</button>' +
           '<p class="form-status" aria-live="polite"></p>' +
-          '<p class="small muted" style="text-align:center">Already registered? <a href="#/">Sign in</a></p>' +
+          '<p class="small muted" style="text-align:center">Already registered? <a href="#/signin">Sign in</a></p>' +
         "</form>";
     } else if (tab === "forgot") {
       auth =
@@ -876,7 +875,7 @@
           '<label class="field"><span>Email</span><input type="email" name="email" required autocomplete="email"></label>' +
           '<button class="btn btn--primary btn--block" type="submit">Send reset link</button>' +
           '<p class="form-status" aria-live="polite"></p>' +
-          '<p class="small muted" style="text-align:center"><a href="#/">Back to sign in</a></p>' +
+          '<p class="small muted" style="text-align:center"><a href="#/signin">Back to sign in</a></p>' +
         "</form>";
     } else {
       auth =
