@@ -715,8 +715,7 @@
 
     if (!state.me) {
       if ({ signin: 1, register: 1, forgot: 1 }[r.path]) return viewLanding(r);
-      var preview = { "preview-a": viewLandingEditorial, "preview-b": viewLandingStory, "preview-c": viewLandingParents }[r.path];
-      return preview ? preview() : viewMarketing();
+      return viewMarketing();
     }
     if (!state.me.profile) {
       $main.innerHTML = '<div class="card"><h1>Almost there</h1><p>Your account exists but its profile is missing. Please contact the coaches.</p></div>';
@@ -769,81 +768,13 @@
     );
   }
 
-  function viewMarketing() {
-    var sched = (P.schedule || []).map(function (x) { return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][x.day]; });
-    var first = (P.schedule || [])[0];
-    var blurbs = {
-      physical: "Strength, conditioning and grappling — we help each boy become fit, resilient and sure of himself.",
-      spiritual: "Qur'an, du'a and the example of the Ahl al-Bayt. Time each week to reflect and to build character that lasts.",
-      intellectual: "Reading, history and real discussion. We teach our boys to think, to question, and to speak with confidence.",
-      outdoors: "Hikes, camps and teamwork — the lessons that can only be learned in the open air, shoulder to shoulder.",
-    };
-    var pillarCards = (CFG.pillars || []).map(function (pl) {
-      return '<div class="mkt-pillar"><div class="mkt-pillar__icon">' + icon(pl.key) + "</div><div><h3>" + esc(pl.label) +
-        '</h3><p class="soft small" style="margin:0">' + esc(blurbs[pl.key] || pl.blurb) + "</p></div></div>";
-    }).join("");
-
-    var stage = '<div class="scrolly__stage"><svg id="wrestlers" aria-hidden="true"></svg></div>';
-
-    $main.innerHTML =
-      '<section class="mkt-hero">' +
-        '<img class="mkt-hero__logo" src="assets/img/logo.webp" width="720" height="721" alt="' + esc(P.name) + '">' +
-        '<p class="mkt-hero__lede">' + esc(P.tagline) + "</p>" +
-        '<div class="row" style="justify-content:center;gap:.6rem">' +
-          '<a class="btn btn--primary" href="#/register">Join Project Zulfiqar</a>' +
-          '<a class="btn" href="#/signin">Member sign in</a>' +
-        "</div>" +
-        '<p class="kaizen__word" style="margin-top:1.4rem">改善 · kaizen · continual improvement</p>' +
-        '<p class="scrolly__cue" aria-hidden="true">↓</p>' +
-      "</section>" +
-
-      '<div class="scrolly">' + stage +
-        '<div class="scrolly__steps">' +
-
-          '<section class="scrolly__step"><div class="card card--strong">' +
-            '<p class="label">Why we exist</p>' +
-            '<h2>To raise young men of purpose</h2>' +
-            "<p class=\"soft\">Too many of our boys grow up pulled in every direction but their own. Project Zulfiqar exists to raise a generation of Muslim young men who are strong in body, grounded in faith and sharp in mind.</p>" +
-            "<p class=\"soft\">Young men of <strong>integrity, respect, discipline and brotherhood</strong> — who know who they are, carry themselves with purpose, and lift up those around them.</p>" +
-          "</div></section>" +
-
-          '<section class="scrolly__step"><div class="card card--strong">' +
-            '<p class="label">How we do it</p>' +
-            '<h2>We train the whole person</h2>' +
-            "<p class=\"soft\">Twice a week, every member trains across four pillars — never just one. A boy who is only strong, or only studious, is only half-formed.</p>" +
-            '<div class="mkt-pillars">' + pillarCards + "</div>" +
-            "<p class=\"soft small\" style=\"margin-top:.9rem\">Each evening follows a clear plan and theme, led by committed coaches and mentors. Afterwards parents get a written recap, homework to carry the growth home, and a members' portal to follow it all.</p>" +
-          "</div></section>" +
-
-          '<section class="scrolly__step"><div class="card card--strong">' +
-            '<p class="label">What it is</p>' +
-            '<h2>A programme for the next generation</h2>' +
-            "<p class=\"soft\">Project Zulfiqar is a youth development programme for Muslim boys in Years 7 to 10, meeting twice a week.</p>" +
-            '<dl class="facts" style="max-width:none;margin:1.1rem 0 0">' +
-              "<div><dt>Who</dt><dd>" + esc(P.ages) + "</dd></div>" +
-              "<div><dt>When</dt><dd>" + esc(sched.join(" & ")) + (first ? ", " + esc(time12(first.start) + "–" + time12(first.end)) : "") + "</dd></div>" +
-              "<div><dt>Where</dt><dd>" + esc((P.locations || []).join(" / ")) + "</dd></div>" +
-              "<div><dt>Cost</dt><dd>" + money(P.prices.sessionPence) + " / session · " + money(P.prices.monthPence) + " / month</dd></div>" +
-            "</dl>" +
-            '<div class="row" style="margin-top:1.2rem;gap:.6rem"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn" href="#/signin">Member sign in</a></div>' +
-          "</div></section>" +
-
-        "</div>" +
-      "</div>" +
-
-      '<p class="values-line" style="text-align:center;margin:1rem 0 0">' + esc((P.values || []).join("  ·  ")) + "</p>" +
-      '<footer class="foot" style="display:block">' + esc(P.name) +
-        (P.contactEmail ? ' · <a href="mailto:' + esc(P.contactEmail) + '">' + esc(P.contactEmail) + "</a>" : "") + "</footer>";
-
-    wireWrestle(document.getElementById("wrestlers"), $main.querySelector(".scrolly"));
-  }
-
   // Drive the wrestlers from the scroll position through `track`: 0 as it
   // reaches the top of the screen, 1 as its end leaves the bottom. onT gets
   // the same progress, for pages that pace other things to it.
   function wireWrestle(svg, track, onT) {
     if (!svg || !track || !window.ZWrestle) return;
     ZWrestle.init(svg);
+    svg.setAttribute("viewBox", "38 44 168 150");   // frame the action closely
     var onScroll = function () {
       if (!document.body.contains(svg)) { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); return; }
       var r = track.getBoundingClientRect(), total = r.height - window.innerHeight;
@@ -856,7 +787,6 @@
     onScroll();
   }
 
-  /* ---- landing page options to compare: #/preview-a, -b, -c ---------- */
   function landingFacts() {
     var days = (P.schedule || []).map(function (x) { return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][x.day]; });
     var first = (P.schedule || [])[0];
@@ -872,28 +802,22 @@
     intellectual: "Reading, history and real discussion.",
     outdoors: "Hikes, camps and teamwork in the open air.",
   };
-  function previewBar(cur) {
-    return '<nav class="lp-switch" aria-label="Compare designs"><span class="lp-switch__label">Compare:</span> ' +
-      [["preview-a", "A · Editorial"], ["preview-b", "B · Story"], ["preview-c", "C · For parents"], ["home", "Current"]].map(function (o) {
-        return '<a href="#/' + o[0] + '"' + (o[0] === cur ? ' aria-current="page"' : "") + ">" + o[1] + "</a>";
-      }).join("") + "</nav>";
-  }
   function lpFoot() {
     return '<footer class="lp-foot"><img src="assets/img/logo.webp" width="64" height="64" alt="">' +
       "<span>" + esc(P.name) + "</span><span class=\"soft\">" + esc((P.values || []).join(" · ")) + "</span>" +
       '<span class="soft">改善 · kaizen</span></footer>';
   }
 
-  // A — Editorial: one big statement beside the animation, then open,
-  // card-free sections with large type.
-  function viewLandingEditorial() {
+  // The public landing page: one big statement beside the wrestlers, then
+  // open, card-free sections with large type.
+  function viewMarketing() {
     var F = landingFacts();
     var lines = ["Strong in body.", "Grounded in faith.", "Sharp in mind."];
-    $main.innerHTML = previewBar("preview-a") +
+    $main.innerHTML =
       '<div class="lpA">' +
       '<section class="lpA-track"><div class="lpA-pin">' +
         '<div class="lpA-copy">' +
-          '<img class="lpA-mark" src="assets/img/logo.webp" width="88" height="88" alt="' + esc(P.name) + '">' +
+          '<img class="lpA-mark" src="assets/img/logo.webp" width="720" height="721" alt="' + esc(P.name) + '">' +
           '<h1 class="lpA-h1">' + lines.map(function (l, i) { return '<span data-line="' + i + '">' + l + "</span>"; }).join("") + "</h1>" +
           '<p class="lpA-lede">' + esc(P.name) + " is a youth programme for Muslim boys in Years 7 to 10 — twice a week, every week.</p>" +
           '<div class="row" style="gap:.6rem"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn btn--ghost" href="#/signin">Member sign in</a></div>' +
@@ -902,7 +826,7 @@
       "</div></section>" +
 
       '<section class="lpA-sec"><p class="lpA-kicker">Why we exist</p>' +
-        '<p class="lpA-quote">Too many of our boys grow up pulled in every direction but their own. We exist to raise young men of <em>purpose</em> — who know who they are and lift up those around them.</p></section>' +
+        '<p class="lpA-quote">To create a group of young men who are <em>disciplined, resilient and talented</em>, through holistic growth, brotherhood and mentorship.</p></section>' +
 
       '<section class="lpA-sec"><p class="lpA-kicker">How we do it</p><h2 class="lpA-h2">Four pillars. Never just one.</h2>' +
         '<div class="lpA-pillars">' + (CFG.pillars || []).map(function (pl, i) {
@@ -918,82 +842,10 @@
         '<a class="btn btn--primary" href="#/register">Join Project Zulfiqar</a></section>' +
       "</div>" + lpFoot();
     var spans = $main.querySelectorAll(".lpA-h1 span");
-    wireWrestle(document.getElementById("wrestlers"), $main.querySelector(".lpA-track"), function (t) {
+    var svg = document.getElementById("wrestlers");
+    wireWrestle(svg, $main.querySelector(".lpA-track"), function (t) {
       spans.forEach(function (sp, i) { sp.classList.toggle("is-on", t >= i * 0.33 - 0.01); });
     });
-  }
-
-  // B — Story: one statement per screen fading in over the scenery, the
-  // wrestlers pinned beneath, ending on the sign-up.
-  function viewLandingStory() {
-    var F = landingFacts();
-    var beats = [
-      '<img class="lpB-logo" src="assets/img/logo.webp" width="360" height="360" alt="' + esc(P.name) + '"><p class="lpB-small">Scroll</p>',
-      "<h2>Our boys are pulled in every direction but their own.</h2>",
-      "<h2>We train the whole person.</h2><p>" + (CFG.pillars || []).map(function (pl) { return esc(pl.label); }).join(" · ") + "</p>",
-      "<h2>" + esc((P.values || []).join(". ")) + ".</h2><p>Learned on the mat. Carried everywhere else.</p>",
-      "<h2>Twice a week. Years 7 to 10.</h2><p>" + esc(F.when) + "<br>" + esc(F.where) + "<br>" + esc(F.cost) + "</p>" +
-        '<div class="row" style="justify-content:center;gap:.6rem;margin-top:1.2rem"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn" href="#/signin">Member sign in</a></div>',
-    ];
-    $main.innerHTML = previewBar("preview-b") +
-      '<section class="lpB-track" style="height:' + (beats.length * 100 + 60) + 'vh"><div class="lpB-pin">' +
-        beats.map(function (b, i) { return '<div class="lpB-beat" data-beat="' + i + '">' + b + "</div>"; }).join("") +
-        '<div class="lpB-stage"><svg id="wrestlers" aria-hidden="true"></svg></div>' +
-        '<div class="lpB-dots">' + beats.map(function () { return "<i></i>"; }).join("") + "</div>" +
-      "</div></section>" + lpFoot();
-    var els = $main.querySelectorAll(".lpB-beat"), dots = $main.querySelectorAll(".lpB-dots i");
-    wireWrestle(document.getElementById("wrestlers"), $main.querySelector(".lpB-track"), function (t) {
-      var cur = Math.min(beats.length - 1, Math.floor(t * beats.length * 0.999));
-      els.forEach(function (e, i) { e.classList.toggle("is-on", i === cur); });
-      dots.forEach(function (d, i) { d.classList.toggle("is-on", i === cur); });
-    });
-  }
-
-  // C — For parents: the practical answers first, a session told alongside
-  // the animation, prices, questions, then sign-up.
-  function viewLandingParents() {
-    var F = landingFacts();
-    var tt = (P.defaultTimetable || []);
-    var faqs = [
-      ["Does my son need any experience?", "No. Every boy starts where he is; coaches pair beginners carefully and build up from the basics."],
-      ["Is the grappling safe?", "Sessions are coached and supervised throughout. Boys learn control first: how to fall, how to tap, and how to look after their partner."],
-      ["What should he bring?", (P.defaultBring || []).join(", ") + "."],
-      ["How do I pay?", "Pay as you go at " + money(P.prices.sessionPence) + " a session, or " + money(P.prices.monthPence) + " for the month. Both are paid online through the members' portal."],
-      ["How will I know how he's doing?", "After each session you get a written recap, the homework, and a register to confirm. Everything is in the members' portal."],
-    ];
-    $main.innerHTML = previewBar("preview-c") +
-      '<section class="lpC-hero">' +
-        "<div>" +
-          '<p class="label">Years 7–10 · Boys</p>' +
-          '<h1 class="lpC-h1">A twice-weekly programme that builds strong, faithful, thoughtful young men.</h1>' +
-          '<ul class="lpC-chips"><li>' + icon("calendar") + esc(F.when) + "</li><li>" + icon("pin") + esc(F.where) + "</li><li>" + icon("card") + esc(F.cost) + "</li></ul>" +
-          '<div class="row" style="gap:.6rem"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn" href="#/signin">Member sign in</a></div>' +
-        "</div>" +
-        '<img class="lpC-logo" src="assets/img/logo.webp" width="320" height="320" alt="' + esc(P.name) + '">' +
-      "</section>" +
-
-      '<section class="lpC-session"><div class="lpC-stage"><svg id="wrestlers" aria-hidden="true"></svg></div>' +
-        '<div class="lpC-steps"><p class="label">A typical evening</p><h2>What happens at a session</h2>' +
-        tt.map(function (row) { return '<div class="lpC-step"><span>' + esc(time12(row.time)) + "</span><p>" + esc(row.activity) + "</p></div>"; }).join("") +
-        '<p class="soft small">Every session has its own theme, shared with parents beforehand.</p></div></section>' +
-
-      '<section class="lpC-sec"><h2>Four pillars</h2><div class="lpC-grid">' +
-        (CFG.pillars || []).map(function (pl) {
-          return '<div class="card"><div class="mkt-pillar__icon">' + icon(pl.key) + "</div><h3>" + esc(pl.label) + '</h3><p class="soft small" style="margin:0">' + esc(PILLAR_LINES[pl.key] || pl.blurb) + "</p></div>";
-        }).join("") + "</div></section>" +
-
-      '<section class="lpC-sec"><h2>Prices</h2><div class="lpC-prices">' +
-        '<div class="card"><p class="label">Pay as you go</p><p class="lpC-price">' + money(P.prices.sessionPence) + '<span> / session</span></p><p class="soft small">Book the sessions he can make.</p></div>' +
-        '<div class="card card--strong"><p class="label">Monthly pass</p><p class="lpC-price">' + money(P.prices.monthPence) + '<span> / month</span></p><p class="soft small">Every session that month, the best value.</p></div>' +
-      "</div></section>" +
-
-      '<section class="lpC-sec"><h2>Questions parents ask</h2>' +
-        faqs.map(function (q) { return '<details class="lpC-faq"><summary>' + esc(q[0]) + "</summary><p class=\"soft\">" + esc(q[1]) + "</p></details>"; }).join("") +
-      "</section>" +
-
-      '<section class="lpC-sec lpC-cta card card--strong"><h2>Ready to join?</h2><p class="soft">Registration takes two minutes.</p>' +
-        '<a class="btn btn--primary" href="#/register">Register your son</a></section>' + lpFoot();
-    wireWrestle(document.getElementById("wrestlers"), $main.querySelector(".lpC-session"));
   }
 
   function viewLanding(r) {
