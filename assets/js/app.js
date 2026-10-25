@@ -824,7 +824,7 @@
         '<p class="lpA-quote">To create a group of young men who are <em>disciplined, resilient and talented</em>, through holistic growth, brotherhood and mentorship.</p></section>' +
 
       '<section class="lpA-sec lpA-info">' +
-        '<div class="lpA-facts">' + [["calendar", "When", F.days], ["clock", "Time", F.time], ["pin", "Where", F.where]].map(function (f) {
+        '<div class="lpA-facts">' + [["users", "Who", "Boys, Years 7–10"], ["calendar", "When", F.days], ["clock", "Time", F.time], ["pin", "Where", F.where]].map(function (f) {
           return '<div class="lpA-fact">' + icon(f[0]) + '<div><p class="lpA-kicker">' + f[1] + "</p><p>" + esc(f[2]) + "</p></div></div>";
         }).join("") + "</div>" +
         '<div class="lpA-growth">' + [["physical", "Physical"], ["spiritual", "Spiritual"], ["emotional", "Emotional"], ["intellectual", "Intellectual"]].map(function (g) {
