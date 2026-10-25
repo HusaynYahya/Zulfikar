@@ -445,7 +445,7 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .lpA-grow__icon { flex: none; width: 54px; height: 54px; border: 1.5px solid var(--accent); border-radius: 50%; display: grid; place-items: center; color: var(--accent); }
 .lpA-grow__icon svg { width: 26px; height: 26px; }
 .lpA-cta { text-align: center; }
-.lpA-cta .lpA-h2 { margin-bottom: 1.6rem; }
+.lpA-cta .lpA-h2 { margin-bottom: 2.6rem; }
 .lpA-values { display: flex; flex-wrap: wrap; justify-content: center; gap: .1em .6em; }
 
 @media (max-width: 820px) {
