@@ -180,6 +180,7 @@
     spiritual: '<path d="M12 3c-3 3-6 4-6 8h12c0-4-3-5-6-8z"/><path d="M5 11v9h14v-9M10 20v-4a2 2 0 0 1 4 0v4M3 20h18"/>',
     intellectual: '<path d="M3 5c3-1 6-1 9 1 3-2 6-2 9-1v14c-3-1-6-1-9 1-3-2-6-2-9-1z"/><path d="M12 6v14"/>',
     outdoors: '<path d="M2 20l7-11 4 6 3-4 6 9z"/>',
+    emotional: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/>',
     pin: '<path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
     coins: '<ellipse cx="9" cy="7" rx="6" ry="2.5"/><path d="M3 7v4c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V7"/><path d="M9 16.5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4c0-1.4-2.7-2.5-6-2.5"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -788,20 +789,13 @@
   }
 
   function landingFacts() {
-    var days = (P.schedule || []).map(function (x) { return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][x.day]; });
     var first = (P.schedule || [])[0];
     return {
-      who: P.ages, where: (P.locations || []).join(" / "),
-      when: days.join(" & ") + (first ? " · " + time12(first.start) + "–" + time12(first.end) : ""),
-      cost: money(P.prices.sessionPence) + " a session · " + money(P.prices.monthPence) + " a month",
+      days: (P.schedule || []).map(function (x) { return ["Sundays","Mondays","Tuesdays","Wednesdays","Thursdays","Fridays","Saturdays"][x.day]; }).join(" & "),
+      time: first ? time12(first.start) + "–" + time12(first.end) : "",
+      where: (P.locations || []).join(" / "),
     };
   }
-  var PILLAR_LINES = {
-    physical: "Strength, conditioning and grappling.",
-    spiritual: "Qur'an, du'a and the example of the Ahl al-Bayt.",
-    intellectual: "Reading, history and real discussion.",
-    outdoors: "Hikes, camps and teamwork in the open air.",
-  };
   function lpFoot() {
     return '<footer class="lp-foot"><img src="assets/img/logo.webp" width="64" height="64" alt="">' +
       "<span>" + esc(P.name) + "</span><span class=\"soft\">" + esc((P.values || []).join(" · ")) + "</span>" +
@@ -829,15 +823,13 @@
       '<section class="lpA-sec"><p class="lpA-kicker">Why we exist</p>' +
         '<p class="lpA-quote">To create a group of young men who are <em>disciplined, resilient and talented</em>, through holistic growth, brotherhood and mentorship.</p></section>' +
 
-      '<section class="lpA-sec"><p class="lpA-kicker">How we do it</p><h2 class="lpA-h2">Four pillars. Never just one.</h2>' +
-        '<div class="lpA-pillars">' + (CFG.pillars || []).map(function (pl, i) {
-          return '<div><span class="lpA-num">0' + (i + 1) + "</span><h3>" + esc(pl.label) + '</h3><p class="soft">' + esc(PILLAR_LINES[pl.key] || pl.blurb) + "</p></div>";
+      '<section class="lpA-sec">' +
+        '<div class="lpA-facts">' + [["calendar", "When", F.days], ["clock", "Time", F.time], ["pin", "Where", F.where]].map(function (f) {
+          return '<div class="lpA-fact">' + icon(f[0]) + '<div><p class="lpA-kicker">' + f[1] + "</p><p>" + esc(f[2]) + "</p></div></div>";
+        }).join("") + "</div>" +
+        '<div class="lpA-growth">' + [["physical", "Physical"], ["spiritual", "Spiritual"], ["emotional", "Emotional"], ["intellectual", "Intellectual"]].map(function (g) {
+          return '<div class="lpA-grow"><span class="lpA-grow__icon">' + icon(g[0]) + "</span><span>" + g[1] + "</span></div>";
         }).join("") + "</div></section>" +
-
-      '<section class="lpA-sec lpA-facts">' +
-        [["Who", F.who], ["When", F.when], ["Where", F.where], ["Cost", F.cost]].map(function (f) {
-          return "<div><p class=\"lpA-kicker\">" + f[0] + "</p><p class=\"lpA-fact\">" + esc(f[1]) + "</p></div>";
-        }).join("") + "</section>" +
 
       '<section class="lpA-sec lpA-cta"><h2 class="lpA-h2 lpA-values">' + (P.values || []).map(function (v) { return "<span>" + esc(v) + "</span>"; }).join(" ") + "</h2>" +
         '<a class="btn btn--primary" href="#/register">Join Project Zulfiqar</a></section>' +
