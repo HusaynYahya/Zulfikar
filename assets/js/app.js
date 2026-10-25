@@ -816,6 +816,7 @@
     $main.innerHTML =
       '<div class="lpA">' +
       '<section class="lpA-track"><div class="lpA-pin">' +
+        '<div class="lpA-kaizen" title="Kaizen: continual improvement"><p class="kaizen" lang="ja">改善</p><p class="kaizen__word">Kaizen</p></div>' +
         '<div class="lpA-copy">' +
           '<img class="lpA-mark" src="assets/img/logo.webp" width="720" height="721" alt="' + esc(P.name) + '">' +
           '<h1 class="lpA-h1">' + lines.map(function (l, i) { return '<span data-line="' + i + '">' + l + "</span>"; }).join("") + "</h1>" +
