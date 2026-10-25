@@ -285,10 +285,10 @@ details.disclose > div { margin-top: .7rem; }
 
 /* ---- sign-in screen --------------------------------------------------- */
 .login {
-  min-height: calc(100vh - 7rem); display: grid; align-items: center;
+  min-height: calc(100vh - 7rem); display: grid; align-items: start;
   grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: clamp(2rem, 6vw, 5rem);
 }
-.login-brand { text-align: center; }
+.login-brand { text-align: center; position: sticky; top: 4.5rem; padding-top: 1rem; }   /* stays in view beside a long form */
 .login-brand h1 { margin: 0; line-height: 0; }
 .login-brand__logo { width: min(360px, 100%); height: auto; margin: 0 auto; filter: drop-shadow(0 8px 34px rgba(0, 0, 0, .5)); }
 .kaizen {
@@ -299,7 +299,7 @@ details.disclose > div { margin-top: .7rem; }
 .kaizen__word { color: var(--ink-mute); font-size: .85rem; letter-spacing: .3em; text-transform: lowercase; margin: .2rem 0 0; padding-left: .3em; }
 @media (max-width: 860px) {
   .login { grid-template-columns: 1fr; min-height: 0; gap: 1.2rem; }
-  .login-brand { order: -1; }
+  .login-brand { order: -1; position: static; padding-top: 0; }
   .login-brand__logo { width: min(200px, 54vw); }
   .kaizen { font-size: 2.2rem; }
 }
