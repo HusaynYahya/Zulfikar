@@ -152,7 +152,8 @@ minutes.
 │   ├── js/data.js                     storage: Supabase (live) or localStorage (demo)
 │   ├── js/app.js                      screens for families and coaches
 │   ├── js/scenery.js                  draws the landscapes (mountains, shrine, desert, lake)
-│   ├── js/wrestle.js                  plays the home-page wrestlers as you scroll
+│   ├── js/lineart.js                  home-page wrestlers, option A: the line-art drawings
+│   ├── js/wrestle.js                  home-page wrestlers, option B: drawn in code
 │   └── img/
 │       ├── logo.webp, logo-small.png  the logo with its background removed
 │       ├── logo-original.png          the logo as supplied

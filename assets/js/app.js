@@ -770,16 +770,18 @@
   }
 
   // Drive the wrestlers from the scroll position through `track`: 0 as it
-  // reaches the top of the screen, 1 as its end leaves the bottom. onT gets
+  // reaches the top of the screen, 1 as its end leaves the bottom. Each svg
+  // in `stages` is played by its own engine (ZLineArt or ZWrestle). onT gets
   // the same progress, for pages that pace other things to it.
-  function wireWrestle(svg, track, onT) {
-    if (!svg || !track || !window.ZWrestle) return;
-    ZWrestle.init(svg);
+  function wireWrestle(stages, track, onT) {
+    stages = stages.filter(function (st) { return st.svg && st.engine; });
+    if (!stages.length || !track) return;
+    stages.forEach(function (st) { st.engine.init(st.svg); if (st.viewBox) st.svg.setAttribute("viewBox", st.viewBox); });
     var onScroll = function () {
-      if (!document.body.contains(svg)) { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); return; }
+      if (!document.body.contains(track)) { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); return; }
       var r = track.getBoundingClientRect(), total = r.height - window.innerHeight;
       var t = total > 0 ? Math.max(0, Math.min(1, -r.top / total)) : 0;
-      ZWrestle.frame(svg, t);
+      stages.forEach(function (st) { st.engine.frame(st.svg, t); });
       if (onT) onT(t);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -816,7 +818,11 @@
           '<p class="lpA-lede">' + esc(P.name) + " is a weekly programme for our Muslim youth.</p>" +
           '<div class="row lpA-actions"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn btn--ghost" href="#/signin">Member sign in</a></div>' +
         "</div>" +
-        '<div class="lpA-stage"><svg id="wrestlers" aria-hidden="true"></svg></div>' +
+        '<div class="lpA-stage">' +
+          '<svg class="lpA-anim" data-option="a" aria-hidden="true"></svg><svg class="lpA-anim" data-option="b" aria-hidden="true" hidden></svg>' +
+          '<div class="lpA-ab" role="group" aria-label="Choose the animation">' +
+            '<button type="button" data-option="a">A · Line art</button><button type="button" data-option="b">B · Drawn</button></div>' +
+        "</div>" +
       "</div></section>" +
 
       '<section class="lpA-sec"><p class="lpA-kicker">Why we exist</p>' +
@@ -834,8 +840,24 @@
         '<a class="btn btn--primary" href="#/register">Join Project Zulfiqar</a></section>' +
       "</div>" + lpFoot();
     var spans = $main.querySelectorAll(".lpA-h1 span");
-    var svg = document.getElementById("wrestlers");
-    wireWrestle(svg, $main.querySelector(".lpA-track"), function (t) {
+    // A/B: the two wrestling animations, to compare; the choice is
+    // remembered on this device
+    var svgA = $main.querySelector('svg[data-option="a"]'), svgB = $main.querySelector('svg[data-option="b"]');
+    function pick(o) {
+      svgA.toggleAttribute("hidden", o !== "a"); svgB.toggleAttribute("hidden", o !== "b");   // svg has no .hidden property
+      $main.querySelectorAll(".lpA-ab button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-option") === o)); });
+      try { localStorage.setItem("zulfiqar-anim", o); } catch (e) {}
+    }
+    $main.querySelectorAll(".lpA-ab button").forEach(function (b) {
+      b.addEventListener("click", function () { pick(b.getAttribute("data-option")); });
+    });
+    var chosen = "a";
+    try { chosen = localStorage.getItem("zulfiqar-anim") === "b" ? "b" : "a"; } catch (e) {}
+    pick(chosen);
+    wireWrestle([
+      { svg: svgA, engine: window.ZLineArt },
+      { svg: svgB, engine: window.ZWrestle, viewBox: "38 44 168 150" },   // frame the drawn action closely
+    ], $main.querySelector(".lpA-track"), function (t) {
       spans.forEach(function (sp, i) { sp.classList.toggle("is-on", t >= i * 0.33 - 0.01); });
     });
   }
