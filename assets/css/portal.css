@@ -429,6 +429,7 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .lpA-actions { justify-content: center; gap: .6rem; }
 .lpA-stage { height: 74vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem; }
 .lpA-stage svg { width: 100%; flex: 1; min-height: 0; }
+.lpA-stage canvas { width: 100%; flex: 1; min-height: 0; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)); }
 .lpA-ab { display: flex; gap: .2rem; padding: .25rem; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 .lpA-ab button { border: 0; background: transparent; color: var(--ink-soft); font-size: .8rem; padding: .35rem .8rem; border-radius: 999px; cursor: pointer; }
 .lpA-ab button[aria-pressed="true"] { background: var(--paper); color: #1b1f27; }

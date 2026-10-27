@@ -819,7 +819,7 @@
           '<div class="row lpA-actions"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn btn--ghost" href="#/signin">Member sign in</a></div>' +
         "</div>" +
         '<div class="lpA-stage">' +
-          '<svg class="lpA-anim" data-option="a" aria-hidden="true"></svg><svg class="lpA-anim" data-option="b" aria-hidden="true" hidden></svg>' +
+          '<canvas class="lpA-anim" data-option="a" aria-hidden="true"></canvas><svg class="lpA-anim" data-option="b" aria-hidden="true" hidden></svg>' +
           '<div class="lpA-ab" role="group" aria-label="Choose the animation">' +
             '<button type="button" data-option="a">A · Line art</button><button type="button" data-option="b">B · Drawn</button></div>' +
         "</div>" +
@@ -842,7 +842,7 @@
     var spans = $main.querySelectorAll(".lpA-h1 span");
     // A/B: the two wrestling animations, to compare; the choice is
     // remembered on this device
-    var svgA = $main.querySelector('svg[data-option="a"]'), svgB = $main.querySelector('svg[data-option="b"]');
+    var svgA = $main.querySelector('canvas[data-option="a"]'), svgB = $main.querySelector('svg[data-option="b"]');
     function pick(o) {
       svgA.toggleAttribute("hidden", o !== "a"); svgB.toggleAttribute("hidden", o !== "b");   // svg has no .hidden property
       $main.querySelectorAll(".lpA-ab button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-option") === o)); });
