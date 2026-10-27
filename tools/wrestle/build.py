@@ -107,8 +107,12 @@ def feet(g, x0, x1):
 
 
 # ---- 3. drawing the layers ---------------------------------------------------
+CROPS = {}     # each layer's black-on-white drawing, full size — for tools/wrestle/video.py
+
+
 def layer(g, x0, y0, x1, y1, name):
     """Ivory line art of g[y0:y1, x0:x1] with a soft fill inside the bodies."""
+    CROPS[name] = g[y0:y1, x0:x1].copy()
     crop = cv2.erode(g[y0:y1, x0:x1], np.ones((LINE_GROW, LINE_GROW), np.uint8))
     dark = 255 - crop.astype(np.float32)
     line_a = np.clip((dark - 40) / 160, 0, 1)
@@ -218,6 +222,7 @@ def main():
     with open(os.path.join(OUT, "frames.json"), "w") as f:
         json.dump(data, f, indent=1)
     print("stage", data["w"], "x", data["h"], "·", len(beats), "beats ·", len(layers), "layers")
+    return data
 
 
 if __name__ == "__main__":
