@@ -956,7 +956,7 @@
       '<div class="lpA">' +
       '<section class="lpA-track"><div class="lpA-pin">' +
         '<div class="lpA-brand">' +
-          '<div class="lpA-kaizen" title="Kaizen: continual improvement"><p class="kaizen" lang="ja">改善</p><p class="kaizen__word">Kaizen</p></div>' +
+          '<div class="lpA-kaizen" title="Kaizen: continual improvement"><p class="kaizen" lang="ja">改善</p></div>' +
           '<img class="lpA-mark" src="assets/img/logo.webp?v=4" width="720" height="721" alt="' + esc(P.name) + '">' +
         "</div>" +
         '<div class="lpA-copy">' +
@@ -1074,7 +1074,6 @@
         '<section class="login-brand">' +
           '<h1><img class="login-brand__logo" src="assets/img/logo.webp?v=4" width="720" height="721" alt="' + esc(P.name) + '"></h1>' +
           '<p class="kaizen" lang="ja" title="Kaizen: continual improvement">改善</p>' +
-          '<p class="kaizen__word">Kaizen</p>' +
         "</section>" +
       "</div>";
 
