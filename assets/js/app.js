@@ -115,11 +115,16 @@
     return o;
   }
 
+  /* Resolves once the database has connected (or given up), so a form sent
+     while the page is still starting waits for it. */
+  var booting = Promise.resolve();
+
   /* Submit handler with busy state and inline error reporting. */
   function onSubmit(form, fn) {
     if (!form) return;
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
+      await booting.catch(function () {});
       var status = form.querySelector(".form-status");
       var btn = form.querySelector("[type=submit]");
       if (btn) btn.disabled = true;
@@ -140,7 +145,8 @@
     var el = e.target.closest("[data-action]");
     if (!el || !actions[el.getAttribute("data-action")]) return;
     e.preventDefault();
-    Promise.resolve(actions[el.getAttribute("data-action")](el)).catch(function (err) {
+    var fn = actions[el.getAttribute("data-action")];
+    booting.catch(function () {}).then(function () { return fn(el); }).catch(function (err) {
       console.error(err);
       toast(err.message || String(err), true);
     });
@@ -1987,10 +1993,19 @@
   window.addEventListener("hashchange", render);
   // If the database can't be reached (offline, or the project is paused), the
   // public pages still open; the sign-in page says the members' area is down.
+  // Public pages (home, sign in, register) show straight away while the
+  // database connects in the background; members' pages wait for it.
+  var PUBLIC = { home: 1, signin: 1, register: 1, forgot: 1 };
   var giveUp = new Promise(function (_, reject) { setTimeout(function () { reject(new Error("The database didn't answer in time.")); }, 8000); });
-  Promise.race([D.init(), giveUp]).then(render).catch(function (err) {
+  var shownEarly = D.mode === "live" && !!PUBLIC[parseHash().path];   // demo data loads instantly anyway
+  if (shownEarly) render();
+  booting = Promise.race([D.init(), giveUp]);
+  booting.then(function () {
+    // re-draw only if it changes anything: a signed-in member, or a members' page
+    if (!shownEarly || D.me() || !PUBLIC[parseHash().path]) render();
+  }).catch(function (err) {
     console.error(err);
     state.offline = err.message || String(err);
-    render();
+    if (!shownEarly || parseHash().path !== "home") render();
   });
 })();
