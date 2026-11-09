@@ -283,16 +283,16 @@
     var past = new Date(); past.setDate(past.getDate() - 3);
 
     var sessions = [
-      { title: "Takedowns & the meaning of Sabr", location: "Harefield", pillars: ["physical", "spiritual"],
+      { title: "Takedowns & the meaning of Sabr", location: "Hujjat Stanmore", pillars: ["physical", "spiritual"],
         recap: "We warmed up with animal-flow drills, then drilled the double-leg takedown in pairs — focus on level change and keeping the head up. In the circle afterwards we spoke about sabr (patience): how a wrestler who rushes gets countered, and how the same is true in life.",
         takeaways: ["Level change before you shoot", "Sabr is active, not passive", "Hydrate before Monday sessions"] },
-      { title: "Book circle: the life of Malik al-Ashtar", location: "Zahra Centre", pillars: ["intellectual", "spiritual"],
+      { title: "Book circle: the life of Malik al-Ashtar", location: "Hujjat Stanmore", pillars: ["intellectual", "spiritual"],
         recap: "We read extracts from Imam Ali's letter to Malik al-Ashtar and discussed what it says about leadership and fairness. Each group picked one line and presented what it would look like at school.",
         takeaways: ["A leader serves the people he leads", "Fairness even with people you dislike"] },
-      { title: "Hike prep & map reading", location: "Harefield", pillars: ["outdoors", "intellectual"],
+      { title: "Hike prep & map reading", location: "Hujjat Stanmore", pillars: ["outdoors", "intellectual"],
         recap: "Compass bearings, contour lines and kit lists for the upcoming hike. Teams planned a 6 km route and checked each other's work.",
         takeaways: ["Red to the shed: align the needle", "Pack layers, not cotton"] },
-      { title: "Conditioning circuit & Du'a Kumayl reflection", location: "Zahra Centre", pillars: ["physical", "spiritual"],
+      { title: "Conditioning circuit & Du'a Kumayl reflection", location: "Hujjat Stanmore", pillars: ["physical", "spiritual"],
         recap: "A 30-minute bodyweight circuit in teams, then we sat together and reflected on a few lines of Du'a Kumayl and why we ask for forgiveness.",
         takeaways: ["Consistency beats intensity", "Thursday night: Du'a Kumayl with family"] },
     ].map(function (s, i) {
@@ -320,7 +320,7 @@
     // a planned session for the next evening: theme, timetable and kit list
     sessions.unshift({
       id: "demo-session-next", date: nextDates[0], published: true, register_taken: false,
-      title: "Grip strength & the story of Khaybar", location: "Harefield", pillars: ["physical", "spiritual"],
+      title: "Grip strength & the story of Khaybar", location: "Hujjat Stanmore", pillars: ["physical", "spiritual"],
       recap: "", takeaways: [], created_by: coachId, created_at: nowISO(),
       timetable: [
         { time: "19:00", activity: "Arrive, salaam and mobility warm-up" },
@@ -374,7 +374,7 @@
           { id: uuid(), family_id: famId, student_id: ali, date: nextDates[0], going: true, reason: null, updated_at: nowISO() },
         ],
         notices: [
-          { id: uuid(), title: "Hike this Saturday", body: "Meet at the Zahra Centre at 9am. Walking boots, a packed lunch and a waterproof. Back by 3pm, insha'Allah.", expires_on: isoDate(new Date(Date.now() + 10 * 864e5)), created_by: coachId, created_at: nowISO() },
+          { id: uuid(), title: "Hike this Saturday", body: "Meet at Hujjat Stanmore at 9am. Walking boots, a packed lunch and a waterproof. Back by 3pm, insha'Allah.", expires_on: isoDate(new Date(Date.now() + 10 * 864e5)), created_by: coachId, created_at: nowISO() },
         ],
         payments: [
           { id: uuid(), family_id: famId, student_id: ali, kind: "month", period: month, amount_pence: 5000, method: "stripe", status: "paid", created_at: nowISO() },

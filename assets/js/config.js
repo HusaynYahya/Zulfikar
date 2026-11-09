@@ -36,9 +36,8 @@ window.ZULFIQAR = {
     // Weekly schedule. day: 0 = Sunday … 6 = Saturday. Times are 24-hour.
     schedule: [
       { day: 1, start: "19:00", end: "21:30" },  // Monday
-      { day: 3, start: "19:00", end: "21:30" },  // Wednesday
     ],
-    locations: ["Harefield", "Zahra Centre"],
+    locations: ["Hujjat Stanmore"],
     prices: { sessionPence: 1000, monthPence: 5000 },
     values: ["Integrity", "Respect", "Discipline", "Brotherhood"],
     // Starting point for each new session plan. Coaches can change it per session.

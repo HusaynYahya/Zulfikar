@@ -1,7 +1,7 @@
 # Project ذوالفقار — member portal
 
 The portal for families of boys on **Project Zulfiqar** (Year 7 – Year 10,
-Monday & Wednesday, Harefield / Zahra Centre). It is plain HTML, CSS and JavaScript,
+Monday evenings at Hujjat Stanmore). It is plain HTML, CSS and JavaScript,
 with no build step, so it can be hosted free on GitHub Pages.
 
 ## What it does
