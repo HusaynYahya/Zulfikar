@@ -41,10 +41,16 @@ window.ZULFIQAR = {
     locations: ["Hujjat Stanmore"],
     prices: { sessionPence: 1500, monthPence: 5000 },
     values: ["Integrity", "Respect", "Discipline", "Brotherhood"],
+    // the three parts of a Monday evening, shown on the home page
+    evening: [
+      { part: "Part 1", name: "Wrestling", time: "7:00–8:30pm", text: "Technique, drilling and live rounds." },
+      { part: "Part 2", name: "Creative", time: "8:30–9:15pm", text: "Poetry writing, plant potting, book clubs and discussion circles." },
+      { part: "Part 3", name: "Dinner", time: "9:15pm to close", text: "We finish the evening by eating together." },
+    ],
     // Starting point for each new session plan. Coaches can change it per session.
     defaultTimetable: [
       { time: "19:00", activity: "Part 1: Wrestling" },
-      { time: "20:30", activity: "Part 2: Creative" },
+      { time: "20:30", activity: "Part 2: Creative — poetry, plant potting, book club or a discussion circle" },
       { time: "21:15", activity: "Part 3: Dinner" },
       { time: "21:30", activity: "Collection" },
     ],

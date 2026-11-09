@@ -979,6 +979,9 @@
         '<div class="lpA-facts">' + [["users", "Who", "Boys, Years 7–10"], ["calendar", "When", F.days], ["clock", "Time", F.time], ["pin", "Where", F.where]].map(function (f) {
           return '<div class="lpA-fact">' + icon(f[0]) + '<div><p class="lpA-kicker">' + f[1] + "</p><p>" + esc(f[2]) + "</p></div></div>";
         }).join("") + "</div>" +
+        ((P.evening || []).length ? '<div class="lpA-evening">' + P.evening.map(function (e) {
+          return '<div class="lpA-part"><p class="lpA-kicker">' + esc(e.part) + " · " + esc(e.time) + '</p><h3>' + esc(e.name) + '</h3><p class="soft">' + esc(e.text) + "</p></div>";
+        }).join("") + "</div>" : "") +
         '<div class="lpA-growth">' + [["physical", "Physical"], ["spiritual", "Spiritual"], ["emotional", "Emotional"], ["intellectual", "Intellectual"]].map(function (g) {
           return '<div class="lpA-grow"><span class="lpA-grow__icon">' + icon(g[0]) + "</span><span>" + g[1] + "</span></div>";
         }).join("") + "</div></section>" +
