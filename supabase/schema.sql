@@ -318,3 +318,27 @@ alter default privileges in schema public
 -- a family may change only its name and phone, never its role
 revoke update on public.profiles from authenticated;
 grant update (parent_name, phone) on public.profiles to authenticated;
+
+-- ---- noticeboard (also in updates/003-noticeboard.sql) -----------------
+create table if not exists public.notices (
+  id         uuid primary key default gen_random_uuid(),
+  title      text not null check (char_length(title) between 1 and 120),
+  body       text check (char_length(body) <= 2000),
+  expires_on date,
+  created_by uuid references public.profiles (id) on delete set null default auth.uid(),
+  created_at timestamptz not null default now()
+);
+create index if not exists notices_created_at_idx on public.notices (created_at desc);
+
+alter table public.notices enable row level security;
+
+drop policy if exists "read notices"   on public.notices;
+drop policy if exists "post notice"    on public.notices;
+drop policy if exists "change notice"  on public.notices;
+drop policy if exists "remove notice"  on public.notices;
+create policy "read notices"  on public.notices for select using (auth.uid() is not null);
+create policy "post notice"   on public.notices for insert with check (public.is_coach());
+create policy "change notice" on public.notices for update using (public.is_coach()) with check (public.is_coach());
+create policy "remove notice" on public.notices for delete using (public.is_coach());
+
+grant select, insert, update, delete on public.notices to authenticated;

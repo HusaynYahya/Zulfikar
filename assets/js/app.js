@@ -156,9 +156,16 @@
     rsvps: { order: "date" },
     attendance_reviews: { order: "reviewed_at", desc: true },
     students: { order: "first_name" },
+    notices: { order: "created_at", desc: true },
   };
+  // Tables added after launch: if the database hasn't been updated yet, the
+  // screens carry on without them rather than failing to load.
+  var OPTIONAL = { notices: 1 };
   async function load(tables) {
-    var lists = await Promise.all(tables.map(function (t) { return D.list(t, ORDER[t]); }));
+    var lists = await Promise.all(tables.map(function (t) {
+      var q = D.list(t, ORDER[t]);
+      return OPTIONAL[t] ? q.catch(function (err) { console.warn("Couldn't load " + t + ":", err); return []; }) : q;
+    }));
     var out = {};
     tables.forEach(function (t, i) { out[t] = lists[i]; });
     return out;
@@ -441,6 +448,134 @@
     );
   }
 
+  /* ---- noticeboard ---------------------------------------------------- */
+  /* Notices show until the end of their expires_on day (or for good). */
+  function activeNotices(list) {
+    var today = todayISO();
+    return (list || []).filter(function (n) { return !n.expires_on || n.expires_on >= today; });
+  }
+  var SEEN_KEY = "zulfiqar-notices-seen";
+  function noticesSeenAt() { try { return localStorage.getItem(SEEN_KEY) || ""; } catch (e) { return ""; } }
+  function markNoticesSeen() { try { localStorage.setItem(SEEN_KEY, new Date().toISOString()); } catch (e) {} }
+  function noticeHtml(n, opts) {
+    opts = opts || {};
+    return '<div class="notice">' +
+      '<div class="notice__head"><h3>' + (opts.isNew ? '<span class="badge badge--accent">New</span> ' : "") + esc(n.title) + "</h3>" +
+        (opts.canRemove ? '<button type="button" class="btn btn--ghost btn--sm" data-action="notice-remove" data-id="' + esc(n.id) + '">Remove</button>' : "") + "</div>" +
+      (n.body ? '<p class="notice__body">' + esc(n.body) + "</p>" : "") +
+      '<p class="notice__meta">Posted ' + esc(fmtDate(String(n.created_at).slice(0, 10))) +
+        (n.expires_on ? " · showing until " + esc(fmtDate(n.expires_on)) : "") + "</p>" +
+    "</div>";
+  }
+  function familyNotices(list) {
+    var live = activeNotices(list);
+    if (!live.length) return "";
+    var seen = noticesSeenAt();
+    var html = '<section class="card noticeboard" aria-label="Noticeboard"><p class="label">' + icon("chat") + "Noticeboard</p>" +
+      live.map(function (n) { return noticeHtml(n, { isNew: !seen || n.created_at > seen }); }).join("") + "</section>";
+    markNoticesSeen();
+    return html;
+  }
+  function coachNoticeboard(list) {
+    var live = activeNotices(list), ends = new Date(); ends.setDate(ends.getDate() + 14);
+    return '<div class="card"><h2>Noticeboard</h2>' +
+      '<p class="soft small">Shown at the top of every family\'s home page.</p>' +
+      '<form class="form" id="notice-form">' +
+        '<label class="field"><span>Headline <span class="req">*</span></span><input type="text" name="title" required maxlength="120" placeholder="e.g. No session next Monday"></label>' +
+        '<label class="field"><span>Details</span><textarea name="body" rows="3" maxlength="2000" placeholder="Anything families need to know"></textarea></label>' +
+        '<label class="field"><span>Show until</span><input type="date" name="expires_on" value="' + isoDate(ends) + '"><small>Leave empty to keep it up until you remove it.</small></label>' +
+        '<button class="btn btn--primary" type="submit">Post notice</button><p class="form-status" aria-live="polite"></p>' +
+      "</form>" +
+      (live.length ? '<hr class="divider"><p class="label">Showing now</p>' + live.map(function (n) { return noticeHtml(n, { canRemove: true }); }).join("") : "") +
+    "</div>";
+  }
+  function bindNoticeboard() {
+    onSubmit(document.getElementById("notice-form"), async function (f) {
+      await D.insert("notices", { title: f.title, body: f.body || null, expires_on: f.expires_on || null });
+      toast("Notice posted.");
+      render();
+    });
+    actions["notice-remove"] = async function (el) {
+      if (!confirm("Remove this notice? Families will no longer see it.")) return;
+      await D.remove("notices", el.getAttribute("data-id"));
+      toast("Notice removed.");
+      render();
+    };
+  }
+
+  /* ---- add to calendar -------------------------------------------------- */
+  // Times are the programme's local (UK) times, so the files name the
+  // Europe/London zone and carry its summer-time rules.
+  var ICS_TZ = ["BEGIN:VTIMEZONE", "TZID:Europe/London",
+    "BEGIN:DAYLIGHT", "TZOFFSETFROM:+0000", "TZOFFSETTO:+0100", "TZNAME:BST", "DTSTART:19700329T010000", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "END:DAYLIGHT",
+    "BEGIN:STANDARD", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0000", "TZNAME:GMT", "DTSTART:19701025T020000", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "END:STANDARD",
+    "END:VTIMEZONE"];
+  function icsText(v) { return String(v || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n"); }
+  function icsStamp(date, hhmm) { return date.replace(/-/g, "") + "T" + hhmm.replace(":", "") + "00"; }
+  function icsFold(line) {   // lines over 75 characters continue with a leading space
+    var out = [];
+    while (line.length > 74) { out.push(line.slice(0, 74)); line = " " + line.slice(74); }
+    out.push(line);
+    return out.join("\r\n");
+  }
+  function icsEvent(ev) {
+    return ["BEGIN:VEVENT",
+      "UID:" + ev.uid + "@project-zulfiqar",
+      "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, ""),
+      "DTSTART;TZID=Europe/London:" + icsStamp(ev.date, ev.start),
+      "DTEND;TZID=Europe/London:" + icsStamp(ev.date, ev.end)]
+      .concat(ev.rrule ? ["RRULE:" + ev.rrule] : [])
+      .concat(["SUMMARY:" + icsText(ev.title), "LOCATION:" + icsText(ev.location), "DESCRIPTION:" + icsText(ev.details),
+        "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsText(ev.title), "TRIGGER:-PT1H", "END:VALARM",
+        "END:VEVENT"]);
+  }
+  function downloadIcs(name, events) {
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Project Zulfiqar//Members portal//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"]
+      .concat(ICS_TZ);
+    events.forEach(function (ev) { lines = lines.concat(icsEvent(ev)); });
+    lines.push("END:VCALENDAR");
+    var blob = new Blob([lines.map(icsFold).join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name + ".ics";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  function sessionEvent(date, slot, plan) {
+    var title = P.name + (plan && plan.title ? ": " + plan.title : "");
+    return { uid: "session-" + date, date: date, start: slot.start, end: slot.end, title: title,
+      location: plan ? plan.location : (P.locations || []).join(" / "),
+      details: (plan && (plan.bring || []).length ? "Bring: " + plan.bring.join(", ") + "\n" : "") + "Details and replies: " + location.href.split("#")[0] };
+  }
+  function calButtons(u, plan) {
+    var ev = sessionEvent(u.date, u.slot, plan);
+    var g = "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+      "&text=" + encodeURIComponent(ev.title) +
+      "&dates=" + icsStamp(ev.date, ev.start) + "/" + icsStamp(ev.date, ev.end) + "&ctz=Europe/London" +
+      "&location=" + encodeURIComponent(ev.location) + "&details=" + encodeURIComponent(ev.details);
+    return '<div class="row cal-row">' +
+      '<button type="button" class="btn btn--sm" data-action="cal-ics" data-date="' + esc(u.date) + '">' + icon("calendar") + "Add to calendar</button>" +
+      '<a class="btn btn--sm btn--ghost" href="' + esc(g) + '" target="_blank" rel="noopener">Google Calendar</a></div>';
+  }
+  // Every scheduled evening, repeating weekly, in one file.
+  function seriesEvents() {
+    return (P.schedule || []).map(function (slot) {
+      var d = new Date();
+      while (d.getDay() !== slot.day) d.setDate(d.getDate() + 1);
+      var days = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+      return { uid: "weekly-" + days[slot.day], date: isoDate(d), start: slot.start, end: slot.end, rrule: "FREQ=WEEKLY;BYDAY=" + days[slot.day],
+        title: P.name, location: (P.locations || []).join(" / "),
+        details: "Weekly session. The theme, timetable and what to bring for each evening are in the members' portal: " + location.href.split("#")[0] };
+    });
+  }
+  actions["cal-ics"] = async function (el) {
+    var date = el.getAttribute("data-date");
+    var u = upcomingDates(14).find(function (x) { return x.date === date; });
+    if (!u) return;
+    var sessions = await D.list("sessions", ORDER.sessions);
+    downloadIcs("project-zulfiqar-" + date, [sessionEvent(date, u.slot, planFor(date, sessions))]);
+  };
+  actions["cal-series"] = function () { downloadIcs("project-zulfiqar-weekly", seriesEvents()); };
+
   function upcomingCard(u, d, boys, label) {
     var plan = planFor(u.date, d.sessions);
     var tt = plan && plan.timetable && plan.timetable.length ? plan.timetable : null;
@@ -453,6 +588,7 @@
           "<span>" + icon("clock") + esc(time12(u.slot.start)) + " to " + esc(time12(u.slot.end)) + "</span>" +
           "<span>" + icon("pin") + esc(plan ? plan.location : (P.locations || []).join(" or ")) + "</span>" +
         "</div>" +
+        calButtons(u, plan) +
         '<div class="plan-grid">' +
           "<div>" + '<p class="label">Timetable</p>' +
             (tt ? timetableHtml(tt) : '<p class="small muted">The coaches will post the plan for this evening soon.</p>') + "</div>" +
@@ -705,7 +841,7 @@
   var FAMILY_VIEWS, COACH_VIEWS;
 
   async function render() {
-    actions = { "sign-out": actions["sign-out"], "demo-reset": actions["demo-reset"] };
+    actions = { "sign-out": actions["sign-out"], "demo-reset": actions["demo-reset"], "cal-ics": actions["cal-ics"], "cal-series": actions["cal-series"] };
     var r = parseHash();
     state.me = D.me();
     renderChrome(r.path);
@@ -1002,7 +1138,7 @@
   }
 
   async function familyHome() {
-    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "payments", "rsvps", "attendance_reviews"]);
+    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "payments", "rsvps", "attendance_reviews", "notices"]);
     var boys = d.students, month = thisMonth();
     var latest = d.sessions.filter(function (s) { return s.published && isPast(s) && s.recap; })[0];
     var next = upcomingDates(1)[0];
@@ -1036,6 +1172,7 @@
       '<div class="page-head"><div><h1>Salaam, ' +
         esc(boys.length ? joinNames(boys.map(function (b) { return b.first_name; })) : firstWord(state.me.profile.parent_name)) +
       '</h1><p class="sub">Here\'s what\'s coming up and what you\'ve got left to do.</p></div></div>' +
+      familyNotices(d.notices) +
       (pending.length
         ? '<div class="card card--accent" style="margin-bottom:1rem"><h2>Please check the register</h2>' +
             '<p class="soft small">The coaches took the register at these sessions. Confirm it\'s right, or tell us if something\'s wrong. It\'s what we charge from.</p>' +
@@ -1141,7 +1278,8 @@
     }).join("");
 
     $main.innerHTML =
-      '<div class="page-head"><div><h1>Sessions</h1><p class="sub">What\'s coming up, and what we got up to.</p></div></div>' +
+      '<div class="page-head"><div><h1>Sessions</h1><p class="sub">What\'s coming up, and what we got up to.</p></div>' +
+        '<button type="button" class="btn" data-action="cal-series">' + icon("calendar") + "Add every session to my calendar</button></div>" +
       (pending.length
         ? '<div class="card card--accent" style="margin-bottom:1rem"><h2>Please check the register</h2>' +
             '<p class="soft small">Confirm each one is right, or tell us what\'s wrong.</p>' +
@@ -1410,7 +1548,7 @@
      COACH screens
      ====================================================================== */
   async function coachHome() {
-    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "feedback", "payments", "rsvps", "attendance_reviews"]);
+    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "feedback", "payments", "rsvps", "attendance_reviews", "notices"]);
     var month = thisMonth();
     var next = upcomingDates(1)[0];
     var nextPlan = next ? planFor(next.date, d.sessions) : null;
@@ -1458,13 +1596,15 @@
               }).join("")
             : '<p class="muted small">All caught up.</p>') + "</div>" +
         "</div>" +
+        '<div class="stack">' + coachNoticeboard(d.notices) +
         '<div class="card"><h2>Latest feedback</h2>' + (d.feedback.length ? d.feedback.slice(0, 4).map(function (f) {
           return '<div style="margin-bottom:.8rem">' + starsStatic(f.rating) + ' <span class="small muted">' +
             esc((f.anonymous ? "Name hidden" : fullName(students[f.student_id])) + " · " + (f.session_id && sessions[f.session_id] ? sessions[f.session_id].title : "General")) + "</span>" +
             (f.enjoyed ? '<p class="small" style="margin:.2rem 0 0">' + esc(f.enjoyed) + "</p>" : "") +
             (f.improve ? '<p class="small soft" style="margin:.1rem 0 0">Better: ' + esc(f.improve) + "</p>" : "") + "</div>";
-        }).join("") : '<p class="muted small">No feedback yet.</p>') + "</div>" +
+        }).join("") : '<p class="muted small">No feedback yet.</p>') + "</div></div>" +
       "</div>";
+    bindNoticeboard();
   }
 
   function sortBoys(boys) {

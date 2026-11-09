@@ -195,6 +195,7 @@ main { max-width: var(--max); margin: 0 auto; padding: 2.2rem var(--pad) 3rem; o
 .badge--warn { background: rgba(241, 194, 125, .14); color: var(--warn); }
 .badge--bad  { background: rgba(241, 154, 138, .15); color: var(--bad); }
 .badge--mute { background: var(--glass-light); color: var(--ink-mute); }
+.badge--accent { background: var(--accent-soft); color: var(--accent); vertical-align: .15em; }
 
 .tabs {
   display: inline-flex; flex-wrap: wrap; gap: .2rem; padding: .25rem; border-radius: 999px;
@@ -471,3 +472,15 @@ body.has-nav .foot { padding-bottom: 7rem; }
   .lpA-grow { font-size: 1.15rem; gap: .5rem; }
   .lpA-grow__icon { width: 44px; height: 44px; }
 }
+
+/* ---- noticeboard & add to calendar ------------------------------------ */
+.noticeboard { margin-bottom: 1rem; border-color: rgba(233, 180, 111, .35); }
+.noticeboard > .label { display: flex; align-items: center; gap: .4rem; color: var(--accent); }
+.noticeboard > .label svg { width: 16px; height: 16px; }
+.notice + .notice { border-top: 1px solid var(--hair); margin-top: .9rem; padding-top: .9rem; }
+.notice__head { display: flex; align-items: flex-start; justify-content: space-between; gap: .6rem; }
+.notice__head h3 { margin: 0; font-size: 1.15rem; }
+.notice__body { margin: .35rem 0 0; white-space: pre-line; color: var(--ink-soft); }
+.notice__meta { margin: .35rem 0 0; font-size: .78rem; color: var(--ink-mute); }
+.cal-row { gap: .4rem; margin: .7rem 0 .2rem; }
+@media print { .cal-row { display: none; } }

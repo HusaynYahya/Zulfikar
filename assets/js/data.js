@@ -13,7 +13,8 @@
 
    Tables: profiles, students, sessions, attendance, homework, submissions,
            feedback, payments, rsvps (coming or not, before a session),
-           attendance_reviews (parent confirms or flags the register after)
+           attendance_reviews (parent confirms or flags the register after),
+           notices (the coaches' noticeboard)
    ============================================================================ */
 (function () {
   "use strict";
@@ -148,7 +149,7 @@
       try { db = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { db = null; }
       if (!db || !db.tables) { db = seed(); save(); }
       // demo data saved by an older version may lack newer tables
-      ["rsvps", "attendance_reviews"].forEach(function (t) { db.tables[t] = db.tables[t] || []; });
+      ["rsvps", "attendance_reviews", "notices"].forEach(function (t) { db.tables[t] = db.tables[t] || []; });
       db.tables.sessions.forEach(function (s) {
         if (s.register_taken === undefined) s.register_taken = s.date < isoDate(new Date());
         s.timetable = s.timetable || [];
@@ -173,7 +174,8 @@
         case "profiles":    return row.id === uid;
         case "students":    return row.family_id === uid;
         case "sessions":    return row.published;
-        case "homework":    return true;
+        case "homework":
+        case "notices":     return true;
         case "attendance":
         case "submissions": return mine.indexOf(row.student_id) !== -1;
         case "feedback":
@@ -370,6 +372,9 @@
         ],
         rsvps: [
           { id: uuid(), family_id: famId, student_id: ali, date: nextDates[0], going: true, reason: null, updated_at: nowISO() },
+        ],
+        notices: [
+          { id: uuid(), title: "Hike this Saturday", body: "Meet at the Zahra Centre at 9am. Walking boots, a packed lunch and a waterproof. Back by 3pm, insha'Allah.", expires_on: isoDate(new Date(Date.now() + 10 * 864e5)), created_by: coachId, created_at: nowISO() },
         ],
         payments: [
           { id: uuid(), family_id: famId, student_id: ali, kind: "month", period: month, amount_pence: 5000, method: "stripe", status: "paid", created_at: nowISO() },
