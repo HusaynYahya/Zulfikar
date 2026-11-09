@@ -805,7 +805,7 @@
     var html =
       '<div class="topbar__inner">' +
         '<a class="brand" href="#/home" aria-label="' + esc(P.name) + ' home">' +
-          '<img class="brand__logo" src="assets/img/logo-small.png?v=2" alt="" width="44" height="44">' +
+          '<img class="brand__logo" src="assets/img/logo-small.png?v=3" alt="" width="44" height="44">' +
           '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>";
     if (nav.length) {
       html += '<nav class="nav" aria-label="Main">' + nav.map(function (n) {
@@ -898,7 +898,7 @@
   function publicHeader(cta) {
     return (
       '<header class="site-top"><div class="site-top__inner">' +
-        '<a class="brand" href="#/" aria-label="' + esc(P.name) + '"><img class="brand__logo" src="assets/img/logo-small.png?v=2" alt="" width="40" height="40">' +
+        '<a class="brand" href="#/" aria-label="' + esc(P.name) + '"><img class="brand__logo" src="assets/img/logo-small.png?v=3" alt="" width="40" height="40">' +
           '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>" +
         (cta === "home" ? '<a class="btn btn--sm" href="#/">← Home</a>' : '<a class="btn btn--sm btn--primary" href="#/signin">Member sign in</a>') +
       "</div></header>"
@@ -934,7 +934,7 @@
     };
   }
   function lpFoot() {
-    return '<footer class="lp-foot"><img src="assets/img/logo.webp?v=2" width="64" height="64" alt="">' +
+    return '<footer class="lp-foot"><img src="assets/img/logo.webp?v=3" width="64" height="64" alt="">' +
       "<span>" + esc(P.name) + "</span><span class=\"soft\">" + esc((P.values || []).join(" · ")) + "</span>" +
       '<span class="soft">改善 · kaizen</span></footer>';
   }
@@ -949,7 +949,7 @@
       '<section class="lpA-track"><div class="lpA-pin">' +
         '<div class="lpA-kaizen" title="Kaizen: continual improvement"><p class="kaizen" lang="ja">改善</p><p class="kaizen__word">Kaizen</p></div>' +
         '<div class="lpA-copy">' +
-          '<img class="lpA-mark" src="assets/img/logo.webp?v=2" width="720" height="720" alt="' + esc(P.name) + '">' +
+          '<img class="lpA-mark" src="assets/img/logo.webp?v=3" width="720" height="720" alt="' + esc(P.name) + '">' +
           '<h1 class="lpA-h1">' + lines.map(function (l, i) { return '<span data-line="' + i + '">' + l + "</span>"; }).join("") + "</h1>" +
           '<p class="lpA-lede">' + esc(P.name) + " is a weekly programme for our Muslim youth.</p>" +
           '<div class="row lpA-actions"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn btn--ghost" href="#/signin">Member sign in</a></div>' +
@@ -975,6 +975,7 @@
       '<section class="lpA-sec lpA-cta"><h2 class="lpA-h2 lpA-values">' + (P.values || []).map(function (v) { return "<span>" + esc(v) + "</span>"; }).join(" ") + "</h2>" +
         '<a class="btn btn--primary" href="#/register">Join Project Zulfiqar</a></section>' +
       "</div>" + lpFoot();
+    if (window.ZSmoke) ZSmoke.start($main.querySelector(".lpA-mark"));
     var spans = $main.querySelectorAll(".lpA-h1 span");
     // A/B: the two wrestling animations, to compare; the choice is
     // remembered on this device
@@ -1001,6 +1002,7 @@
   function viewLanding(r) {
     var tab = r.path === "register" ? "register" : r.path === "forgot" ? "forgot" : "signin";
     var auth;
+    var down = state.offline ? '<p class="form-status is-error" style="margin:0 0 1rem">The members\' area can\'t be reached right now. Please try again a little later.</p>' : "";
     if (tab === "register") {
       auth =
         "<h2>Register your son</h2>" +
@@ -1058,9 +1060,9 @@
     $main.innerHTML =
       publicHeader("home") +
       '<div class="login">' +
-        '<section class="card card--strong auth-card" aria-label="Account">' + auth + "</section>" +
+        '<section class="card card--strong auth-card" aria-label="Account">' + down + auth + "</section>" +
         '<section class="login-brand">' +
-          '<h1><img class="login-brand__logo" src="assets/img/logo.webp?v=2" width="720" height="720" alt="' + esc(P.name) + '"></h1>' +
+          '<h1><img class="login-brand__logo" src="assets/img/logo.webp?v=3" width="720" height="720" alt="' + esc(P.name) + '"></h1>' +
           '<p class="kaizen" lang="ja" title="Kaizen: continual improvement">改善</p>' +
           '<p class="kaizen__word">Kaizen</p>' +
         "</section>" +
@@ -1111,7 +1113,7 @@
       var res = await D.signUp({ email: f.email, password: f.password, parent_name: f.parent_name, phone: f.phone, boys: boys });
       if (res.needsConfirmation) {
         $main.innerHTML = '<div class="card" style="max-width:520px;margin:2rem auto;text-align:center">' +
-          '<img src="assets/img/logo.webp?v=2" alt="" width="160" height="160" style="margin:0 auto .5rem;width:160px;height:auto">' +
+          '<img src="assets/img/logo.webp?v=3" alt="" width="160" height="160" style="margin:0 auto .5rem;width:160px;height:auto">' +
           "<h1>Check your email</h1><p class=\"soft\">We've sent a confirmation link to <strong>" + esc(f.email) +
           "</strong>. Click it to finish setting up your account, then sign in.</p></div>";
         return;
@@ -1309,7 +1311,7 @@
     $main.innerHTML =
       '<div class="confirmation card card--strong">' +
         '<div class="confirmation__head">' +
-          '<img src="assets/img/logo-small.png?v=2" alt="" width="72" height="72">' +
+          '<img src="assets/img/logo-small.png?v=3" alt="" width="72" height="72">' +
           '<div><p class="label">Booking confirmation</p><h1>' + (ok ? "Signed up and paid" : "Not confirmed yet") + "</h1></div>" +
           (ok ? badge("Confirmed", "ok") : badge("Action needed", "warn")) +
         "</div>" +
@@ -1981,8 +1983,12 @@
      Start
      ====================================================================== */
   window.addEventListener("hashchange", render);
-  D.init().then(render).catch(function (err) {
+  // If the database can't be reached (offline, or the project is paused), the
+  // public pages still open; the sign-in page says the members' area is down.
+  var giveUp = new Promise(function (_, reject) { setTimeout(function () { reject(new Error("The database didn't answer in time.")); }, 8000); });
+  Promise.race([D.init(), giveUp]).then(render).catch(function (err) {
     console.error(err);
-    $main.innerHTML = '<div class="card"><h1>Can\'t connect</h1><p class="soft">The portal couldn\'t reach its database. Check your connection and the keys in <code>config.js</code>.</p><p class="small muted">' + esc(err.message || err) + "</p></div>";
+    state.offline = err.message || String(err);
+    render();
   });
 })();
