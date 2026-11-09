@@ -44,8 +44,8 @@ window.ZULFIQAR = {
     // Starting point for each new session plan. Coaches can change it per session.
     defaultTimetable: [
       { time: "19:00", activity: "Part 1: Wrestling" },
-      { time: "20:00", activity: "Part 2: Creative" },
-      { time: "20:50", activity: "Part 3: Dinner" },
+      { time: "20:30", activity: "Part 2: Creative" },
+      { time: "21:15", activity: "Part 3: Dinner" },
       { time: "21:30", activity: "Collection" },
     ],
     defaultBring: ["Water bottle", "Trainers and sports kit", "Notebook and pen", "A light snack"],

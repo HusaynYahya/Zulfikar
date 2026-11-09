@@ -324,8 +324,8 @@
       recap: "", takeaways: [], created_by: coachId, created_at: nowISO(),
       timetable: [
         { time: "19:00", activity: "Part 1: Wrestling — grip and pulling drills in pairs" },
-        { time: "20:00", activity: "Part 2: Creative — the gate of Khaybar, told as a comic strip" },
-        { time: "20:50", activity: "Part 3: Dinner" },
+        { time: "20:30", activity: "Part 2: Creative — the gate of Khaybar, told as a comic strip" },
+        { time: "21:15", activity: "Part 3: Dinner" },
         { time: "21:30", activity: "Collection" },
       ],
       bring: ["Water bottle", "Trainers and sports kit", "Towel", "Notebook and pen"],
