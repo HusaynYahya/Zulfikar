@@ -3,7 +3,7 @@
    ----------------------------------------------------------------------------
    Thin steam rises off the whole sword in the logo (both blades, the guard
    and the hilt) and some of it gathers into small cartoon clouds. The wind
-   blows left to right, and more cartoon clouds drift in from the left edge
+   blows right to left, and more cartoon clouds drift in from the right edge
    across the mountains. Drawn on a canvas just above the scenery and behind
    the page, so text stays crisp.
 
@@ -14,7 +14,7 @@
 
   // How much steam: puffs per second (desktop, phone), and how many of them
   // become a cartoon cloud (1 in CLOUD_EVERY).
-  var RATE = [11, 6], CLOUD_EVERY = 5;
+  var RATE = [11, 6], CLOUD_EVERY = 45;
 
   // The sword, traced as lines over the logo, in fractions of its width/height.
   var SWORD = [
@@ -99,7 +99,7 @@
     size(); addEventListener("resize", size);
 
     var parts = [], last = performance.now(), carry = 0, raf = 0, clock = 0, count = 0;
-    // clouds drifting in from the left, across the mountains
+    // clouds drifting in from the right, across the mountains
     var drift = [], nextDrift = 0;
     function addDrift(x) {
       var w = (small ? 64 : 96) + Math.random() * (small ? 40 : 70);
@@ -114,7 +114,7 @@
         x: b.left + pt[0] * b.width + (Math.random() - .5) * 3, y: b.top + pt[1] * b.height,
         age: 0, life: cloud ? 17 + Math.random() * 6 : 7 + Math.random() * 4, cloud: cloud,
         sprite: clouds[(Math.random() * clouds.length) | 0], flip: Math.random() < .5,
-        vx: (Math.random() - .4) * 6, vy: -(16 + Math.random() * 14) * scale,
+        vx: (Math.random() - .6) * 6, vy: -(16 + Math.random() * 14) * scale,
         r0: (3 + Math.random() * 3) * scale, grow: (cloud ? 70 : 34 + Math.random() * 30) * (small ? .65 : 1),
         seed: Math.random() * 100, a: .07 + Math.random() * .05, rot: Math.random() * 6.28,
       });
@@ -133,12 +133,12 @@
       }
 
       ctx.clearRect(0, 0, W, H);
-      if (!drift.length && !nextDrift) { for (var n = 0; n < (small ? 2 : 3); n++) addDrift(Math.random() * W * .8); nextDrift = clock + 4; }
-      if (clock >= nextDrift && drift.length < (small ? 4 : 6)) { addDrift(-180); nextDrift = clock + 7 + Math.random() * 6; }
+      if (!drift.length && !nextDrift) { for (var n = 0; n < 2; n++) addDrift(W * (.2 + Math.random() * .8)); nextDrift = clock + 4; }
+      if (clock >= nextDrift && drift.length < (small ? 3 : 4)) { addDrift(W + 180); nextDrift = clock + 9 + Math.random() * 7; }
       for (var j = drift.length - 1; j >= 0; j--) {
         var c = drift[j];
-        c.age += dt; c.x += c.speed * dt;
-        if (c.x - c.w > W) { drift.splice(j, 1); continue; }
+        c.age += dt; c.x -= c.speed * dt;
+        if (c.x + c.w < 0) { drift.splice(j, 1); continue; }
         var ch = c.w * 150 / 256;
         ctx.globalAlpha = .7 * Math.min(1, c.age / 2);
         ctx.save(); ctx.translate(c.x, c.y + Math.sin(clock * .5 + c.seed) * 3);
@@ -151,10 +151,10 @@
         var p = parts[i];
         p.age += dt;
         var k = p.age / p.life;
-        if (k >= 1 || p.x > W + 300) { parts.splice(i, 1); continue; }
+        if (k >= 1 || p.x < -300) { parts.splice(i, 1); continue; }
         // steam rises first, then the wind carries it out over the hills
         var wind = Math.min(1, p.age / 2);
-        p.vx += ((p.cloud ? 38 : 50) * gust * wind - p.vx * .2) * dt;
+        p.vx += (-(p.cloud ? 38 : 50) * gust * wind - p.vx * .2) * dt;   // the wind blows right to left
         p.vy += ((p.cloud ? 4 : 18 + 10 * Math.sin(p.seed)) * wind - p.vy * .5 * wind) * dt;
         p.x += (p.vx + Math.sin(clock * .9 + p.seed) * 8 * wind) * dt;
         p.y += (p.vy + Math.cos(clock * .7 + p.seed * 1.7) * 5 * wind) * dt;
