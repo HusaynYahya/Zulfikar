@@ -43,9 +43,9 @@ window.ZULFIQAR = {
     values: ["Integrity", "Respect", "Discipline", "Brotherhood"],
     // the three parts of a Monday evening, shown on the home page
     evening: [
-      { part: "Part 1", name: "Wrestling", time: "7:00–8:30pm", text: "Technique, drilling and live rounds." },
-      { part: "Part 2", name: "Creative", time: "8:30–9:15pm", text: "Poetry writing, plant potting, book clubs and discussion circles." },
-      { part: "Part 3", name: "Dinner", time: "9:15pm to close", text: "We finish the evening by eating together." },
+      { part: "Part 1", name: "Wrestling", text: "Technique, drilling and live rounds." },
+      { part: "Part 2", name: "Creative", text: "Poetry writing, plant potting, book clubs and discussion circles." },
+      { part: "Part 3", name: "Dinner", text: "We finish the evening by eating together." },
     ],
     // Starting point for each new session plan. Coaches can change it per session.
     defaultTimetable: [
