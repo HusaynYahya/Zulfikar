@@ -419,7 +419,7 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .lp-foot img { width: 40px; height: 40px; }
 .lpA-track { height: 320vh; }
 .lpA-pin { position: sticky; top: 0; height: 100vh; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: center; gap: clamp(1rem, 4vw, 3rem); }
-.lpA-mark { width: clamp(130px, 13vw, 180px); height: auto; margin: 0 auto 1.2rem; filter: drop-shadow(0 8px 30px rgba(0,0,0,.55)); }
+.lpA-mark { width: clamp(150px, 15vw, 210px); height: auto; margin: 0 auto 1.2rem; filter: drop-shadow(0 8px 30px rgba(0,0,0,.55)); }
 .lpA-kaizen { position: absolute; top: 1.4rem; right: 0; text-align: center; }
 .lpA-kaizen .kaizen { font-size: clamp(2rem, 3vw, 2.8rem); margin: 0; }
 .lpA-h1 { font-size: clamp(2.4rem, 4.3vw, 3.9rem); line-height: 1.02; letter-spacing: -.02em; margin: 0 0 1.3rem; }

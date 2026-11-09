@@ -156,7 +156,7 @@ minutes.
 │   ├── js/rigdata.js                  the traced head, hands and shoe it uses (generated, don't edit)
 │   ├── js/wrestle.js                  home-page wrestlers, option B: the earlier cartoon version
 │   └── img/
-│       ├── logo.webp, logo-small.png  the logo with its background removed
+│       ├── logo.webp, logo-small.png  the round badge logo, cut out of its background
 │       ├── logo-original.png          the logo as supplied
 │       ├── favicon.png, apple-touch-icon.png
 │       └── flyer.webp                 the programme poster
