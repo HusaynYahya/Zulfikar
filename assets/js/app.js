@@ -854,6 +854,8 @@
     var where = (state.me ? "in:" : "out:") + r.path;
     if (where !== state.lastPath) window.scrollTo(0, 0);
     setScene(state.me ? r.path : (({ signin: 1, register: 1, forgot: 1 }[r.path]) ? "landing" : "marketing"));
+    // random weather over the scenery on the public pages (weather.js)
+    if (window.ZWeather) { if (state.me) ZWeather.stop(); else ZWeather.start(); }
     state.lastPath = where;
 
     if (!state.me) {
