@@ -3,11 +3,11 @@
    ----------------------------------------------------------------------------
    Each visit gets a random weather, drawn over the mountain scenery and
    behind the page: sunny, cloudy, windy, rainy, stormy, foggy or snowy. It
-   stays the same while the visitor moves between pages, and changes on the
-   next visit. Add ?weather=stormy (or any other kind) to the address to see a
-   particular one.
+   carries over as the visitor moves between pages, and if they stay on one
+   page for a while it slowly changes into another. Add ?weather=stormy (or
+   any other kind) to the address to hold a particular one.
 
-   ZWeather.start()   starts (or keeps) the weather
+   ZWeather.start()   starts the weather, or on a new page restarts the wait
    ZWeather.stop()    removes it
    ZWeather.kind      the weather showing
    ============================================================================ */
@@ -27,14 +27,22 @@
   };
   var KEY = "zulfiqar-weather";
 
-  function choose() {
+  function pinned() {   // ?weather=stormy holds one kind and never changes it
     var asked = (location.search.match(/[?&]weather=(\w+)/) || [])[1];
-    if (asked && KINDS[asked]) return asked;
-    try { var kept = sessionStorage.getItem(KEY); if (kept && KINDS[kept]) return kept; } catch (e) {}
-    var names = Object.keys(KINDS), total = names.reduce(function (s, k) { return s + KINDS[k].w; }, 0);
-    var roll = Math.random() * total, kind = names[0];
-    for (var i = 0; i < names.length; i++) { roll -= KINDS[names[i]].w; if (roll <= 0) { kind = names[i]; break; } }
-    try { sessionStorage.setItem(KEY, kind); } catch (e) {}
+    return asked && KINDS[asked] ? asked : null;
+  }
+  function pick(not) {     // a weighted random kind, other than `not`
+    var names = Object.keys(KINDS).filter(function (k) { return k !== not; });
+    var total = names.reduce(function (s, k) { return s + KINDS[k].w; }, 0), roll = Math.random() * total;
+    for (var i = 0; i < names.length; i++) { roll -= KINDS[names[i]].w; if (roll <= 0) return names[i]; }
+    return names[0];
+  }
+  function remember(kind) { try { sessionStorage.setItem(KEY, kind); } catch (e) {} }
+  function choose() {
+    var kept = null;
+    try { kept = sessionStorage.getItem(KEY); } catch (e) {}
+    var kind = pinned() || (kept && KINDS[kept] ? kept : pick());
+    remember(kind);
     return kind;
   }
 
@@ -77,28 +85,38 @@
     return c;
   }
 
-  var canvas = null, raf = 0, stopFn = null;
+  // Stay on one page long enough and the weather slowly turns into another:
+  // after CHANGE_AFTER seconds (a random time in that range) it cross-fades
+  // over FADE seconds. Moving to another page restarts the wait.
+  var CHANGE_AFTER = [45, 75], FADE = 12;
+  var canvas = null, raf = 0, stopFn = null, onPage = null;
 
   function start() {
-    if (canvas) return;
-    var kind = choose(), K = KINDS[kind];
-    ZWeather.kind = kind;
+    if (canvas) { onPage(); return; }
+    var first = choose();
+    ZWeather.kind = first;
     canvas = document.createElement("canvas");
     canvas.className = "weather"; canvas.setAttribute("aria-hidden", "true");
     var scene = document.getElementById("scene");
     if (scene) scene.after(canvas); else document.body.prepend(canvas);
-    var ctx = canvas.getContext("2d");
-    var W = 0, H = 0, small = false;
+    var main = canvas.getContext("2d");
+    // two offscreen canvases, used only while one weather fades into the next
+    var off = [document.createElement("canvas"), document.createElement("canvas")].map(function (c) { return c.getContext("2d"); });
+    var W = 0, H = 0, small = false, dpr = 1;
     function size() {
-      var dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      dpr = Math.min(1.5, window.devicePixelRatio || 1);
       W = innerWidth; H = innerHeight; small = W < 700;
-      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      [main].concat(off).forEach(function (c) {
+        c.canvas.width = Math.round(W * dpr); c.canvas.height = Math.round(H * dpr);
+        c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      });
     }
     size(); addEventListener("resize", size);
     var less = function (n) { return Math.round((n || 0) * (small ? .5 : 1)); };
 
-    // ---- the pieces of weather -----------------------------------------
+    // ---- one weather: its clouds, rain, snow... and how to draw them ------
+    function layer(kind) {
+    var K = KINDS[kind], ctx = main;
     var clouds = [], cs = K.clouds, sprites = [cloudSprite(cs.dark), cloudSprite(cs.dark), cloudSprite(Math.min(1, cs.dark + .1))];
     function newCloud(x) {
       var s = cs.scale * rand(.6, 1.1) * (small ? .6 : 1);
@@ -142,11 +160,11 @@
     }
 
     // ---- drawing ------------------------------------------------------
-    var last = performance.now(), clock = 0;
+    var clock = 0;
     function line(pts) { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (var j = 1; j < pts.length; j++) ctx.lineTo(pts[j][0], pts[j][1]); ctx.stroke(); }
 
-    function draw(dt) {
-      clock += dt;
+    function draw(dt, into) {
+      ctx = into; clock += dt;
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = K.tint; ctx.fillRect(0, 0, W, H);
 
@@ -262,13 +280,40 @@
       }
     }
 
-    function step(now) {
-      raf = requestAnimationFrame(step);
-      var dt = Math.min(.05, (now - last) / 1000); last = now;
-      draw(dt);
+    return { kind: kind, draw: draw };
     }
+
+    // ---- the running weather, and the slow change to the next ------------
     var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (still) draw(0); else raf = requestAnimationFrame(step);   // a still picture for reduced motion
+    var cur = layer(first), next = null, fading = 0, now = 0, changeAt = 0, last = performance.now();
+    function smooth(k) { return k * k * (3 - 2 * k); }
+    onPage = function () { if (!next) changeAt = now + rand(CHANGE_AFTER[0], CHANGE_AFTER[1]); };
+    onPage();
+
+    function frame(dt) {
+      now += dt;
+      if (!next && !still && !pinned() && now >= changeAt) { next = layer(pick(cur.kind)); fading = 0; }
+      if (!next) { cur.draw(dt, main); return; }
+      fading += dt;
+      var k = smooth(Math.min(1, fading / FADE));
+      cur.draw(dt, off[0]); next.draw(dt, off[1]);
+      main.setTransform(1, 0, 0, 1, 0, 0);
+      main.clearRect(0, 0, main.canvas.width, main.canvas.height);
+      main.globalAlpha = 1 - k; main.drawImage(off[0].canvas, 0, 0);
+      main.globalAlpha = k; main.drawImage(off[1].canvas, 0, 0);
+      main.globalAlpha = 1; main.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (fading >= FADE) {
+        cur = next; next = null;
+        ZWeather.kind = cur.kind; remember(cur.kind);
+        onPage();
+      }
+    }
+    function step(t) {
+      raf = requestAnimationFrame(step);
+      var dt = Math.min(.05, (t - last) / 1000); last = t;
+      frame(dt);
+    }
+    if (still) frame(0); else raf = requestAnimationFrame(step);   // a still picture for reduced motion
 
     stopFn = function () { cancelAnimationFrame(raf); removeEventListener("resize", size); };
   }
