@@ -547,7 +547,7 @@
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
   }
   function sessionEvent(date, slot, plan) {
-    var title = P.name + (plan && plan.title ? ": " + plan.title : "");
+    var title = (P.initiative ? P.initiative + " · " : "") + P.name + (plan && plan.title ? ": " + plan.title : "");
     return { uid: "session-" + date, date: date, start: slot.start, end: slot.end, title: title,
       location: plan ? plan.location : (P.locations || []).join(" / "),
       details: (plan && (plan.bring || []).length ? "Bring: " + plan.bring.join(", ") + "\n" : "") + "Details and replies: " + location.href.split("#")[0] };
@@ -569,7 +569,7 @@
       while (d.getDay() !== slot.day) d.setDate(d.getDate() + 1);
       var days = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
       return { uid: "weekly-" + days[slot.day], date: isoDate(d), start: slot.start, end: slot.end, rrule: "FREQ=WEEKLY;BYDAY=" + days[slot.day],
-        title: P.name, location: (P.locations || []).join(" / "),
+        title: (P.initiative ? P.initiative + " · " : "") + P.name, location: (P.locations || []).join(" / "),
         details: "Weekly session. The theme, timetable and what to bring for each evening are in the members' portal: " + location.href.split("#")[0] };
     });
   }
@@ -975,6 +975,7 @@
         '<p class="lpA-quote">To create a group of young men who are <em>disciplined, resilient and talented</em>, through holistic growth, brotherhood and mentorship.</p></section>' +
 
       '<section class="lpA-sec lpA-info">' +
+        (P.initiative ? '<div class="lpA-initiative"><p class="lpA-kicker">Our first initiative</p><h2 class="lpA-h2">' + esc(P.initiative) + "</h2></div>" : "") +
         '<div class="lpA-facts">' + [["users", "Who", "Boys, Years 7–10"], ["calendar", "When", F.days], ["clock", "Time", F.time], ["pin", "Where", F.where]].map(function (f) {
           return '<div class="lpA-fact">' + icon(f[0]) + '<div><p class="lpA-kicker">' + f[1] + "</p><p>" + esc(f[2]) + "</p></div></div>";
         }).join("") + "</div>" +
@@ -1321,7 +1322,7 @@
       '<div class="confirmation card card--strong">' +
         '<div class="confirmation__head">' +
           '<img src="assets/img/logo-small.png?v=4" alt="" width="72" height="72">' +
-          '<div><p class="label">Booking confirmation</p><h1>' + (ok ? "Signed up and paid" : "Not confirmed yet") + "</h1></div>" +
+          '<div><p class="label">Booking confirmation' + (P.initiative ? " · " + esc(P.initiative) : "") + "</p><h1>" + (ok ? "Signed up and paid" : "Not confirmed yet") + "</h1></div>" +
           (ok ? badge("Confirmed", "ok") : badge("Action needed", "warn")) +
         "</div>" +
         '<dl class="confirmation__grid">' +

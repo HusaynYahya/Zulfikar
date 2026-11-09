@@ -29,6 +29,7 @@ window.ZULFIQAR = {
   /* ---- programme ----------------------------------------------------- */
   programme: {
     name: "Project Zulfiqar",
+    initiative: "Youth Wrestling",   // the weekly sessions, Project Zulfiqar's first initiative
     arabic: "ذوالفقار",
     tagline: "Physical, Spiritual and Intellectual holistic growth for our youth.",
     ages: "Year 7 – Year 10 (Boys)",
