@@ -9,7 +9,7 @@ with no build step, so it can be hosted free on GitHub Pages.
 | | Families | Coaches |
 |---|---|---|
 | **Sign up** | A parent registers with their details, one or more sons (year group, date of birth, medical needs, photo consent) and agrees to the programme values | Sees the full roster, with medical flags, emergency contacts and parent details. Can export it as CSV |
-| **Payments** | £10 per session or £50 per month, paid by card through Stripe. Each boy's balance for the month and full payment history are shown | Records cash and bank payments, and can see who owes what each month |
+| **Payments** | £15 per session or £50 per month, paid by card through Stripe. Each boy's balance for the month and full payment history are shown | Records cash and bank payments, and can see who owes what each month |
 | **Session plans** | Sees each upcoming evening's theme, its timetable and a what-to-bring checklist (ticks are remembered on their device) | Plans each session ahead: theme, timetable and kit list. The defaults are in `config.js` |
 | **Coming or not** | Says whether each son is coming to the next sessions, with a reason if not | Sees who's coming, who isn't (and why) and who hasn't replied. Saying "coming" pre-ticks the register |
 | **Booking confirmation** | Gets a formal confirmation for each evening (signed up, paid, a reference number) that can be printed or saved as a PDF | Can open any boy's confirmation |
@@ -21,7 +21,7 @@ with no build step, so it can be hosted free on GitHub Pages.
 The layout works on phones, where navigation moves to a bottom tab bar.
 
 **How balances work.** Each attended session in a published recap counts as
-£10. A monthly pass covers everything in that month. Session payments are
+£15. A monthly pass covers everything in that month. Session payments are
 subtracted from the total. Coaches take the register when they write the recap.
 
 ---
@@ -84,7 +84,7 @@ change is in [`assets/js/config.js`](assets/js/config.js).
 ### 2. Stripe: card payments
 
 1. In the Stripe Dashboard, create two **Payment Links**:
-   - "Project Zulfiqar — session", **£10**
+   - "Project Zulfiqar — session", **£15**
    - "Project Zulfiqar — monthly", **£50**
 
    For each one, under **After payment**, choose *Don't show confirmation page →

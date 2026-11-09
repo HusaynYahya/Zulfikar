@@ -378,7 +378,7 @@
         ],
         payments: [
           { id: uuid(), family_id: famId, student_id: ali, kind: "month", period: month, amount_pence: 5000, method: "stripe", status: "paid", created_at: nowISO() },
-          { id: uuid(), family_id: famId, student_id: mahdi, kind: "session", period: month, amount_pence: 1000, method: "cash", status: "paid", created_at: nowISO() },
+          { id: uuid(), family_id: famId, student_id: mahdi, kind: "session", period: month, amount_pence: 1500, method: "cash", status: "paid", created_at: nowISO() },
         ],
       },
     };

@@ -22,7 +22,7 @@ window.ZULFIQAR = {
      amounts below and paste their URLs here. The portal adds the boy's ID
      and the month to each link so the webhook knows who paid for what.    */
   stripe: {
-    sessionLink: "",  // £10 — one session,  e.g. "https://buy.stripe.com/xxxx"
+    sessionLink: "",  // £15 — one session,  e.g. "https://buy.stripe.com/xxxx"
     monthLink:   "",  // £50 — one month,    e.g. "https://buy.stripe.com/yyyy"
   },
 
@@ -38,7 +38,7 @@ window.ZULFIQAR = {
       { day: 1, start: "19:00", end: "21:30" },  // Monday
     ],
     locations: ["Hujjat Stanmore"],
-    prices: { sessionPence: 1000, monthPence: 5000 },
+    prices: { sessionPence: 1500, monthPence: 5000 },
     values: ["Integrity", "Respect", "Discipline", "Brotherhood"],
     // Starting point for each new session plan. Coaches can change it per session.
     defaultTimetable: [
