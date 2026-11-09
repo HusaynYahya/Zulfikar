@@ -43,15 +43,15 @@ window.ZULFIQAR = {
     values: ["Integrity", "Respect", "Discipline", "Brotherhood"],
     // the three parts of a Monday evening, shown on the home page
     evening: [
-      { part: "Part 1", name: "Wrestling", text: "Technique, drilling and live rounds." },
-      { part: "Part 2", name: "Creative", text: "Poetry writing, plant potting, book clubs and discussion circles." },
-      { part: "Part 3", name: "Dinner", text: "We finish the evening by eating together." },
+      { part: "Round 1", name: "Wrestling", text: "Structured training led by an experienced coach." },
+      { part: "Round 2", name: "Creative", text: "Rediscovering lost skills." },
+      { part: "Round 3", name: "A Shared Meal", text: "Forging brotherhood." },
     ],
     // Starting point for each new session plan. Coaches can change it per session.
     defaultTimetable: [
-      { time: "19:00", activity: "Part 1: Wrestling" },
-      { time: "20:30", activity: "Part 2: Creative — poetry, plant potting, book club or a discussion circle" },
-      { time: "21:15", activity: "Part 3: Dinner" },
+      { time: "19:00", activity: "Round 1: Wrestling" },
+      { time: "20:30", activity: "Round 2: Creative — poetry, plant potting, book club or a discussion circle" },
+      { time: "21:15", activity: "Round 3: A Shared Meal" },
       { time: "21:30", activity: "Collection" },
     ],
     defaultBring: ["Water bottle", "Trainers and sports kit", "Notebook and pen", "A light snack"],
