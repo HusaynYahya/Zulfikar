@@ -16,10 +16,9 @@
 
   // The sword, traced as lines over the logo, in fractions of its width/height.
   var SWORD = [
-    [[0.445, 0.03], [0.475, 0.40], [0.50, 0.72]],                 // left blade
-    [[0.515, 0.02], [0.555, 0.20], [0.56, 0.40], [0.51, 0.72]],   // right blade
-    [[0.30, 0.765], [0.70, 0.765]],                               // guard
-    [[0.50, 0.78], [0.50, 0.97]],                                 // hilt
+    [[0.532, 0.018], [0.494, 0.083], [0.493, 0.175], [0.497, 0.30], [0.499, 0.36]],   // pommel, grip and the blade above the name
+    [[0.358, 0.235], [0.632, 0.235]],                                                 // guard
+    [[0.505, 0.60], [0.501, 0.682], [0.483, 0.774], [0.451, 0.866], [0.44, 0.959], [0.413, 0.998]],   // the blade below the name
   ];
   var SEGS = [], TOTAL = 0;
   SWORD.forEach(function (line) {
