@@ -56,6 +56,10 @@ window.ZULFIQAR = {
     ],
     defaultBring: ["Water bottle", "Trainers and sports kit", "Notebook and pen", "A light snack"],
     contactEmail: "",  // shown on the sign-in page if set
+    // While false, families can register their sons but the member portal shows
+    // "coming soon" (they can't use it yet). Coaches can still sign in at #/signin.
+    // Set to true when the portal is ready.
+    portalOpen: false,
   },
 
   /* ---- the four pillars ---------------------------------------------- */

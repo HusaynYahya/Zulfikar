@@ -814,10 +814,14 @@
     { path: "account", label: "Account", icon: "user" },
   ];
 
+  // the member portal is closed to families until programme.portalOpen is true
+  function portalClosed() { return P.portalOpen === false; }
+  var SOON_TEXT = "The member portal, with all the session information, is coming soon.";
+
   function renderChrome(path) {
     var me = state.me;
     var role = me && me.profile && me.profile.role;
-    var nav = role === "coach" ? COACH_NAV : role ? FAMILY_NAV : [];
+    var nav = role === "coach" ? COACH_NAV : role && !portalClosed() ? FAMILY_NAV : [];
     // payments and confirmation live under Account now, so light that tab
     if (path === "payments" || path === "confirmation") path = "account";
     document.body.classList.toggle("has-nav", nav.length > 0);
@@ -830,7 +834,7 @@
     var html =
       '<div class="topbar__inner">' +
         '<a class="brand" href="#/home" aria-label="' + esc(P.name) + ' home">' +
-          '<img class="brand__logo" src="assets/img/logo-small.png?v=6" alt="" width="44" height="44">' +
+          '<img class="brand__logo" src="assets/img/logo-small.png?v=7" alt="" width="44" height="44">' +
           '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>";
     if (nav.length) {
       html += '<nav class="nav" aria-label="Main">' + nav.map(function (n) {
@@ -885,6 +889,7 @@
       $main.innerHTML = '<div class="card"><h1>Almost there</h1><p>Your account exists but its profile is missing. Please contact the coaches.</p></div>';
       return;
     }
+    if (state.me.profile.role !== "coach" && portalClosed()) return viewComingSoon();
     var views = state.me.profile.role === "coach" ? COACH_VIEWS : FAMILY_VIEWS;
     var view = views[r.path] || views.home;
     $main.innerHTML = '<div class="loading">Loading…</div>';
@@ -896,6 +901,29 @@
         '</p><button class="btn" type="button" data-action="retry">Try again</button></div>';
       actions.retry = render;
     }
+  }
+
+  /* ======================================================================
+     Member portal coming soon (while programme.portalOpen is false)
+     ====================================================================== */
+  function viewComingSoon(opts) {
+    opts = opts || {};
+    var head = opts.checkEmail ? "Check your email"
+      : opts.names ? "Thank you, " + esc(opts.names) + (opts.many ? " are" : " is") + " registered"
+      : "Member portal coming soon";
+    var body = opts.checkEmail
+      ? "<p class=\"soft\">We've sent a confirmation link to <strong>" + esc(opts.checkEmail) + "</strong>. Please click it to confirm your email address.</p>"
+      : opts.names
+        ? "<p class=\"soft\">We look forward to seeing " + (opts.many ? "them" : "him") + " on a Monday evening at " + esc((P.locations || [])[0] || "") + ".</p>"
+        : "<p class=\"soft\">Thank you for registering.</p>";
+    $main.innerHTML =
+      publicHeader("home") +
+      '<div class="card card--strong soon-card">' +
+        '<img src="assets/img/logo.webp?v=9" alt="" width="720" height="830">' +
+        "<h1>" + head + "</h1>" + body +
+        '<p class="soon-note">' + SOON_TEXT + " We'll let you know as soon as it opens. You'll sign in with the email and password you registered with.</p>" +
+        (state.me ? '<button class="btn btn--sm" type="button" data-action="sign-out">Sign out</button>' : '<a class="btn btn--sm" href="#/">Back to the home page</a>') +
+      "</div>";
   }
 
   /* ======================================================================
@@ -925,9 +953,11 @@
   function publicHeader(cta) {
     return (
       '<header class="site-top"><div class="site-top__inner">' +
-        '<a class="brand" href="#/" aria-label="' + esc(P.name) + '"><img class="brand__logo" src="assets/img/logo-small.png?v=6" alt="" width="40" height="40">' +
+        '<a class="brand" href="#/" aria-label="' + esc(P.name) + '"><img class="brand__logo" src="assets/img/logo-small.png?v=7" alt="" width="40" height="40">' +
           '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>" +
-        (cta === "home" ? '<a class="btn btn--sm" href="#/">← Home</a>' : '<a class="btn btn--sm btn--primary" href="#/signin">Member sign in</a>') +
+        (cta === "home" ? '<a class="btn btn--sm" href="#/">← Home</a>'
+          : portalClosed() ? '<a class="btn btn--sm btn--primary" href="#/register">Register your son</a>'
+          : '<a class="btn btn--sm btn--primary" href="#/signin">Member sign in</a>') +
       "</div></header>"
     );
   }
@@ -961,7 +991,7 @@
     };
   }
   function lpFoot() {
-    return '<footer class="lp-foot"><img src="assets/img/logo-small.png?v=6" width="64" height="64" alt="">' +
+    return '<footer class="lp-foot"><img src="assets/img/logo-small.png?v=7" width="64" height="64" alt="">' +
       "<span>" + esc(P.name) + "</span><span class=\"soft\">" + esc((P.values || []).join(" · ")) + "</span>" +
       '<span class="soft">改善 · kaizen</span></footer>';
   }
@@ -976,12 +1006,12 @@
       '<section class="lpA-track"><div class="lpA-pin">' +
         '<div class="lpA-brand">' +
           '<div class="lpA-kaizen" title="Kaizen: continual improvement"><p class="kaizen" lang="ja">改善</p></div>' +
-          '<img class="lpA-mark" src="assets/img/logo.webp?v=8" width="720" height="830" alt="' + esc(P.name) + '">' +
+          '<img class="lpA-mark" src="assets/img/logo.webp?v=9" width="720" height="830" alt="' + esc(P.name) + '">' +
         "</div>" +
         '<div class="lpA-copy">' +
           '<h1 class="lpA-h1">' + lines.map(function (l, i) { return '<span data-line="' + i + '">' + l + "</span>"; }).join("") + "</h1>" +
           '<p class="lpA-lede">' + "Weekly coaching sessions for our Muslim youth.</p>" +
-          '<div class="row lpA-actions"><a class="btn btn--primary" href="#/register">Register your son</a><a class="btn btn--ghost" href="#/signin">Member sign in</a></div>' +
+          '<div class="row lpA-actions"><a class="btn btn--primary" href="#/register">Register your son</a>' + (portalClosed() ? '<span class="lpA-soon">Member portal coming soon</span>' : '<a class="btn btn--ghost" href="#/signin">Member sign in</a>') + "</div>" +
         "</div>" +
         '<div class="lpA-stage">' +
           '<svg class="lpA-anim" aria-hidden="true"></svg>' +
@@ -1037,13 +1067,14 @@
           '<div id="boys">' + boyBlock(0) + "</div>" +
           '<button type="button" class="btn btn--sm" data-action="add-boy">' + icon("plus") + "Add a brother</button>" +
           "<fieldset><legend>Account</legend>" +
-            '<label class="field"><span>Password <span class="req">*</span></span><input type="password" name="password" required minlength="8" autocomplete="new-password"><small>At least 8 characters.</small></label>' +
+            '<label class="field"><span>Password <span class="req">*</span></span><input type="password" name="password" required minlength="8" autocomplete="new-password"><small>At least 8 characters.' + (portalClosed() ? " You'll use this to sign in when the member portal opens." : "") + "</small></label>" +
             '<label class="check"><input type="checkbox" name="agree_values" required> My son agrees to uphold the programme values: ' + esc((P.values || []).join(", ")) + ".</label>" +
             '<label class="check"><input type="checkbox" name="agree_medical" required> I confirm the details above are correct and consent to first aid being given if needed.</label>' +
           "</fieldset>" +
           '<button class="btn btn--primary btn--block" type="submit">Create account</button>' +
           '<p class="form-status" aria-live="polite"></p>' +
-          '<p class="small muted" style="text-align:center">Already registered? <a href="#/signin">Sign in</a></p>' +
+          (portalClosed() ? '<p class="small muted" style="text-align:center">' + SOON_TEXT + "</p>"
+            : '<p class="small muted" style="text-align:center">Already registered? <a href="#/signin">Sign in</a></p>') +
         "</form>";
     } else if (tab === "forgot") {
       auth =
@@ -1079,7 +1110,7 @@
       '<div class="login">' +
         '<section class="card card--strong auth-card" aria-label="Account">' + down + auth + "</section>" +
         '<section class="login-brand">' +
-          '<h1><img class="login-brand__logo" src="assets/img/logo.webp?v=8" width="720" height="830" alt="' + esc(P.name) + '"></h1>' +
+          '<h1><img class="login-brand__logo" src="assets/img/logo.webp?v=9" width="720" height="830" alt="' + esc(P.name) + '"></h1>' +
           '<p class="kaizen" lang="ja" title="Kaizen: continual improvement">改善</p>' +
         "</section>" +
       "</div>";
@@ -1127,9 +1158,17 @@
         };
       });
       var res = await D.signUp({ email: f.email, password: f.password, parent_name: f.parent_name, phone: f.phone, boys: boys });
+      if (portalClosed()) {
+        var first = boys.map(function (b) { return b.first_name; }).filter(Boolean);
+        var names = first.length > 1 ? first.slice(0, -1).join(", ") + " and " + first[first.length - 1] : first[0] || "your son";
+        if (res.needsConfirmation) return viewComingSoon({ checkEmail: f.email });
+        await D.signOut(); state.me = null;
+        window.scrollTo(0, 0);
+        return viewComingSoon({ names: names, many: first.length > 1 });
+      }
       if (res.needsConfirmation) {
         $main.innerHTML = '<div class="card" style="max-width:520px;margin:2rem auto;text-align:center">' +
-          '<img src="assets/img/logo.webp?v=8" alt="" width="160" height="160" style="margin:0 auto .5rem;width:160px;height:auto">' +
+          '<img src="assets/img/logo.webp?v=9" alt="" width="160" height="160" style="margin:0 auto .5rem;width:160px;height:auto">' +
           "<h1>Check your email</h1><p class=\"soft\">We've sent a confirmation link to <strong>" + esc(f.email) +
           "</strong>. Click it to finish setting up your account, then sign in.</p></div>";
         return;
@@ -1329,7 +1368,7 @@
     $main.innerHTML =
       '<div class="confirmation card card--strong">' +
         '<div class="confirmation__head">' +
-          '<img src="assets/img/logo-small.png?v=6" alt="" width="72" height="72">' +
+          '<img src="assets/img/logo-small.png?v=7" alt="" width="72" height="72">' +
           '<div><p class="label">Booking confirmation' + (P.initiative ? " · " + esc(P.initiative) : "") + "</p><h1>" + (ok ? "Signed up and paid" : "Not confirmed yet") + "</h1></div>" +
           (ok ? badge("Confirmed", "ok") : badge("Action needed", "warn")) +
         "</div>" +

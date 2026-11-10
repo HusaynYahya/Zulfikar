@@ -429,6 +429,11 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .lpA-copy { text-align: center; }
 .lpA-lede { font-size: 1.12rem; color: var(--ink-soft); max-width: 30rem; margin: 0 auto 1.6rem; }
 .lpA-actions { justify-content: center; gap: .6rem; }
+.lpA-soon { display: inline-flex; align-items: center; padding: .55rem .9rem; font-size: .9rem; color: var(--ink-soft); border: 1px dashed rgba(255, 255, 255, .22); border-radius: 999px; }
+.soon-card { max-width: 540px; margin: 2rem auto; text-align: center; }
+.soon-card img { width: 150px; height: auto; margin: 0 auto 1rem; filter: drop-shadow(0 8px 30px rgba(0, 0, 0, .5)); }
+.soon-card h1 { margin-bottom: .6rem; }
+.soon-note { margin: 1.2rem 0 1.4rem; padding: .9rem 1rem; border-radius: 14px; background: var(--glass-light, rgba(255,255,255,.06)); }
 .lpA-stage { height: 74vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem; }
 .lpA-stage svg { width: 100%; flex: 1; min-height: 0; }
 .lpA-stage canvas { width: 100%; flex: 1; min-height: 0; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)); }
