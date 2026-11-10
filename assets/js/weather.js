@@ -179,8 +179,7 @@
       g.fillStyle = inside; g.beginPath(); g.arc(rx, ry, R1, Math.PI, 2 * Math.PI); g.fill();
       var SPEC = [[0, "rgba(140,90,255,0)"], [.12, "rgba(140,90,255,1)"], [.28, "rgba(70,130,255,1)"], [.44, "rgba(80,210,140,1)"],
                   [.6, "rgba(255,230,90,1)"], [.76, "rgba(255,150,60,1)"], [.9, "rgba(255,70,70,1)"], [1, "rgba(255,70,70,0)"]];
-      bow(R1, band, SPEC, .5);                                                                                     // the main bow
-      bow(R1 + band * 1.9, band * 1.3, SPEC.map(function (c) { return [1 - c[0], c[1]]; }).reverse(), .16);       // a faint second bow, colours reversed
+      bow(R1 + band * 1.9, band * 1.3, SPEC.map(function (c) { return [1 - c[0], c[1]]; }).reverse(), .16);       // a single faint bow
       var fade = g.createLinearGradient(0, H * .35, 0, H * .95);                                                  // ends fade into the ground
       fade.addColorStop(0, "rgba(0,0,0,0)"); fade.addColorStop(1, "rgba(0,0,0,1)");
       g.globalCompositeOperation = "destination-out"; g.fillStyle = fade; g.fillRect(0, 0, W, H);
