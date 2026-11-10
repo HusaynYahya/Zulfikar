@@ -152,17 +152,14 @@ minutes.
 │   ├── js/data.js                     storage: Supabase (live) or localStorage (demo)
 │   ├── js/app.js                      screens for families and coaches
 │   ├── js/scenery.js                  draws the landscapes (mountains, shrine, desert, lake)
-│   ├── js/lineart.js                  home-page wrestlers, option A: line art animated in code (see below)
-│   ├── js/rigdata.js                  the traced head, hands and shoe it uses (generated, don't edit)
-│   ├── js/wrestle.js                  home-page wrestlers, option B: the earlier cartoon version
+│   ├── js/wrestle.js                  the home-page wrestlers, drawn in code (see below)
+│   ├── js/weather.js, smoke.js        the random weather, and the steam off the logo's sword
+│   ├── js/garden.js, sayings.js       each boy's flower bed; the daily saying of Imam Ali (as)
 │   └── img/
 │       ├── logo.webp, logo-small.png  the round badge logo, cut out of its background
 │       ├── logo-original.png          the logo as supplied
 │       ├── favicon.png, apple-touch-icon.png
 │       └── flyer.webp                 the programme poster
-├── tools/wrestle/
-│   ├── raw/1.png … 9.png              the nine reference drawings, in action order
-│   └── rig/                           trace.py makes rigdata.js from drawing 1; check.html shows any pose
 └── supabase/
     ├── schema.sql                     tables, sign-up trigger, access rules
     ├── updates/                       changes to run on an existing database
@@ -171,22 +168,12 @@ minutes.
 
 ## The home-page wrestlers
 
-The two wrestlers on the home page are not pictures or video. Each is a
-skeleton (pelvis, spine, neck, shoulders, elbows, wrists, hips, knees,
-ankles) carrying vector body parts: the limbs and torso are contours measured
-from drawing 1 in `tools/wrestle/raw/`, and the head, hands and shoes are traced
-from it. The scroll position sets the choreography's time and the figures are
-redrawn for every screen refresh, so the motion is smooth at any scroll
-position.
-
-The choreography lives near the top of `assets/js/lineart.js`: `STEPS` (when
-each foot steps and how far), `BODY` (lean, head angle and crouch over time)
-and `wristTargets` (guard, reach, hand fight, the neck and wrist holds). To see
-any moment, serve the repository and open
-`tools/wrestle/rig/check.html?t=0.7&ref=6` (the pose at 70% of the scroll, over
-drawing 6). To re-trace the head, hands or shoe, edit `tools/wrestle/rig/spec.json`
-and run `python3 tools/wrestle/rig/trace.py tools/wrestle/rig/spec.json` from the
-repository root; it rewrites `assets/js/rigdata.js`.
+The two wrestlers on the home page, one in a white gi and one in navy, are
+drawn in code, not pictures or video (`assets/js/wrestle.js`). As the page
+scrolls they circle, one shoots a double leg, lifts and flips the other,
+follows him down and then helps him up. The moves are keyframes near the top
+of the file; elbows and knees are placed by simple two-bone IK so limbs keep
+their length.
 
 ## Security testing
 
