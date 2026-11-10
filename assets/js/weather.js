@@ -146,17 +146,63 @@
     for (i = 0; i < less(K.motes); i++) motes.push({ x: rand(0, W), y: rand(0, H), r: rand(.8, 2), v: rand(4, 12), ph: rand(0, 6.28) });
 
     var bolt = null, flash = 0, nextBolt = rand(2, 5);
-    function makeBolt() {
-      var x = W * rand(.15, .85), y = H * .06, end = H * rand(.5, .72), main = [[x, y]], branches = [];
+    function makeBolt(target) {
+      var x = target ? target[0] + rand(-120, 120) : W * rand(.15, .85), y = H * .06, end = target ? target[1] : H * rand(.5, .72), main = [[x, y]], branches = [];
       while (y < end) {
-        x += rand(-22, 22); y += rand(16, 30); main.push([x, y]);
+        var steps = Math.max(1, (end - y) / 23);
+        x += target ? (target[0] - x) / steps + rand(-14, 14) : rand(-22, 22);
+        y = Math.min(end, y + rand(16, 30)); main.push([x, y]);
         if (Math.random() < .18) {   // a fork
           var bx = x, by = y, br = [[bx, by]], dir = Math.random() < .5 ? -1 : 1;
           for (var j = 0; j < 5 + (Math.random() * 4 | 0); j++) { bx += dir * rand(6, 20); by += rand(10, 22); br.push([bx, by]); }
           branches.push(br);
         }
       }
+      if (target) main.push([target[0], target[1]]);
       return { lines: [main].concat(branches), age: 0 };
+    }
+
+    // In a storm, a man stands on a crag and raises the Zulfiqar; the
+    // lightning comes down onto the blade.
+    var RAISE = .9, HOLD = .7, LOWER = 1.1;   // seconds
+    var raise = 0, held = 0, struck = 0;
+    function man() {
+      var u = small ? .7 : 1, fx = W - (small ? 46 : 70), top = H * (small ? .56 : .5);   // the right-hand edge, clear of the page
+      return { u: u, x: fx, y: top };
+    }
+    // the raised sword's tip, for aiming the bolt
+    function swordTip(m, k) {
+      var a = armAngle(k), sh = [m.x + 3 * m.u, m.y - 44 * m.u], arm = 17 * m.u, len = 40 * m.u;
+      return [sh[0] + Math.cos(a) * (arm + len), sh[1] + Math.sin(a) * (arm + len)];
+    }
+    function armAngle(k) { return (0.55 + (-Math.PI / 2 - 0.55) * k); }   // down at his side → straight up
+    function drawMan(k, glow) {
+      var m = man(), u = m.u, x = m.x, y = m.y, c = "#07090f";
+      ctx.save();
+      // the crag he stands on, running down off the screen
+      ctx.fillStyle = c;
+      ctx.beginPath(); ctx.moveTo(x - 120 * u, H); ctx.lineTo(x - 60 * u, y + 40 * u); ctx.lineTo(x - 26 * u, y + 8 * u); ctx.lineTo(x - 10 * u, y + 2 * u);
+      ctx.lineTo(x + 14 * u, y); ctx.lineTo(x + 36 * u, y + 14 * u); ctx.lineTo(x + 60 * u, y + 40 * u); ctx.lineTo(x + 120 * u, H); ctx.closePath(); ctx.fill();
+      // legs apart, a long cloak, shoulders, head
+      ctx.beginPath(); ctx.moveTo(x - 9 * u, y + 1); ctx.lineTo(x - 3 * u, y - 24 * u); ctx.lineTo(x + 4 * u, y - 24 * u); ctx.lineTo(x + 11 * u, y + 1); ctx.lineTo(x + 6 * u, y + 1);
+      ctx.lineTo(x + .5 * u, y - 14 * u); ctx.lineTo(x - 4 * u, y + 1); ctx.closePath(); ctx.fill();
+      var flap = Math.sin(performance.now() / 260) * 3 * u;   // the cloak in the wind
+      ctx.beginPath(); ctx.moveTo(x - 7 * u, y - 46 * u); ctx.quadraticCurveTo(x - 20 * u + flap, y - 26 * u, x - 22 * u + flap, y - 6 * u);
+      ctx.lineTo(x - 6 * u, y - 14 * u); ctx.lineTo(x + 9 * u, y - 24 * u); ctx.lineTo(x + 9 * u, y - 44 * u); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x + 1.5 * u, y - 53 * u, 5.5 * u, 6.5 * u, 0, 0, Math.PI * 2); ctx.fill();
+      // the arm and the Zulfiqar, raised by k (0 down, 1 straight up)
+      var a = armAngle(k), sh = [m.x + 3 * u, m.y - 44 * u], arm = 17 * u, len = 40 * u;
+      var hand = [sh[0] + Math.cos(a) * arm, sh[1] + Math.sin(a) * arm];
+      ctx.strokeStyle = c; ctx.lineWidth = 5 * u; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(sh[0], sh[1]); ctx.lineTo(hand[0], hand[1]); ctx.stroke();
+      ctx.translate(hand[0], hand[1]); ctx.rotate(a + Math.PI / 2);
+      if (glow > 0) { ctx.shadowColor = "rgba(190,210,255," + glow + ")"; ctx.shadowBlur = 24 * glow; }
+      ctx.fillStyle = glow > 0 ? "rgba(" + Math.round(7 + 220 * glow) + "," + Math.round(9 + 225 * glow) + "," + Math.round(15 + 240 * glow) + ",1)" : c;
+      ctx.fillRect(-7 * u, -1.5 * u, 14 * u, 3 * u);   // the guard
+      ctx.beginPath();                                 // a straight blade that splits into two points
+      ctx.moveTo(-2.4 * u, -1.5 * u); ctx.lineTo(-2.4 * u, -len * .72); ctx.lineTo(-4.2 * u, -len); ctx.lineTo(-.6 * u, -len * .8);
+      ctx.lineTo(0, -len * .84); ctx.lineTo(.6 * u, -len * .8); ctx.lineTo(4.2 * u, -len); ctx.lineTo(2.4 * u, -len * .72); ctx.lineTo(2.4 * u, -1.5 * u); ctx.closePath(); ctx.fill();
+      ctx.restore();
     }
 
     // ---- drawing ------------------------------------------------------
@@ -231,7 +277,13 @@
 
       if (K.lightning) {
         nextBolt -= dt;
-        if (nextBolt <= 0) { bolt = makeBolt(); flash = 1; nextBolt = rand(4, 10); }
+        if (nextBolt < RAISE) raise = Math.min(1, raise + dt / RAISE);
+        else if (held > 0) held -= dt;
+        else raise = Math.max(0, raise - dt / LOWER);
+        var lift = raise * raise * (3 - 2 * raise);
+        if (nextBolt <= 0) { bolt = makeBolt(swordTip(man(), 1)); flash = 1; nextBolt = rand(4, 9); held = HOLD; raise = 1; struck = 1; }
+        struck = Math.max(0, struck - dt * 1.6);
+        drawMan(lift, struck);
         if (bolt) {
           bolt.age += dt;
           var on = bolt.age < .14 || (bolt.age > .2 && bolt.age < .42);   // it flickers twice
