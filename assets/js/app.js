@@ -1113,10 +1113,11 @@
       publicHeader("home") +
       '<div class="login' + (tab === "register" ? " login--wide" : "") + '">' +
         '<section class="card card--strong auth-card" aria-label="Account">' + down + auth + "</section>" +
+        (tab === "register" ? "" :
         '<section class="login-brand">' +
           '<h1><img class="login-brand__logo" src="assets/img/logo.webp?v=9" width="720" height="830" alt="' + esc(P.name) + '"></h1>' +
           '<p class="kaizen" lang="ja" title="Kaizen: continual improvement">改善</p>' +
-        "</section>" +
+        "</section>") +
       "</div>";
 
     actions["demo-as"] = async function (el) {
