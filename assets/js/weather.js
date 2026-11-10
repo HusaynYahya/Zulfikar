@@ -190,8 +190,8 @@
       ctx.beginPath(); ctx.moveTo(x - 7 * u, y - 46 * u); ctx.quadraticCurveTo(x - 20 * u + flap, y - 26 * u, x - 22 * u + flap, y - 6 * u);
       ctx.lineTo(x - 6 * u, y - 14 * u); ctx.lineTo(x + 9 * u, y - 24 * u); ctx.lineTo(x + 9 * u, y - 44 * u); ctx.closePath(); ctx.fill();
       ctx.beginPath(); ctx.ellipse(x + 1.5 * u, y - 53 * u, 5.5 * u, 6.5 * u, 0, 0, Math.PI * 2); ctx.fill();
-      // his face catches the light: a faint glow while the sword is up, bright when it strikes
-      var lit = Math.min(1, glow + k * .35);
+      // his face always glows, brighter as the sword goes up and brightest at the strike
+      var lit = Math.min(1, .55 + glow * .45 + k * .1);   // always lit, brightest at the strike
       if (lit > .02) {
         var hx = x + 3.5 * u, hy = y - 54 * u;
         var halo = ctx.createRadialGradient(hx, hy, 0, hx, hy, 22 * u);
