@@ -27,7 +27,7 @@
     snowy:     { w: 1, tint: "rgba(190,200,225,.10)", snow: 200, clouds: { n: 7, dark: .25, speed: 8, scale: 1, a: .85 } },
     night:     { w: 1, tint: "rgba(4,7,20,.50)", night: true, stars: 170, clouds: { n: 2, dark: .7, speed: 5, scale: .9, a: .45 } },
     sunset:    { w: 1, tint: "rgba(255,110,50,.10)", sunset: true, birds: 7, clouds: { n: 4, dark: .05, speed: 7, scale: .8, a: .55 } },
-    rainbow:   { w: 1, tint: "rgba(150,170,200,.06)", rainbow: true, rain: 40, tilt: .1, clouds: { n: 4, dark: .3, speed: 9, scale: 1, a: .7 } },
+    rainbow:   { w: 1, tint: "rgba(150,170,200,.06)", rainbow: true, rain: 150, drizzle: true, tilt: .08, clouds: { n: 4, dark: .3, speed: 9, scale: 1, a: .7 } },
     sandstorm: { w: 1, tint: "rgba(190,130,70,.34)", dust: 320, fog: .22, clouds: { n: 0, dark: .4, speed: 40, scale: 1, a: .5 } },
   };
   var KEY = "zulfiqar-weather";
@@ -162,6 +162,31 @@
     function newDust(x) { return { x: x, y: rand(0, H), len: rand(6, 26), v: rand(380, 760), a: rand(.15, .45), ph: rand(0, 6.28) }; }
     for (i = 0; i < less(K.dust); i++) dust.push(newDust(rand(0, W)));
 
+    var rainbowImg = null;
+    function paintRainbow(cw, ch) {
+      var cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
+      var g = cv.getContext("2d"); g.setTransform(cw / W, 0, 0, ch / H, 0, 0);
+      var rx = W * .56, ry = H * 1.08, R1 = Math.max(W * .46, H * .74), band = R1 * .085;
+      function bow(r0, width, stops, alpha) {
+        var gr = g.createRadialGradient(rx, ry, r0, rx, ry, r0 + width);
+        stops.forEach(function (c) { gr.addColorStop(c[0], c[1]); });
+        g.save(); g.globalAlpha = alpha; g.fillStyle = gr;
+        g.beginPath(); g.arc(rx, ry, r0 + width, Math.PI, 2 * Math.PI); g.arc(rx, ry, r0, 2 * Math.PI, Math.PI, true); g.closePath(); g.fill();
+        g.restore();
+      }
+      var inside = g.createRadialGradient(rx, ry, R1 * .55, rx, ry, R1);   // a brighter sky inside the bow
+      inside.addColorStop(0, "rgba(255,255,255,0)"); inside.addColorStop(1, "rgba(255,255,255,.07)");
+      g.fillStyle = inside; g.beginPath(); g.arc(rx, ry, R1, Math.PI, 2 * Math.PI); g.fill();
+      var SPEC = [[0, "rgba(140,90,255,0)"], [.12, "rgba(140,90,255,1)"], [.28, "rgba(70,130,255,1)"], [.44, "rgba(80,210,140,1)"],
+                  [.6, "rgba(255,230,90,1)"], [.76, "rgba(255,150,60,1)"], [.9, "rgba(255,70,70,1)"], [1, "rgba(255,70,70,0)"]];
+      bow(R1, band, SPEC, .5);                                                                                     // the main bow
+      bow(R1 + band * 1.9, band * 1.3, SPEC.map(function (c) { return [1 - c[0], c[1]]; }).reverse(), .16);       // a faint second bow, colours reversed
+      var fade = g.createLinearGradient(0, H * .35, 0, H * .95);                                                  // ends fade into the ground
+      fade.addColorStop(0, "rgba(0,0,0,0)"); fade.addColorStop(1, "rgba(0,0,0,1)");
+      g.globalCompositeOperation = "destination-out"; g.fillStyle = fade; g.fillRect(0, 0, W, H);
+      return cv;
+    }
+
     var bolt = null, flash = 0, nextBolt = rand(2, 5);
     function makeBolt(target) {
       var x = target ? target[0] + rand(-120, 120) : W * rand(.15, .85), y = H * .06, end = target ? target[1] : H * rand(.5, .72), main = [[x, y]], branches = [];
@@ -287,16 +312,17 @@
         });
       }
 
-      if (K.rainbow) {   // the sun back out after rain, and a rainbow across the valley
-        var rx = W * .5, ry = H * 1.02, rr = Math.max(W * .48, H * .78), bands = ["#ff5b5b", "#ff9f43", "#ffe066", "#6fdc8c", "#5cb8ff", "#7a7cff", "#b07cff"];
-        ctx.save(); ctx.globalAlpha = .42; ctx.lineWidth = small ? 9 : 15; ctx.shadowColor = "rgba(255,255,255,.35)"; ctx.shadowBlur = 8;
-        bands.forEach(function (c, n) { ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(rx, ry, rr - n * ctx.lineWidth, Math.PI, 2 * Math.PI); ctx.stroke(); });
-        ctx.restore();
+      if (K.rainbow) {   // the sun back out after rain, and a rainbow over the valley
         var bx2 = W * .12, by2 = H * .16;
-        var bg2 = ctx.createRadialGradient(bx2, by2, 0, bx2, by2, Math.max(W, H) * .45);
-        bg2.addColorStop(0, "rgba(255,236,190,.4)"); bg2.addColorStop(1, "rgba(255,236,190,0)");
+        var bg2 = ctx.createRadialGradient(bx2, by2, 0, bx2, by2, Math.max(W, H) * .5);
+        bg2.addColorStop(0, "rgba(255,236,190,.45)"); bg2.addColorStop(1, "rgba(255,236,190,0)");
         ctx.fillStyle = bg2; ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = "rgba(255,244,215,.9)"; ctx.beginPath(); ctx.arc(bx2, by2, small ? 16 : 24, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(255,244,215,.92)"; ctx.shadowColor = "rgba(255,230,170,.9)"; ctx.shadowBlur = 30;
+        ctx.beginPath(); ctx.arc(bx2, by2, small ? 16 : 24, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+
+        // the bow doesn't move, so it's drawn once (per screen size) on its own layer, then copied in each frame
+        if (!rainbowImg || rainbowImg.width !== ctx.canvas.width || rainbowImg.height !== ctx.canvas.height) rainbowImg = paintRainbow(ctx.canvas.width, ctx.canvas.height);
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(rainbowImg, 0, 0); ctx.restore();
       }
 
       if (K.sun) {   // the sun, top left, with slowly turning rays
@@ -341,14 +367,16 @@
 
       if (drops.length) {   // rain, slanting with the wind, with a little splash where it lands
         var tilt = K.tilt || .15;
-        ctx.strokeStyle = "rgba(200,212,235,.38)"; ctx.lineWidth = 1.1; ctx.beginPath();
+        ctx.strokeStyle = K.drizzle ? "rgba(235,238,250,.26)" : "rgba(200,212,235,.38)"; ctx.lineWidth = K.drizzle ? .8 : 1.1; ctx.beginPath();
         drops.forEach(function (d) {
-          d.y += d.v * dt; d.x -= d.v * tilt * dt;
+          var dv = K.drizzle ? d.v * .55 : d.v;
+          d.y += dv * dt; d.x -= dv * tilt * dt;
           if (d.y > H * d.ground) {
-            if (splashes.length < 80 && Math.random() < .35) splashes.push({ x: d.x, y: d.y, age: 0 });
+            if (!K.drizzle && splashes.length < 80 && Math.random() < .35) splashes.push({ x: d.x, y: d.y, age: 0 });
             d.y = rand(-60, -10); d.x = rand(0, W * 1.3);
           }
-          ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + d.len * tilt, d.y - d.len);
+          var dl = K.drizzle ? d.len * .55 : d.len;
+          ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + dl * tilt, d.y - dl);
         });
         ctx.stroke();
         ctx.lineWidth = 1;
