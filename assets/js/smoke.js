@@ -1,5 +1,5 @@
 /* ============================================================================
-   PROJECT ZULFIQAR — steam from the sword
+   PROJECT DHULFIQAR — steam from the sword
    ----------------------------------------------------------------------------
    Thin steam rises off the whole sword in the logo (both blades, the guard
    and the hilt), and a wind blowing right to left carries it out across the

@@ -1,5 +1,5 @@
 /* ============================================================================
-   PROJECT ZULFIQAR — data layer
+   PROJECT DHULFIQAR — data layer
    ----------------------------------------------------------------------------
    One small interface, two back-ends:
 

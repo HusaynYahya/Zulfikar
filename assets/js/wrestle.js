@@ -1,5 +1,5 @@
 /* ============================================================================
-   PROJECT ZULFIQAR — scroll-driven wrestling, code-drawn version (option B)
+   PROJECT DHULFIQAR — scroll-driven wrestling, code-drawn version (option B)
    ----------------------------------------------------------------------------
    Two figures grapple through a short sequence as the page scrolls, drawn as
    ink line-art (an illustrated, anime-ish look). The motion is deliberately

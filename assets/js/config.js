@@ -1,5 +1,5 @@
 /* ============================================================================
-   PROJECT ZULFIQAR — portal settings
+   PROJECT DHULFIQAR — portal settings
    ----------------------------------------------------------------------------
    Everything you are likely to change lives here: programme details, prices,
    and the two sets of keys that switch the portal from DEMO to LIVE.
@@ -28,8 +28,8 @@ window.ZULFIQAR = {
 
   /* ---- programme ----------------------------------------------------- */
   programme: {
-    name: "Project Zulfiqar",
-    initiative: "Youth Grappling",   // the weekly sessions, Project Zulfiqar's first initiative
+    name: "Project Dhulfiqar",
+    initiative: "Youth Grappling",   // the weekly sessions, Project Dhulfiqar's first initiative
     arabic: "ذوالفقار",
     tagline: "Physical, Spiritual and Intellectual holistic growth for our youth.",
     ages: "Year 7 – Year 10 (Boys)",

@@ -1,5 +1,5 @@
 /* ============================================================================
-   PROJECT ZULFIQAR — weather
+   PROJECT DHULFIQAR — weather
    ----------------------------------------------------------------------------
    Each visit gets a random weather, drawn over the mountain scenery and
    behind the page: sunny, cloudy, windy, rainy, stormy, foggy, snowy, a
@@ -203,7 +203,7 @@
       return { lines: [main].concat(branches), age: 0 };
     }
 
-    // In a storm, a man stands on a crag and raises the Zulfiqar; the
+    // In a storm, a man stands on a crag and raises the Dhulfiqar; the
     // lightning comes down onto the blade.
     var RAISE = .9, HOLD = .7, LOWER = 1.1;   // seconds
     var raise = 0, held = 0, struck = 0;
@@ -244,7 +244,7 @@
         ctx.fillStyle = c;                                                          // a dark brow, so it reads as a face
         ctx.fillRect(hx - 1 * u, hy - 3.5 * u, 4.5 * u, 1.2 * u);
       }
-      // the arm and the Zulfiqar, raised by k (0 down, 1 straight up)
+      // the arm and the Dhulfiqar, raised by k (0 down, 1 straight up)
       var a = armAngle(k), sh = [m.x + 13 * u, m.y - 42 * u], arm = 17 * u, len = 40 * u;
       var hand = [sh[0] + Math.cos(a) * arm, sh[1] + Math.sin(a) * arm];
       ctx.strokeStyle = c; ctx.lineWidth = 4 * u; ctx.lineCap = "round";

@@ -1,5 +1,5 @@
 /* ============================================================================
-   PROJECT ZULFIQAR — scenery
+   PROJECT DHULFIQAR — scenery
    ----------------------------------------------------------------------------
    Draws layered landscapes as SVG, seeded so the same seed always gives the
    same scene. Several kinds of place:

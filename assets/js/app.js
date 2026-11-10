@@ -1,5 +1,5 @@
 /* ============================================================================
-   PROJECT ZULFIQAR — portal app
+   PROJECT DHULFIQAR — portal app
    ----------------------------------------------------------------------------
    A small hash-routed single-page app. Two experiences share one shell:
 
@@ -555,7 +555,7 @@
         "END:VEVENT"]);
   }
   function downloadIcs(name, events) {
-    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Project Zulfiqar//Members portal//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"]
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Project Dhulfiqar//Members portal//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"]
       .concat(ICS_TZ);
     events.forEach(function (ev) { lines = lines.concat(icsEvent(ev)); });
     lines.push("END:VCALENDAR");
@@ -597,9 +597,9 @@
     var u = upcomingDates(14).find(function (x) { return x.date === date; });
     if (!u) return;
     var sessions = await D.list("sessions", ORDER.sessions);
-    downloadIcs("project-zulfiqar-" + date, [sessionEvent(date, u.slot, planFor(date, sessions))]);
+    downloadIcs("project-dhulfiqar-" + date, [sessionEvent(date, u.slot, planFor(date, sessions))]);
   };
-  actions["cal-series"] = function () { downloadIcs("project-zulfiqar-weekly", seriesEvents()); };
+  actions["cal-series"] = function () { downloadIcs("project-dhulfiqar-weekly", seriesEvents()); };
 
   function upcomingCard(u, d, boys, label) {
     var plan = planFor(u.date, d.sessions);
@@ -1005,7 +1005,7 @@
         }).join("") + "</div></section>" +
 
       '<section class="lpA-sec lpA-cta"><h2 class="lpA-h2 lpA-values">' + (P.values || []).map(function (v) { return "<span>" + esc(v) + "</span>"; }).join(" ") + "</h2>" +
-        '<a class="btn btn--primary" href="#/register">Join Project Zulfiqar</a></section>' +
+        '<a class="btn btn--primary" href="#/register">Join Project Dhulfiqar</a></section>' +
       "</div>" + lpFoot();
     if (window.ZSmoke) ZSmoke.start($main.querySelector(".lpA-mark"));
     var spans = $main.querySelectorAll(".lpA-h1 span");
@@ -1970,7 +1970,7 @@
       }).join("\r\n");
       var a = document.createElement("a");
       a.href = URL.createObjectURL(new Blob([lines], { type: "text/csv" }));
-      a.download = "zulfiqar-members-" + month + ".csv";
+      a.download = "dhulfiqar-members-" + month + ".csv";
       document.body.appendChild(a); a.click(); a.remove();
     };
 

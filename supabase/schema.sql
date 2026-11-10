@@ -1,5 +1,5 @@
 -- ============================================================================
--- PROJECT ZULFIQAR — database schema for Supabase
+-- PROJECT DHULFIQAR — database schema for Supabase
 -- ----------------------------------------------------------------------------
 -- Paste this whole file into Supabase → SQL Editor → New query → Run.
 -- It is safe to run once on a fresh project.

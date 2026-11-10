@@ -1,6 +1,6 @@
 # Project ذوالفقار — member portal
 
-The portal for families of boys on **Project Zulfiqar** (Year 7 – Year 10,
+The portal for families of boys on **Project Dhulfiqar** (Year 7 – Year 10,
 Monday evenings at Hujjat Stanmore). It is plain HTML, CSS and JavaScript,
 with no build step, so it can be hosted free on GitHub Pages.
 
@@ -84,8 +84,8 @@ change is in [`assets/js/config.js`](assets/js/config.js).
 ### 2. Stripe: card payments
 
 1. In the Stripe Dashboard, create two **Payment Links**:
-   - "Project Zulfiqar — session", **£15**
-   - "Project Zulfiqar — monthly", **£50**
+   - "Project Dhulfiqar — session", **£15**
+   - "Project Dhulfiqar — monthly", **£50**
 
    For each one, under **After payment**, choose *Don't show confirmation page →
    redirect* and enter `https://husaynyahya.github.io/Zulfikar/#/payments?paid=1`.

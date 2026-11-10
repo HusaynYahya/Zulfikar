@@ -1,5 +1,5 @@
 /* ============================================================================
-   PROJECT ZULFIQAR — sayings of Imam Ali (as) from Nahj al-Balagha
+   PROJECT DHULFIQAR — sayings of Imam Ali (as) from Nahj al-Balagha
    ----------------------------------------------------------------------------
    One is shown on the families' home page, a different one each day. Ref is
    the place in Nahj al-Balagha (sayings numbered as in the Subhi al-Salih

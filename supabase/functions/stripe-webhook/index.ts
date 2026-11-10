@@ -1,5 +1,5 @@
 // ============================================================================
-// PROJECT ZULFIQAR — Stripe webhook (Supabase Edge Function)
+// PROJECT DHULFIQAR — Stripe webhook (Supabase Edge Function)
 // ----------------------------------------------------------------------------
 // Stripe calls this after every completed Payment Link checkout. It records
 // the payment against the right boy and month so it shows in the portal,

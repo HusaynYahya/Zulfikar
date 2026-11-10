@@ -1,4 +1,4 @@
-# Security testing brief — Project Zulfiqar portal
+# Security testing brief — Project Dhulfiqar portal
 
 This is a brief you can hand to a security-testing agent (Codex, or any other),
 or work through yourself. It says what to attack, what is off limits, and what

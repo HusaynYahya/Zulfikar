@@ -1,5 +1,5 @@
 /* ============================================================================
-   PROJECT ZULFIQAR — a boy's flower bed
+   PROJECT DHULFIQAR — a boy's flower bed
    ----------------------------------------------------------------------------
    Drawn on each boy's card. It starts as bare soil; every session he attends
    adds to it: grass first, then plants that come up, grow and flower, until
