@@ -1,0 +1,21 @@
+<!-- Supabase: Authentication → Emails → Templates → "Confirm signup".
+     Subject:  Registration received · Project Dhulfiqar
+     Paste everything below this comment into the message body. -->
+<div style="margin:0;padding:24px 12px;background:#141824;font-family:Helvetica,Arial,sans-serif;color:#f2eee6">
+  <div style="max-width:520px;margin:0 auto;background:#1d2232;border-radius:16px;padding:32px 28px;text-align:center">
+    <img src="https://husaynyahya.github.io/Zulfikar/assets/img/logo-email.png" width="150" alt="Project Dhulfiqar" style="display:block;margin:0 auto 20px;width:150px;height:auto;border:0">
+    <h1 style="margin:0 0 14px;font-family:Georgia,serif;font-weight:normal;font-size:28px;color:#f2eee6">Registration received</h1>
+    <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#d8d3ca">Assalamu alaykum {{ .Data.parent_name }},</p>
+    <p style="margin:0 0 22px;font-size:16px;line-height:1.55;color:#d8d3ca">Thank you for registering {{ range $i, $b := .Data.boys }}{{ if $i }} and {{ end }}<strong style="color:#f2eee6">{{ $b.first_name }}</strong>{{ end }} for <strong style="color:#e9b46f">Youth Grappling</strong> with Project Dhulfiqar. Please confirm your email address to complete the registration:</p>
+    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 26px;border-radius:12px;background:#f2eee6;color:#141824;font-weight:bold;font-size:16px;text-decoration:none">Confirm my email</a>
+    <table role="presentation" style="margin:28px auto 0;border-collapse:collapse;text-align:left;font-size:15px;color:#d8d3ca">
+      <tr><td style="padding:4px 14px 4px 0;color:#e9b46f;font-size:12px;letter-spacing:.12em">WHEN</td><td>Mondays, 7:00–9:30pm</td></tr>
+      <tr><td style="padding:4px 14px 4px 0;color:#e9b46f;font-size:12px;letter-spacing:.12em">WHERE</td><td>Hujjat Stanmore</td></tr>
+      <tr><td style="padding:4px 14px 4px 0;color:#e9b46f;font-size:12px;letter-spacing:.12em">WHO</td><td>Boys, Years 7–10</td></tr>
+      <tr><td style="padding:4px 14px 4px 0;color:#e9b46f;font-size:12px;letter-spacing:.12em">COST</td><td>£15 a session or £50 a month</td></tr>
+    </table>
+    <p style="margin:26px 0 0;padding:14px 16px;border-radius:12px;background:#262c3e;font-size:14px;line-height:1.5;color:#d8d3ca">The member portal, with all the session information, is coming soon. We'll let you know as soon as it opens. You'll sign in with the email and password you registered with.</p>
+    <p style="margin:24px 0 0;font-size:13px;color:#9a968f">Integrity · Respect · Discipline · Brotherhood</p>
+  </div>
+  <p style="max-width:520px;margin:14px auto 0;text-align:center;font-size:12px;color:#7d7a74">You're receiving this because this email address was used to register on the Project Dhulfiqar website. If that wasn't you, you can ignore this email.</p>
+</div>
