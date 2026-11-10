@@ -971,11 +971,12 @@
         "</div>" +
       "</div></section>" +
 
-      '<section class="lpA-sec"><p class="lpA-kicker">Why we exist</p>' +
-        '<p class="lpA-quote">To create a group of young men who are <em>disciplined, resilient and talented</em>, through holistic growth, brotherhood and mentorship.</p></section>' +
+      '<section class="lpA-sec"><p class="lpA-kicker">Our purpose</p>' +
+        '<p class="lpA-quote">Creating a community of youth ready for the reappearance of <em>the Awaited Saviour</em>.</p></section>' +
 
       '<section class="lpA-sec lpA-info">' +
-        (P.initiative ? '<div class="lpA-initiative"><p class="lpA-kicker">Our first initiative</p><h2 class="lpA-h2">' + esc(P.initiative) + "</h2></div>" : "") +
+        (P.initiative ? '<div class="lpA-initiative"><p class="lpA-kicker">Our first initiative</p><h2 class="lpA-h2">' + esc(P.initiative) + "</h2>" +
+          '<p class="lpA-purpose"><span class="lpA-kicker">The purpose of this initiative</span>To create a group of young men who are <em>disciplined, resilient and talented</em>, through holistic growth, brotherhood and mentorship.</p></div>' : "") +
         '<div class="lpA-facts">' + [["users", "Who", "Boys, Years 7–10"], ["calendar", "When", F.days], ["clock", "Time", F.time], ["pin", "Where", F.where]].map(function (f) {
           return '<div class="lpA-fact">' + icon(f[0]) + '<div><p class="lpA-kicker">' + f[1] + "</p><p>" + esc(f[2]) + "</p></div></div>";
         }).join("") + "</div>" +

@@ -446,7 +446,10 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .lpA-h2 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.08; margin: 0 0 2.2rem; }
 .lpA-info { padding: clamp(2.5rem, 6vw, 4rem) 0; }
 .lpA-initiative { text-align: center; margin-bottom: clamp(2rem, 5vw, 3rem); }
-.lpA-initiative .lpA-h2 { margin: 0; }   /* same space above, between and below the two rows */
+.lpA-initiative .lpA-h2 { margin: 0; }
+.lpA-purpose { max-width: 40rem; margin: 1.6rem auto 0; font-family: var(--font-head); font-size: clamp(1.2rem, 1.6vw, 1.45rem); line-height: 1.45; color: var(--ink-soft); }
+.lpA-purpose .lpA-kicker { display: block; margin-bottom: .5rem; font-family: var(--font-ui); }
+.lpA-purpose em { color: var(--accent); }   /* same space above, between and below the two rows */
 .lpA-facts { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 1.5rem; padding-bottom: clamp(2.5rem, 6vw, 4rem); border-bottom: 1px solid var(--hair); }
 .lpA-fact { display: flex; gap: .9rem; align-items: flex-start; justify-content: center; }
 .lpA-fact > svg { flex: none; width: 26px; height: 26px; color: var(--accent); margin-top: .1rem; }
