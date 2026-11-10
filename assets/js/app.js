@@ -282,6 +282,18 @@
 
   /* How a boy stands for a month: monthly pass, or £/session for each evening
      he attended (counted from published session recaps). */
+  /* A saying of Imam Ali (as) from Nahj al-Balagha, a different one each day. */
+  function sayingOfTheDay() {
+    var list = window.ZULFIQAR_SAYINGS || [];
+    if (!list.length) return "";
+    var day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
+    var q = list[day % list.length];
+    return '<figure class="saying">' +
+      '<p class="saying__ar" lang="ar" dir="rtl">' + esc(q.ar) + "</p>" +
+      '<blockquote class="saying__en">' + esc(q.en) + "</blockquote>" +
+      '<figcaption class="saying__ref">Imam Ali (as) · Nahj al-Balagha, ' + esc(q.ref) + "</figcaption></figure>";
+  }
+
   /* Every session a boy has been marked present at, ever. */
   function attendedEver(studentId, data) {
     var known = {};
@@ -1197,6 +1209,7 @@
         esc(boys.length ? joinNames(boys.map(function (b) { return b.first_name; })) : firstWord(state.me.profile.parent_name)) +
       '</h1><p class="sub">Here\'s what\'s coming up and what you\'ve got left to do.</p></div></div>' +
       familyNotices(d.notices) +
+      sayingOfTheDay() +
       (pending.length
         ? '<div class="card card--accent" style="margin-bottom:1rem"><h2>Please check the register</h2>' +
             '<p class="soft small">The coaches took the register at these sessions. Confirm it\'s right, or tell us if something\'s wrong. It\'s what we charge from.</p>' +

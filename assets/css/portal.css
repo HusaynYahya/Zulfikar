@@ -507,3 +507,10 @@ body.has-nav .foot { padding-bottom: 7rem; }
   opacity: .42; filter: saturate(.75);
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
           mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
+
+/* a saying of Imam Ali (as) on the families' home page */
+.saying { margin: 0 0 1rem; padding: 1.4rem 1.6rem; border-radius: var(--radius); text-align: center;
+  background: var(--glass); border: 1px solid var(--glass-edge); -webkit-backdrop-filter: blur(var(--blur)); backdrop-filter: blur(var(--blur)); }
+.saying__ar { font-family: var(--font-arabic); font-size: clamp(1.3rem, 2.4vw, 1.7rem); line-height: 1.9; color: var(--accent); margin: 0 0 .4rem; }
+.saying__en { font-family: var(--font-head); font-style: italic; font-size: 1.12rem; line-height: 1.5; color: var(--ink); margin: 0 auto .5rem; max-width: 42rem; }
+.saying__ref { font-size: .78rem; letter-spacing: .06em; color: var(--ink-mute); }
