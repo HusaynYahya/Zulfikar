@@ -499,3 +499,11 @@ body.has-nav .foot { padding-bottom: 7rem; }
 
 /* steam from the sword (smoke.js) and the weather (weather.js): over the scenery, behind the page */
 .smoke, .weather { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+/* a boy's flower bed (garden.js): faint, behind the foot of his card */
+.boy-card { overflow: hidden; padding-bottom: 5rem; }
+.boy-card > * { position: relative; z-index: 1; }
+.boy-card > .garden { position: absolute; z-index: 0; left: 0; right: 0; bottom: -2px; width: 100%; height: auto; pointer-events: none;
+  opacity: .42; filter: saturate(.75);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }

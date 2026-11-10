@@ -282,6 +282,13 @@
 
   /* How a boy stands for a month: monthly pass, or £/session for each evening
      he attended (counted from published session recaps). */
+  /* Every session a boy has been marked present at, ever. */
+  function attendedEver(studentId, data) {
+    var known = {};
+    data.sessions.forEach(function (x) { known[x.id] = true; });
+    return data.attendance.filter(function (a) { return a.student_id === studentId && a.present && known[a.session_id]; }).length;
+  }
+
   function payStatus(studentId, month, data) {
     var inMonth = {};
     data.sessions.forEach(function (s) {
@@ -1166,7 +1173,7 @@
         return !d.submissions.some(function (s) { return s.homework_id === h.id && s.student_id === b.id; });
       }).length;
       return (
-        '<div class="card">' +
+        '<div class="card boy-card">' +
           '<div class="row row--between"><h3 style="margin:0">' + esc(fullName(b)) + '</h3><span class="muted small">Year ' + esc(b.year_group) + "</span></div>" +
           '<hr class="divider">' +
           '<div class="grid" style="gap:.6rem;grid-template-columns:repeat(3,1fr)">' +
@@ -1174,6 +1181,7 @@
             '<div><div class="stat__num">' + todo + '</div><div class="stat__label">Homework to do</div></div>' +
             '<div><div style="margin:.55rem 0 .35rem">' + payBadge(st) + '</div><div class="stat__label">Payments</div></div>' +
           "</div>" +
+          (window.ZGarden ? ZGarden.svg(b.id, attendedEver(b.id, d)) : "") +
         "</div>"
       );
     }).join("");
