@@ -2,7 +2,8 @@
    PROJECT ZULFIQAR — weather
    ----------------------------------------------------------------------------
    Each visit gets a random weather, drawn over the mountain scenery and
-   behind the page: sunny, cloudy, windy, rainy, stormy, foggy or snowy. It
+   behind the page: sunny, cloudy, windy, rainy, stormy, foggy, snowy, a
+   starry night, sunset, a rainbow after rain, or a sandstorm. It
    carries over as the visitor moves between pages, and if they stay on one
    page for a while it slowly changes into another. Add ?weather=stormy (or
    any other kind) to the address to hold a particular one.
@@ -17,13 +18,17 @@
   // w is how often each kind comes up, relative to the others. The wind
   // blows right to left, like the steam from the sword.
   var KINDS = {
-    sunny:  { w: 20, tint: "rgba(255,186,120,.07)", sun: true, motes: 40, clouds: { n: 2, dark: 0, speed: 6, scale: .7, a: .7 } },
-    cloudy: { w: 20, tint: "rgba(110,118,145,.10)", clouds: { n: 8, dark: .15, speed: 10, scale: 1, a: .85 } },
-    windy:  { w: 15, tint: "rgba(120,130,150,.06)", streaks: 24, leaves: 24, clouds: { n: 6, dark: .1, speed: 60, scale: .9, a: .8 } },
-    rainy:  { w: 15, tint: "rgba(28,38,60,.24)", rain: 240, tilt: .16, fog: .1, clouds: { n: 9, dark: .5, speed: 14, scale: 1.1, a: .9 } },
-    stormy: { w: 10, tint: "rgba(6,10,22,.40)", rain: 460, tilt: .32, lightning: true, clouds: { n: 10, dark: .85, speed: 26, scale: 1.2, a: .95 } },
-    foggy:  { w: 10, tint: "rgba(170,176,192,.12)", fog: .36, clouds: { n: 3, dark: .2, speed: 6, scale: 1, a: .6 } },
-    snowy:  { w: 10, tint: "rgba(190,200,225,.10)", snow: 200, clouds: { n: 7, dark: .25, speed: 8, scale: 1, a: .85 } },
+    sunny:     { w: 1, tint: "rgba(255,186,120,.07)", sun: true, motes: 40, clouds: { n: 2, dark: 0, speed: 6, scale: .7, a: .7 } },
+    cloudy:    { w: 1, tint: "rgba(110,118,145,.10)", clouds: { n: 8, dark: .15, speed: 10, scale: 1, a: .85 } },
+    windy:     { w: 1, tint: "rgba(120,130,150,.06)", streaks: 24, leaves: 24, clouds: { n: 6, dark: .1, speed: 60, scale: .9, a: .8 } },
+    rainy:     { w: 1, tint: "rgba(28,38,60,.24)", rain: 240, tilt: .16, fog: .1, clouds: { n: 9, dark: .5, speed: 14, scale: 1.1, a: .9 } },
+    stormy:    { w: 1, tint: "rgba(6,10,22,.40)", rain: 460, tilt: .32, lightning: true, clouds: { n: 10, dark: .85, speed: 26, scale: 1.2, a: .95 } },
+    foggy:     { w: 1, tint: "rgba(170,176,192,.12)", fog: .36, clouds: { n: 3, dark: .2, speed: 6, scale: 1, a: .6 } },
+    snowy:     { w: 1, tint: "rgba(190,200,225,.10)", snow: 200, clouds: { n: 7, dark: .25, speed: 8, scale: 1, a: .85 } },
+    night:     { w: 1, tint: "rgba(4,7,20,.50)", night: true, stars: 170, clouds: { n: 2, dark: .7, speed: 5, scale: .9, a: .45 } },
+    sunset:    { w: 1, tint: "rgba(255,110,50,.10)", sunset: true, birds: 7, clouds: { n: 4, dark: .05, speed: 7, scale: .8, a: .55 } },
+    rainbow:   { w: 1, tint: "rgba(150,170,200,.06)", rainbow: true, rain: 40, tilt: .1, clouds: { n: 4, dark: .3, speed: 9, scale: 1, a: .7 } },
+    sandstorm: { w: 1, tint: "rgba(190,130,70,.34)", dust: 320, fog: .22, clouds: { n: 0, dark: .4, speed: 40, scale: 1, a: .5 } },
   };
   var KEY = "zulfiqar-weather";
 
@@ -145,6 +150,18 @@
     var motes = [];
     for (i = 0; i < less(K.motes); i++) motes.push({ x: rand(0, W), y: rand(0, H), r: rand(.8, 2), v: rand(4, 12), ph: rand(0, 6.28) });
 
+    var stars = [];
+    for (i = 0; i < less(K.stars); i++) stars.push({ x: rand(0, W), y: H * Math.pow(rand(0, 1), 1.6) * .6, r: rand(.5, 1.7), ph: rand(0, 6.28), sp: rand(.8, 2.4) });
+    var shooting = null, nextShoot = rand(3, 7);
+
+    var birds = [];
+    function newBird(x) { return { x: x, y: H * rand(.18, .42), v: rand(28, 46), s: rand(5, 9) * (small ? .7 : 1), ph: rand(0, 6.28) }; }
+    for (i = 0; i < (K.birds || 0); i++) birds.push(newBird(rand(0, W)));
+
+    var dust = [];
+    function newDust(x) { return { x: x, y: rand(0, H), len: rand(6, 26), v: rand(380, 760), a: rand(.15, .45), ph: rand(0, 6.28) }; }
+    for (i = 0; i < less(K.dust); i++) dust.push(newDust(rand(0, W)));
+
     var bolt = null, flash = 0, nextBolt = rand(2, 5);
     function makeBolt(target) {
       var x = target ? target[0] + rand(-120, 120) : W * rand(.15, .85), y = H * .06, end = target ? target[1] : H * rand(.5, .72), main = [[x, y]], branches = [];
@@ -226,6 +243,61 @@
       ctx = into; clock += dt;
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = K.tint; ctx.fillRect(0, 0, W, H);
+
+      if (K.night) {   // a clear night: twinkling stars, a moon, now and then a shooting star
+        stars.forEach(function (st) {
+          ctx.globalAlpha = .35 + .55 * (.5 + .5 * Math.sin(clock * st.sp + st.ph));
+          ctx.fillStyle = "#f4f2ff"; ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        var mx = W * .2, my = H * .17, mr = small ? 18 : 26;
+        var mg = ctx.createRadialGradient(mx, my, 0, mx, my, mr * 7);
+        mg.addColorStop(0, "rgba(230,236,255,.35)"); mg.addColorStop(1, "rgba(230,236,255,0)");
+        ctx.fillStyle = mg; ctx.fillRect(mx - mr * 7, my - mr * 7, mr * 14, mr * 14);
+        ctx.fillStyle = "#eef0f8"; ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(170,178,200,.35)";   // a few soft craters
+        [[-.3, -.2, .22], [.25, .15, .16], [-.05, .35, .12]].forEach(function (c) { ctx.beginPath(); ctx.arc(mx + c[0] * mr, my + c[1] * mr, c[2] * mr, 0, Math.PI * 2); ctx.fill(); });
+        nextShoot -= dt;
+        if (nextShoot <= 0 && !shooting) { shooting = { x: W * rand(.3, 1), y: H * rand(.05, .3), age: 0 }; nextShoot = rand(5, 11); }
+        if (shooting) {
+          shooting.age += dt; var sk = shooting.age / .9;
+          if (sk >= 1) shooting = null;
+          else {
+            var hx = shooting.x - sk * 260, hy = shooting.y + sk * 120;
+            var tr = ctx.createLinearGradient(hx, hy, hx + 90, hy - 42);
+            tr.addColorStop(0, "rgba(255,255,255," + (1 - sk) + ")"); tr.addColorStop(1, "rgba(255,255,255,0)");
+            ctx.strokeStyle = tr; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 90, hy - 42); ctx.stroke();
+          }
+        }
+      }
+
+      if (K.sunset) {   // a low sun on the horizon, a warm sky, birds heading home
+        var ux = W * .72, uy = H * .6, UR = Math.max(W, H) * .75;
+        var sg = ctx.createRadialGradient(ux, uy, 0, ux, uy, UR);
+        sg.addColorStop(0, "rgba(255,190,110,.6)"); sg.addColorStop(.15, "rgba(255,140,80,.3)"); sg.addColorStop(.5, "rgba(220,90,90,.12)"); sg.addColorStop(1, "rgba(120,60,110,0)");
+        ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "rgba(255,214,150,.95)"; ctx.shadowColor = "rgba(255,150,80,1)"; ctx.shadowBlur = 50;
+        ctx.beginPath(); ctx.arc(ux, uy, small ? 28 : 44, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(30,22,30,.75)"; ctx.lineWidth = 1.6; ctx.lineCap = "round";
+        birds.forEach(function (bd, n) {
+          bd.x -= bd.v * dt; if (bd.x < -20) birds[n] = bd = newBird(W + rand(10, 200));
+          var flapY = Math.sin(clock * 6 + bd.ph) * bd.s * .45;
+          ctx.beginPath(); ctx.moveTo(bd.x - bd.s, bd.y - flapY); ctx.quadraticCurveTo(bd.x - bd.s * .4, bd.y - bd.s * .2, bd.x, bd.y);
+          ctx.quadraticCurveTo(bd.x + bd.s * .4, bd.y - bd.s * .2, bd.x + bd.s, bd.y - flapY); ctx.stroke();
+        });
+      }
+
+      if (K.rainbow) {   // the sun back out after rain, and a rainbow across the valley
+        var rx = W * .55, ry = H * .95, rr = Math.max(W * .55, H * .6), bands = ["#ff5b5b", "#ff9f43", "#ffe066", "#6fdc8c", "#5cb8ff", "#7a7cff", "#b07cff"];
+        ctx.save(); ctx.globalAlpha = .2; ctx.lineWidth = small ? 7 : 11;
+        bands.forEach(function (c, n) { ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(rx, ry, rr - n * ctx.lineWidth, Math.PI, 2 * Math.PI); ctx.stroke(); });
+        ctx.restore();
+        var bx2 = W * .12, by2 = H * .16;
+        var bg2 = ctx.createRadialGradient(bx2, by2, 0, bx2, by2, Math.max(W, H) * .45);
+        bg2.addColorStop(0, "rgba(255,236,190,.4)"); bg2.addColorStop(1, "rgba(255,236,190,0)");
+        ctx.fillStyle = bg2; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "rgba(255,244,215,.9)"; ctx.beginPath(); ctx.arc(bx2, by2, small ? 16 : 24, 0, Math.PI * 2); ctx.fill();
+      }
 
       if (K.sun) {   // the sun, top left, with slowly turning rays
         var sx = W * .16, sy = H * .15, R = Math.max(W, H) * .5;
@@ -331,6 +403,16 @@
           if (l.x < -20 || l.y > H + 20) leaves[n] = l = newLeaf(W + rand(10, 300));
           ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(l.rot); ctx.fillStyle = l.c; ctx.globalAlpha = .85;
           ctx.beginPath(); ctx.ellipse(0, 0, l.s, l.s * .45, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        });
+      }
+
+      if (dust.length) {   // a sandstorm: grains racing right to left
+        ctx.lineWidth = 1.2;
+        dust.forEach(function (g, n) {
+          g.x -= g.v * dt; g.y += Math.sin(clock * 3 + g.ph) * 20 * dt;
+          if (g.x + g.len < 0) dust[n] = g = newDust(W + rand(0, 80));
+          ctx.strokeStyle = "rgba(236,196,140," + g.a + ")";
+          ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x + g.len, g.y - g.len * .08); ctx.stroke();
         });
       }
 
