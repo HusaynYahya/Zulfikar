@@ -306,8 +306,25 @@ details.disclose > div { margin-top: .7rem; }
 }
 
 .auth-card { width: 100%; }
+/* the register page: logo strip on top, the form spread wide */
+.login--wide { grid-template-columns: minmax(0, 1fr); max-width: 1120px; margin: 0 auto; gap: 1rem; padding-top: clamp(.5rem, 3vh, 1.5rem); min-height: 0; }
+.login--wide .login-brand { order: -1; position: static; display: flex; align-items: center; justify-content: center; gap: 1.6rem; padding-top: 0; }
+.login--wide .login-brand__logo { width: 118px; }
+.login--wide .kaizen { font-size: 2.6rem; margin: 0; }
+.reg-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.1rem; align-items: start; }
+.reg-boys, #boys { display: grid; gap: .95rem; justify-items: start; }
+#boys { justify-items: stretch; width: 100%; }
+.reg-account { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 1.6rem; }
+.reg-account legend { grid-column: 1 / -1; }
+.reg-account > .field { grid-row: span 2; }
+@media (max-width: 860px) {
+  .reg-grid, .reg-account { grid-template-columns: minmax(0, 1fr); }
+  .reg-account > .field { grid-row: auto; }
+  .login--wide .login-brand__logo { width: 90px; }
+  .login--wide .kaizen { font-size: 2rem; }
+}
 .boy-block { position: relative; }
-.boy-block .remove-boy { position: absolute; top: .4rem; right: .6rem; }
+.boy-block .remove-boy { position: absolute; top: -1.15rem; right: .8rem; padding: .25rem .7rem; background: rgba(20, 24, 36, .92); border: 1px solid var(--hair); }
 
 /* ---- footer, toast, misc --------------------------------------------- */
 .foot { text-align: center; padding: 2rem var(--pad) 2.4rem; color: var(--ink-mute); font-size: .82rem; text-shadow: 0 1px 10px rgba(0, 0, 0, .6); }

@@ -1055,18 +1055,22 @@
         "<h2>Register your son</h2>" +
         '<p class="small muted">A parent or guardian creates the account. You can add brothers too.</p>' +
         '<form class="form" id="register-form" novalidate>' +
+          '<div class="reg-grid">' +
           "<fieldset><legend>Parent / guardian</legend>" +
             '<label class="field"><span>Full name <span class="req">*</span></span><input type="text" name="parent_name" required autocomplete="name"></label>' +
             '<div class="cols-2">' +
               '<label class="field"><span>Email <span class="req">*</span></span><input type="email" name="email" required autocomplete="email"></label>' +
               '<label class="field"><span>Mobile <span class="req">*</span></span><input type="tel" name="phone" required autocomplete="tel"></label>' +
             "</div>" +
-            '<label class="field"><span>Emergency contact (if not you)</span><input type="text" name="emergency_name" placeholder="Name"></label>' +
-            '<label class="field"><span>Emergency contact number</span><input type="tel" name="emergency_phone"></label>' +
+            '<div class="cols-2">' +
+              '<label class="field"><span>Emergency contact (if not you)</span><input type="text" name="emergency_name" placeholder="Name"></label>' +
+              '<label class="field"><span>Emergency contact number</span><input type="tel" name="emergency_phone"></label>' +
+            "</div>" +
           "</fieldset>" +
-          '<div id="boys">' + boyBlock(0) + "</div>" +
-          '<button type="button" class="btn btn--sm" data-action="add-boy">' + icon("plus") + "Add a brother</button>" +
-          "<fieldset><legend>Account</legend>" +
+          '<div class="reg-boys"><div id="boys">' + boyBlock(0) + "</div>" +
+          '<button type="button" class="btn btn--sm" data-action="add-boy">' + icon("plus") + "Add a brother</button></div>" +
+          "</div>" +
+          '<fieldset class="reg-account"><legend>Account</legend>' +
             '<label class="field"><span>Password <span class="req">*</span></span><input type="password" name="password" required minlength="8" autocomplete="new-password"><small>At least 8 characters.' + (portalClosed() ? " You'll use this to sign in when the member portal opens." : "") + "</small></label>" +
             '<label class="check"><input type="checkbox" name="agree_values" required> My son agrees to uphold the programme values: ' + esc((P.values || []).join(", ")) + ".</label>" +
             '<label class="check"><input type="checkbox" name="agree_medical" required> I confirm the details above are correct and consent to first aid being given if needed.</label>' +
@@ -1107,7 +1111,7 @@
 
     $main.innerHTML =
       publicHeader("home") +
-      '<div class="login">' +
+      '<div class="login' + (tab === "register" ? " login--wide" : "") + '">' +
         '<section class="card card--strong auth-card" aria-label="Account">' + down + auth + "</section>" +
         '<section class="login-brand">' +
           '<h1><img class="login-brand__logo" src="assets/img/logo.webp?v=9" width="720" height="830" alt="' + esc(P.name) + '"></h1>' +
