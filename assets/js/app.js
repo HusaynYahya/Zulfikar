@@ -976,7 +976,7 @@
       '<section class="lpA-track"><div class="lpA-pin">' +
         '<div class="lpA-brand">' +
           '<div class="lpA-kaizen" title="Kaizen: continual improvement"><p class="kaizen" lang="ja">改善</p></div>' +
-          '<img class="lpA-mark" src="assets/img/logo.webp?v=7" width="720" height="835" alt="' + esc(P.name) + '">' +
+          '<img class="lpA-mark" src="assets/img/logo.webp?v=8" width="720" height="830" alt="' + esc(P.name) + '">' +
         "</div>" +
         '<div class="lpA-copy">' +
           '<h1 class="lpA-h1">' + lines.map(function (l, i) { return '<span data-line="' + i + '">' + l + "</span>"; }).join("") + "</h1>" +
@@ -1079,7 +1079,7 @@
       '<div class="login">' +
         '<section class="card card--strong auth-card" aria-label="Account">' + down + auth + "</section>" +
         '<section class="login-brand">' +
-          '<h1><img class="login-brand__logo" src="assets/img/logo.webp?v=7" width="720" height="835" alt="' + esc(P.name) + '"></h1>' +
+          '<h1><img class="login-brand__logo" src="assets/img/logo.webp?v=8" width="720" height="830" alt="' + esc(P.name) + '"></h1>' +
           '<p class="kaizen" lang="ja" title="Kaizen: continual improvement">改善</p>' +
         "</section>" +
       "</div>";
@@ -1129,7 +1129,7 @@
       var res = await D.signUp({ email: f.email, password: f.password, parent_name: f.parent_name, phone: f.phone, boys: boys });
       if (res.needsConfirmation) {
         $main.innerHTML = '<div class="card" style="max-width:520px;margin:2rem auto;text-align:center">' +
-          '<img src="assets/img/logo.webp?v=7" alt="" width="160" height="160" style="margin:0 auto .5rem;width:160px;height:auto">' +
+          '<img src="assets/img/logo.webp?v=8" alt="" width="160" height="160" style="margin:0 auto .5rem;width:160px;height:auto">' +
           "<h1>Check your email</h1><p class=\"soft\">We've sent a confirmation link to <strong>" + esc(f.email) +
           "</strong>. Click it to finish setting up your account, then sign in.</p></div>";
         return;
