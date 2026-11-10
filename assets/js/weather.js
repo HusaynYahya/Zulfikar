@@ -172,7 +172,7 @@
     }
     // the raised sword's tip, for aiming the bolt
     function swordTip(m, k) {
-      var a = armAngle(k), sh = [m.x + 3 * m.u, m.y - 44 * m.u], arm = 17 * m.u, len = 40 * m.u;
+      var a = armAngle(k), sh = [m.x + 13 * m.u, m.y - 42 * m.u], arm = 17 * m.u, len = 40 * m.u;
       return [sh[0] + Math.cos(a) * (arm + len), sh[1] + Math.sin(a) * (arm + len)];
     }
     function armAngle(k) { return (0.55 + (-Math.PI / 2 - 0.55) * k); }   // down at his side → straight up
@@ -190,10 +190,23 @@
       ctx.beginPath(); ctx.moveTo(x - 7 * u, y - 46 * u); ctx.quadraticCurveTo(x - 20 * u + flap, y - 26 * u, x - 22 * u + flap, y - 6 * u);
       ctx.lineTo(x - 6 * u, y - 14 * u); ctx.lineTo(x + 9 * u, y - 24 * u); ctx.lineTo(x + 9 * u, y - 44 * u); ctx.closePath(); ctx.fill();
       ctx.beginPath(); ctx.ellipse(x + 1.5 * u, y - 53 * u, 5.5 * u, 6.5 * u, 0, 0, Math.PI * 2); ctx.fill();
+      // his face catches the light: a faint glow while the sword is up, bright when it strikes
+      var lit = Math.min(1, glow + k * .35);
+      if (lit > .02) {
+        var hx = x + 3.5 * u, hy = y - 54 * u;
+        var halo = ctx.createRadialGradient(hx, hy, 0, hx, hy, 22 * u);
+        halo.addColorStop(0, "rgba(205,220,255," + (.55 * lit) + ")"); halo.addColorStop(1, "rgba(205,220,255,0)");
+        ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(hx, hy, 22 * u, 0, Math.PI * 2); ctx.fill();
+        var face = ctx.createLinearGradient(hx - 6 * u, hy, hx + 5 * u, hy - 3 * u);   // lit from the raised blade, above and in front
+        face.addColorStop(0, "rgba(220,230,255,0)"); face.addColorStop(1, "rgba(235,242,255," + (.95 * lit) + ")");
+        ctx.fillStyle = face; ctx.beginPath(); ctx.ellipse(x + 1.5 * u, y - 53 * u, 5.5 * u, 6.5 * u, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = c;                                                          // a dark brow, so it reads as a face
+        ctx.fillRect(hx - 1 * u, hy - 3.5 * u, 4.5 * u, 1.2 * u);
+      }
       // the arm and the Zulfiqar, raised by k (0 down, 1 straight up)
-      var a = armAngle(k), sh = [m.x + 3 * u, m.y - 44 * u], arm = 17 * u, len = 40 * u;
+      var a = armAngle(k), sh = [m.x + 13 * u, m.y - 42 * u], arm = 17 * u, len = 40 * u;
       var hand = [sh[0] + Math.cos(a) * arm, sh[1] + Math.sin(a) * arm];
-      ctx.strokeStyle = c; ctx.lineWidth = 5 * u; ctx.lineCap = "round";
+      ctx.strokeStyle = c; ctx.lineWidth = 4 * u; ctx.lineCap = "round";
       ctx.beginPath(); ctx.moveTo(sh[0], sh[1]); ctx.lineTo(hand[0], hand[1]); ctx.stroke();
       ctx.translate(hand[0], hand[1]); ctx.rotate(a + Math.PI / 2);
       if (glow > 0) { ctx.shadowColor = "rgba(190,210,255," + glow + ")"; ctx.shadowBlur = 24 * glow; }
