@@ -323,7 +323,7 @@
       title: "Grip strength & the story of Khaybar", location: "Hujjat Stanmore", pillars: ["physical", "spiritual"],
       recap: "", takeaways: [], created_by: coachId, created_at: nowISO(),
       timetable: [
-        { time: "19:00", activity: "Round 1: Wrestling — grip and pulling drills in pairs" },
+        { time: "19:00", activity: "Round 1: Grappling — grip and pulling drills in pairs" },
         { time: "20:30", activity: "Round 2: Creative — the gate of Khaybar, told as a comic strip" },
         { time: "21:15", activity: "Round 3: A Shared Meal" },
         { time: "21:30", activity: "Collection" },

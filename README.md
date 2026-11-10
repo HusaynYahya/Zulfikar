@@ -152,7 +152,7 @@ minutes.
 │   ├── js/data.js                     storage: Supabase (live) or localStorage (demo)
 │   ├── js/app.js                      screens for families and coaches
 │   ├── js/scenery.js                  draws the landscapes (mountains, shrine, desert, lake)
-│   ├── js/wrestle.js                  the home-page wrestlers, drawn in code (see below)
+│   ├── js/wrestle.js                  the home-page grapplers, drawn in code (see below)
 │   ├── js/weather.js, smoke.js        the random weather, and the steam off the logo's sword
 │   ├── js/garden.js, sayings.js       each boy's flower bed; the daily saying of Imam Ali (as)
 │   └── img/
@@ -166,9 +166,9 @@ minutes.
     └── functions/stripe-webhook/      records Stripe payments
 ```
 
-## The home-page wrestlers
+## The home-page grapplers
 
-The two wrestlers on the home page, one in a white gi and one in navy, are
+The two grapplers on the home page, one in a white gi and one in navy, are
 drawn in code, not pictures or video (`assets/js/wrestle.js`). As the page
 scrolls they circle, one shoots a double leg, lifts and flips the other,
 follows him down and then helps him up. The moves are keyframes near the top

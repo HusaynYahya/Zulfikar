@@ -29,7 +29,7 @@ window.ZULFIQAR = {
   /* ---- programme ----------------------------------------------------- */
   programme: {
     name: "Project Zulfiqar",
-    initiative: "Youth Wrestling",   // the weekly sessions, Project Zulfiqar's first initiative
+    initiative: "Youth Grappling",   // the weekly sessions, Project Zulfiqar's first initiative
     arabic: "ذوالفقار",
     tagline: "Physical, Spiritual and Intellectual holistic growth for our youth.",
     ages: "Year 7 – Year 10 (Boys)",
@@ -43,13 +43,13 @@ window.ZULFIQAR = {
     values: ["Integrity", "Respect", "Discipline", "Brotherhood"],
     // the three parts of a Monday evening, shown on the home page
     evening: [
-      { part: "Round 1", name: "Wrestling", text: "Structured training led by an experienced coach." },
+      { part: "Round 1", name: "Grappling", text: "Structured training led by an experienced coach." },
       { part: "Round 2", name: "Creative", text: "Rediscovering lost skills." },
       { part: "Round 3", name: "A Shared Meal", text: "Forging brotherhood." },
     ],
     // Starting point for each new session plan. Coaches can change it per session.
     defaultTimetable: [
-      { time: "19:00", activity: "Round 1: Wrestling" },
+      { time: "19:00", activity: "Round 1: Grappling" },
       { time: "20:30", activity: "Round 2: Creative — poetry, plant potting, book club or a discussion circle" },
       { time: "21:15", activity: "Round 3: A Shared Meal" },
       { time: "21:30", activity: "Collection" },
