@@ -263,16 +263,21 @@
     var knot = toward(LW, RW, 0.5);
     det += seg(knot, [knot[0] + face * 1.5, knot[1] + 6.5], 2.2, c.belt) + seg(knot, [knot[0] - face * 2, knot[1] + 6], 2.2, c.belt);
     det += seg(toward(re, rCuff, 0.3), toward(re, rCuff, 0.75), 0.9, c.fold) + seg(toward(rk, rHem, 0.25), toward(rk, rHem, 0.7), 0.9, c.fold);
-    // hair, ear, and a brow / eye toward the opponent
-    var bx = f.h[0] - face * 2;
-    det += '<path d="M' + (f.h[0] - hr * 0.9) + "," + (f.h[1] + 0.5) +
-      " Q" + bx + "," + (f.h[1] - hr * 2.1) + " " + (f.h[0] + hr * 0.95) + "," + (f.h[1] - 2.2) +
-      " Q" + (f.h[0] + face * 1) + "," + (f.h[1] - hr * 0.55) + " " + (f.h[0] - face * hr * 0.2) + "," + (f.h[1] - hr * 0.35) +
-      " L" + (bx - face * hr * 0.75) + "," + (f.h[1] + 1.8) + ' Z" fill="' + c.hair + '"/>';
-    det += '<ellipse cx="' + (f.h[0] - face * 1.4).toFixed(1) + '" cy="' + (f.h[1] + 0.8).toFixed(1) + '" rx="1.2" ry="1.7" fill="' + c.shadowSkin + '"/>';
-    var ex = f.h[0] + face * 3;
-    det += seg([ex - face * 0.6, f.h[1] - 1.4], [ex + face * 2.6, f.h[1] - 0.9], 1.1, c.hair);
-    det += seg([ex, f.h[1] + 0.6], [ex + face * 1.8, f.h[1] + 0.6], 1.1, c.ink);
+    // a face in profile toward the opponent: a short nose, one eye, a brow,
+    // an ear, and short hair capping the top and back of the head
+    var hx = f.h[0], hy = f.h[1], F = face;
+    function P(x, y) { return (hx + F * x).toFixed(1) + "," + (hy + y).toFixed(1); }
+    var nose = "M" + P(hr * 0.8, -1.2) + " L" + P(hr * 1.12, 1.4) + " L" + P(hr * 0.78, 2.1) + " Z";
+    det += '<path d="' + nose + '" fill="' + c.skin + '" stroke="' + c.ink + '" stroke-width="1" stroke-linejoin="round"/>';
+    det += '<path d="M' + P(hr * 0.86, -1.6) + " L" + P(hr * 0.78, 2.2) + '" stroke="' + c.skin + '" stroke-width="1.6"/>';   // blend the nose into the face
+    det += '<path d="M' + P(-hr * 0.92, 1.5) +
+      " C" + P(-hr * 1.05, -hr * 0.9) + " " + P(-hr * 0.2, -hr * 1.32) + " " + P(hr * 0.45, -hr * 1.05) +
+      " C" + P(hr * 0.78, -hr * 0.9) + " " + P(hr * 0.86, -hr * 0.6) + " " + P(hr * 0.72, -hr * 0.5) +
+      " C" + P(hr * 0.35, -hr * 0.62) + " " + P(-hr * 0.05, -hr * 0.5) + " " + P(-hr * 0.32, -hr * 0.1) +
+      " C" + P(-hr * 0.5, hr * 0.2) + " " + P(-hr * 0.6, hr * 0.3) + " " + P(-hr * 0.92, 1.5) + ' Z" fill="' + c.hair + '"/>';
+    det += '<ellipse cx="' + (hx - F * hr * 0.12).toFixed(1) + '" cy="' + (hy + 0.9).toFixed(1) + '" rx="1.25" ry="1.75" fill="' + c.shadowSkin + '"/>';   // ear
+    det += '<circle cx="' + (hx + F * hr * 0.5).toFixed(1) + '" cy="' + (hy - 0.2).toFixed(1) + '" r="0.85" fill="' + c.ink + '"/>';                   // eye
+    det += seg([hx + F * hr * 0.32, hy - 1.9], [hx + F * hr * 0.72, hy - 2.1], 0.9, c.hair);                                                            // brow
     return "<g>" + ol + fl + det + "</g>";
   }
 
