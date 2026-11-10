@@ -1682,9 +1682,6 @@
           }).join("") + "</select></label>" +
         "</div>" +
         '<label class="field"><span>Theme</span><input type="text" name="title" required value="' + esc(s.title) + '" placeholder="e.g. Takedowns & the meaning of sabr"></label>' +
-        '<div class="field"><span>Pillars</span><div class="checks">' + (CFG.pillars || []).map(function (p) {
-          return '<label class="check"><input type="checkbox" name="pillars" data-multi value="' + esc(p.key) + '"' + (s.pillars.indexOf(p.key) !== -1 ? " checked" : "") + "> " + esc(p.label) + "</label>";
-        }).join("") + "</div></div>" +
         "<fieldset><legend>Plan</legend>" +
           '<div class="cols-2">' +
             '<label class="field"><span>Timetable</span><textarea name="timetable" rows="7" placeholder="19:00 Arrive and warm-up">' + esc(timetableText(s.timetable)) + "</textarea><small>One line each: a time, then what happens.</small></label>" +
@@ -1808,7 +1805,7 @@
     onSubmit(document.getElementById("session-form"), async function (f) {
       var ticked = f.present || [];
       var row = {
-        date: f.date, location: f.location, title: f.title, pillars: f.pillars || [], recap: f.recap,
+        date: f.date, location: f.location, title: f.title, pillars: s.pillars || [], recap: f.recap,
         takeaways: f.takeaways.split("\n").map(function (t) { return t.trim(); }).filter(Boolean),
         timetable: parseTimetable(f.timetable),
         bring: f.bring.split("\n").map(function (t) { return t.trim(); }).filter(Boolean),
