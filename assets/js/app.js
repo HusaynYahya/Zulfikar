@@ -835,7 +835,7 @@
       '<div class="topbar__inner">' +
         '<a class="brand" href="#/home" aria-label="' + esc(P.name) + ' home">' +
           '<img class="brand__logo" src="assets/img/logo-small.png?v=7" alt="" width="44" height="44">' +
-          '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>";
+          '<span class="brand__word">' + esc(P.name) + "</span></a>";
     if (nav.length) {
       html += '<nav class="nav" aria-label="Main">' + nav.map(function (n) {
         return '<a href="#/' + n.path + '"' + (n.path === path ? ' aria-current="page"' : "") + ">" +
@@ -954,7 +954,7 @@
     return (
       '<header class="site-top"><div class="site-top__inner">' +
         '<a class="brand" href="#/" aria-label="' + esc(P.name) + '"><img class="brand__logo" src="assets/img/logo-small.png?v=7" alt="" width="40" height="40">' +
-          '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>" +
+          '<span class="brand__word">' + esc(P.name) + "</span></a>" +
         (cta === "home" ? '<a class="btn btn--sm" href="#/">← Home</a>'
           : portalClosed() ? '<a class="btn btn--sm btn--primary" href="#/register">Register your son</a>'
           : '<a class="btn btn--sm btn--primary" href="#/signin">Member sign in</a>') +
