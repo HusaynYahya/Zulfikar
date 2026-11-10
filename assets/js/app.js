@@ -1010,7 +1010,7 @@
         "</div>" +
         '<div class="lpA-copy">' +
           '<h1 class="lpA-h1">' + lines.map(function (l, i) { return '<span data-line="' + i + '">' + l + "</span>"; }).join("") + "</h1>" +
-          '<p class="lpA-lede">' + "Weekly coaching sessions for our Muslim youth.</p>" +
+          '<p class="lpA-lede">' + "Weekly coaching sessions for our Mahdawi youth.</p>" +
           '<div class="row lpA-actions"><a class="btn btn--primary" href="#/register">Register your son</a>' + (portalClosed() ? '<span class="lpA-soon">Member portal coming soon</span>' : '<a class="btn btn--ghost" href="#/signin">Member sign in</a>') + "</div>" +
         "</div>" +
         '<div class="lpA-stage">' +
