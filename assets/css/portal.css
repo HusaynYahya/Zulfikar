@@ -443,6 +443,7 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .lpA-kicker { font-size: .78rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 1rem; }
 .lpA-quote { font-family: var(--font-head); font-size: clamp(1.7rem, 3.2vw, 2.8rem); line-height: 1.2; max-width: 22em; margin: 0; text-shadow: 0 2px 24px rgba(0,0,0,.45); }
 .lpA-quote em { color: var(--accent); font-style: italic; }
+.lpA-honorific { font-size: .6em; color: var(--ink-soft); }
 .lpA-h2 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.08; margin: 0 0 2.2rem; }
 .lpA-info { padding: clamp(2.5rem, 6vw, 4rem) 0; }
 .lpA-initiative { text-align: center; margin-bottom: clamp(2rem, 5vw, 3rem); }

@@ -972,7 +972,7 @@
       "</div></section>" +
 
       '<section class="lpA-sec"><p class="lpA-kicker">Our purpose</p>' +
-        '<p class="lpA-quote">Creating a community of youth ready for the reappearance of <em>the Awaited Saviour</em>.</p></section>' +
+        '<p class="lpA-quote">Creating a community of youth ready for the reappearance of <em>The Awaited Saviour</em> <span class="lpA-honorific">(ajtfs)</span>.</p></section>' +
 
       '<section class="lpA-sec lpA-info">' +
         (P.initiative ? '<div class="lpA-initiative"><p class="lpA-kicker">Our first initiative</p><h2 class="lpA-h2">' + esc(P.initiative) + "</h2>" +
