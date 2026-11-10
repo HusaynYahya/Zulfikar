@@ -830,7 +830,7 @@
     var html =
       '<div class="topbar__inner">' +
         '<a class="brand" href="#/home" aria-label="' + esc(P.name) + ' home">' +
-          '<img class="brand__logo" src="assets/img/logo-small.png?v=5" alt="" width="44" height="44">' +
+          '<img class="brand__logo" src="assets/img/logo-small.png?v=6" alt="" width="44" height="44">' +
           '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>";
     if (nav.length) {
       html += '<nav class="nav" aria-label="Main">' + nav.map(function (n) {
@@ -925,7 +925,7 @@
   function publicHeader(cta) {
     return (
       '<header class="site-top"><div class="site-top__inner">' +
-        '<a class="brand" href="#/" aria-label="' + esc(P.name) + '"><img class="brand__logo" src="assets/img/logo-small.png?v=5" alt="" width="40" height="40">' +
+        '<a class="brand" href="#/" aria-label="' + esc(P.name) + '"><img class="brand__logo" src="assets/img/logo-small.png?v=6" alt="" width="40" height="40">' +
           '<span class="brand__word">Project<span class="arabic" lang="ar">' + esc(P.arabic) + "</span></span></a>" +
         (cta === "home" ? '<a class="btn btn--sm" href="#/">← Home</a>' : '<a class="btn btn--sm btn--primary" href="#/signin">Member sign in</a>') +
       "</div></header>"
@@ -961,7 +961,7 @@
     };
   }
   function lpFoot() {
-    return '<footer class="lp-foot"><img src="assets/img/logo-small.png?v=5" width="64" height="64" alt="">' +
+    return '<footer class="lp-foot"><img src="assets/img/logo-small.png?v=6" width="64" height="64" alt="">' +
       "<span>" + esc(P.name) + "</span><span class=\"soft\">" + esc((P.values || []).join(" · ")) + "</span>" +
       '<span class="soft">改善 · kaizen</span></footer>';
   }
@@ -1329,7 +1329,7 @@
     $main.innerHTML =
       '<div class="confirmation card card--strong">' +
         '<div class="confirmation__head">' +
-          '<img src="assets/img/logo-small.png?v=5" alt="" width="72" height="72">' +
+          '<img src="assets/img/logo-small.png?v=6" alt="" width="72" height="72">' +
           '<div><p class="label">Booking confirmation' + (P.initiative ? " · " + esc(P.initiative) : "") + "</p><h1>" + (ok ? "Signed up and paid" : "Not confirmed yet") + "</h1></div>" +
           (ok ? badge("Confirmed", "ok") : badge("Action needed", "warn")) +
         "</div>" +
