@@ -272,7 +272,7 @@
       }
 
       if (K.sunset) {   // a low sun on the horizon, a warm sky, birds heading home
-        var ux = W * .72, uy = H * .6, UR = Math.max(W, H) * .75;
+        var ux = W * (small ? .5 : .6), uy = H * (small ? .3 : .27), UR = Math.max(W, H) * .75;   // clear of the text and the wrestlers
         var sg = ctx.createRadialGradient(ux, uy, 0, ux, uy, UR);
         sg.addColorStop(0, "rgba(255,190,110,.6)"); sg.addColorStop(.15, "rgba(255,140,80,.3)"); sg.addColorStop(.5, "rgba(220,90,90,.12)"); sg.addColorStop(1, "rgba(120,60,110,0)");
         ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
@@ -288,8 +288,8 @@
       }
 
       if (K.rainbow) {   // the sun back out after rain, and a rainbow across the valley
-        var rx = W * .55, ry = H * .95, rr = Math.max(W * .55, H * .6), bands = ["#ff5b5b", "#ff9f43", "#ffe066", "#6fdc8c", "#5cb8ff", "#7a7cff", "#b07cff"];
-        ctx.save(); ctx.globalAlpha = .2; ctx.lineWidth = small ? 7 : 11;
+        var rx = W * .5, ry = H * 1.02, rr = Math.max(W * .48, H * .78), bands = ["#ff5b5b", "#ff9f43", "#ffe066", "#6fdc8c", "#5cb8ff", "#7a7cff", "#b07cff"];
+        ctx.save(); ctx.globalAlpha = .42; ctx.lineWidth = small ? 9 : 15; ctx.shadowColor = "rgba(255,255,255,.35)"; ctx.shadowBlur = 8;
         bands.forEach(function (c, n) { ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(rx, ry, rr - n * ctx.lineWidth, Math.PI, 2 * Math.PI); ctx.stroke(); });
         ctx.restore();
         var bx2 = W * .12, by2 = H * .16;
