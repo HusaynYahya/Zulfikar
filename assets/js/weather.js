@@ -23,7 +23,7 @@
     windy:     { w: 1, tint: "rgba(120,130,150,.06)", streaks: 24, leaves: 24, clouds: { n: 6, dark: .1, speed: 60, scale: .9, a: .8 } },
     rainy:     { w: 1, tint: "rgba(28,38,60,.24)", rain: 240, tilt: .16, fog: .1, clouds: { n: 9, dark: .5, speed: 14, scale: 1.1, a: .9 } },
     stormy:    { w: 1, tint: "rgba(6,10,22,.40)", rain: 460, tilt: .32, lightning: true, clouds: { n: 10, dark: .85, speed: 26, scale: 1.2, a: .95 } },
-    foggy:     { w: 1, tint: "rgba(170,176,192,.12)", fog: .36, clouds: { n: 3, dark: .2, speed: 6, scale: 1, a: .6 } },
+    foggy:     { w: 1, tint: "rgba(178,184,198,.34)", fog: .5, fogN: 16, fogTop: .05, fogBig: true, clouds: { n: 3, dark: .2, speed: 5, scale: 1, a: .5 } },
     snowy:     { w: 1, tint: "rgba(190,200,225,.10)", snow: 200, clouds: { n: 7, dark: .25, speed: 8, scale: 1, a: .85 } },
     night:     { w: 1, tint: "rgba(4,7,20,.50)", night: true, stars: 170, clouds: { n: 2, dark: .7, speed: 5, scale: .9, a: .45 } },
     sunset:    { w: 1, tint: "rgba(255,110,50,.10)", sunset: true, birds: 7, clouds: { n: 4, dark: .05, speed: 7, scale: .8, a: .55 } },
@@ -145,7 +145,8 @@
     for (i = 0; i < less(K.leaves); i++) leaves.push(newLeaf(rand(0, W * 1.5)));
 
     var fog = [], fogImg = K.fog ? fogSprite() : null;
-    for (i = 0; i < (K.fog ? 7 : 0); i++) fog.push({ x: rand(-400, W), y: H * rand(.45, .9), w: rand(500, 900), h: rand(90, 170), v: rand(6, 16) });
+    var fogTop = K.fogTop || .45;   // dense fog fills the whole sky, light fog stays low
+    for (i = 0; i < (K.fog ? (K.fogN || 7) : 0); i++) fog.push({ x: rand(-400, W), y: H * rand(fogTop, .95), w: K.fogBig ? rand(900, 1700) : rand(500, 900), h: K.fogBig ? rand(180, 380) : rand(90, 170), v: rand(6, 16) });
 
     var motes = [];
     for (i = 0; i < less(K.motes); i++) motes.push({ x: rand(0, W), y: rand(0, H), r: rand(.8, 2), v: rand(4, 12), ph: rand(0, 6.28) });
@@ -296,12 +297,23 @@
       }
 
       if (K.sunset) {   // a low sun on the horizon, a warm sky, birds heading home
-        var ux = W * (small ? .5 : .6), uy = H * (small ? .3 : .27), UR = Math.max(W, H) * .75;   // clear of the text and the wrestlers
+        // low on the horizon, right of the wrestlers, half sunk below the skyline
+        var ux = W * (small ? .8 : .87), uy = H * (small ? .64 : .65), SR = small ? 34 : 58, UR = Math.max(W, H) * .8;
         var sg = ctx.createRadialGradient(ux, uy, 0, ux, uy, UR);
-        sg.addColorStop(0, "rgba(255,190,110,.6)"); sg.addColorStop(.15, "rgba(255,140,80,.3)"); sg.addColorStop(.5, "rgba(220,90,90,.12)"); sg.addColorStop(1, "rgba(120,60,110,0)");
+        sg.addColorStop(0, "rgba(255,170,90,.65)"); sg.addColorStop(.12, "rgba(255,125,70,.34)"); sg.addColorStop(.45, "rgba(215,80,85,.14)"); sg.addColorStop(1, "rgba(120,60,110,0)");
         ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = "rgba(255,214,150,.95)"; ctx.shadowColor = "rgba(255,150,80,1)"; ctx.shadowBlur = 50;
-        ctx.beginPath(); ctx.arc(ux, uy, small ? 28 : 44, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+        // a band of glow along the skyline
+        var hb = ctx.createLinearGradient(0, uy - H * .12, 0, uy + H * .06);
+        hb.addColorStop(0, "rgba(255,150,80,0)"); hb.addColorStop(.7, "rgba(255,150,80,.22)"); hb.addColorStop(1, "rgba(255,150,80,0)");
+        ctx.fillStyle = hb; ctx.fillRect(0, uy - H * .12, W, H * .18);
+        ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, uy + SR * .25); ctx.clip();   // the bottom of the sun has set
+        ctx.fillStyle = "rgba(255,196,120,.97)"; ctx.shadowColor = "rgba(255,120,60,1)"; ctx.shadowBlur = 70;
+        ctx.beginPath(); ctx.arc(ux, uy, SR, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.restore();
+        // haze where the sun meets the hills, so it sinks rather than being cut off
+        var cut = uy + SR * .25, hz = ctx.createLinearGradient(0, cut - SR * .5, 0, cut + SR * .4);
+        hz.addColorStop(0, "rgba(240,140,95,0)"); hz.addColorStop(.6, "rgba(240,140,95,.55)"); hz.addColorStop(1, "rgba(240,140,95,0)");
+        ctx.fillStyle = hz; ctx.fillRect(0, cut - SR * .5, W, SR * .9);
         ctx.strokeStyle = "rgba(30,22,30,.75)"; ctx.lineWidth = 1.6; ctx.lineCap = "round";
         birds.forEach(function (bd, n) {
           bd.x -= bd.v * dt; if (bd.x < -20) birds[n] = bd = newBird(W + rand(10, 200));
@@ -357,7 +369,7 @@
 
       if (fog.length) {
         fog.forEach(function (f) {
-          f.x -= f.v * dt; if (f.x + f.w < 0) { f.x = W + rand(0, 200); f.y = H * rand(.45, .9); }
+          f.x -= f.v * dt; if (f.x + f.w < 0) { f.x = W + rand(0, 200); f.y = H * rand(fogTop, .95); }
           ctx.globalAlpha = K.fog * (.7 + .3 * Math.sin(clock * .15 + f.y));
           ctx.drawImage(fogImg, f.x, f.y - f.h / 2, f.w, f.h);
         });
