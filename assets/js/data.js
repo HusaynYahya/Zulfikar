@@ -107,6 +107,10 @@
         var res = await sb.auth.updateUser({ password: password });
         if (res.error) throw new Error(res.error.message);
       },
+      async updateEmail(email) {   // Supabase emails a confirmation link before the change applies
+        var res = await sb.auth.updateUser({ email: email }, { emailRedirectTo: location.origin + location.pathname + "#/account" });
+        if (res.error) throw new Error(res.error.message);
+      },
       refreshMe: loadMe,
 
       async list(table, opts) {
@@ -216,6 +220,15 @@
       async updatePassword(password) {
         var u = db.users.find(function (x) { return x.id === db.sessionUser; });
         if (u) { u.password = password; save(); }
+      },
+      async updateEmail(email) {
+        email = String(email).toLowerCase();
+        if (db.users.some(function (x) { return x.email === email && x.id !== db.sessionUser; })) throw new Error("An account with that email already exists.");
+        var u = db.users.find(function (x) { return x.id === db.sessionUser; });
+        var pr = db.tables.profiles.find(function (x) { return x.id === db.sessionUser; });
+        if (u) u.email = email;
+        if (pr) pr.email = email;
+        save();
       },
 
       async list(table, opts) {

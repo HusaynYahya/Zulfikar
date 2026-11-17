@@ -690,14 +690,8 @@
       var boyId = el.getAttribute("data-boy");
       await D.upsert("rsvps", { family_id: uid, student_id: boyId, date: el.getAttribute("data-date"),
         going: true, reason: null, updated_at: new Date().toISOString() }, "student_id,date");
-      // Attendance confirmed — now make sure it's paid for.
-      if (el.getAttribute("data-covered") === "true") {
-        toast("Confirmed — he's all set.");
-        render();
-      } else {
-        toast("Confirmed. Now choose how to pay.");
-        go("#/payments?boy=" + encodeURIComponent(boyId));
-      }
+      toast("Attendance confirmed.");
+      render();
     };
     actions["rsvp-no"] = function (el) {
       // make sure the choices are visible, then open the reason box
@@ -801,9 +795,8 @@
      Shell: banner, top bar, footer
      ====================================================================== */
   var FAMILY_NAV = [
-    { path: "home", label: "Home", icon: "home" },
-    { path: "sessions", label: "Sessions", icon: "calendar" },
-    { path: "feedback", label: "Feedback", icon: "chat" },
+    { path: "home", label: "Sessions", icon: "calendar" },
+    { path: "history", label: "History", icon: "book" },
     { path: "account", label: "Account", icon: "user" },
   ];
   var COACH_NAV = [
@@ -824,6 +817,8 @@
     var nav = role === "coach" ? COACH_NAV : role && !portalClosed() ? FAMILY_NAV : [];
     // payments and confirmation live under Account now, so light that tab
     if (path === "payments" || path === "confirmation") path = "account";
+    if (role === "family" && path === "sessions") path = "home";
+    if (role === "family" && path === "feedback") path = "history";
     document.body.classList.toggle("has-nav", nav.length > 0);
 
     document.getElementById("banner").innerHTML = D.mode === "demo"
@@ -1199,162 +1194,104 @@
     return '<div class="empty">No boys on this account yet. <a href="#/account">Add one in Account</a>.</div>';
   }
 
-  async function familyHome() {
-    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "payments", "rsvps", "attendance_reviews", "notices"]);
-    var boys = d.students, month = thisMonth();
-    var latest = d.sessions.filter(function (s) { return s.published && isPast(s) && s.recap; })[0];
-    var next = upcomingDates(1)[0];
-    var pending = pendingReviews(d, boys);
-
-    var boyCards = boys.map(function (b) {
-      var st = payStatus(b.id, month, d);
-      var todo = d.homework.filter(function (h) {
-        return !d.submissions.some(function (s) { return s.homework_id === h.id && s.student_id === b.id; });
-      }).length;
-      return (
-        '<div class="card boy-card">' +
-          '<div class="row row--between"><h3 style="margin:0">' + esc(fullName(b)) + '</h3><span class="muted small">Year ' + esc(b.year_group) + "</span></div>" +
-          '<hr class="divider">' +
-          '<div class="grid" style="gap:.6rem;grid-template-columns:repeat(3,1fr)">' +
-            '<div><div class="stat__num">' + st.attended + '</div><div class="stat__label">Sessions in ' + esc(monthLabel(month).split(" ")[0]) + "</div></div>" +
-            '<div><div class="stat__num">' + todo + '</div><div class="stat__label">Homework to do</div></div>' +
-            '<div><div style="margin:.55rem 0 .35rem">' + payBadge(st) + '</div><div class="stat__label">Payments</div></div>' +
-          "</div>" +
-          (window.ZGarden ? ZGarden.svg(b.id, attendedEver(b.id, d)) : "") +
-        "</div>"
-      );
-    }).join("");
-
-    var dueSoon = d.homework.filter(function (h) {
-      return boys.some(function (b) {
-        return !d.submissions.some(function (s) { return s.homework_id === h.id && s.student_id === b.id; });
-      });
-    }).slice(0, 4);
-
-    $main.innerHTML =
-      '<div class="page-head"><div><h1>Salaam, ' +
-        esc(boys.length ? joinNames(boys.map(function (b) { return b.first_name; })) : firstWord(state.me.profile.parent_name)) +
-      '</h1><p class="sub">Here\'s what\'s coming up and what you\'ve got left to do.</p></div></div>' +
-      familyNotices(d.notices) +
-      sayingOfTheDay() +
-      (pending.length
-        ? '<div class="card card--accent" style="margin-bottom:1rem"><h2>Please check the register</h2>' +
-            '<p class="soft small">The coaches took the register at these sessions. Confirm it\'s right, or tell us if something\'s wrong. It\'s what we charge from.</p>' +
-            '<div class="stack stack--tight">' + pending.slice(0, 6).map(function (x) { return reviewRow(x.session, x.boy, x.rv, true); }).join("") + "</div>" +
-            (pending.length > 6 ? '<p class="small" style="margin:.8rem 0 0"><a href="#/sessions">See all ' + pending.length + "</a></p>" : "") +
-          "</div>"
-        : "") +
-      (next ? upcomingCard(next, d, boys) : "") +
-      (latest
-        ? '<a class="card card--art card--link" href="#/sessions" style="margin-top:1rem">' + recapArt(latest) +
-            '<p class="label">Latest recap, ' + esc(fmtDate(latest.date)) + "</p>" +
-            "<h3>" + esc(latest.title) + "</h3>" +
-            '<p class="soft small" style="margin:.3rem 0 .6rem">' + esc(String(latest.recap || "").slice(0, 200)) + (String(latest.recap || "").length > 200 ? "…" : "") + "</p>" +
-            pillarChips(latest.pillars) + "</a>"
-        : "") +
-      '<h2 class="section-title">Your boys</h2>' +
-      (boys.length ? '<div class="grid grid-2">' + boyCards + "</div>" : noBoys()) +
-      '<h2 class="section-title">Homework to hand in</h2>' +
-      (dueSoon.length
-        ? '<div class="grid grid-2">' + dueSoon.map(function (h) {
-            return '<a class="card card--link" href="#/sessions"><div class="row row--between"><h3 style="margin:0">' + esc(h.title) + "</h3>" +
-              (h.due_date ? '<span class="small muted">Due ' + esc(fmtDate(h.due_date)) + "</span>" : "") + "</div>" +
-              '<div style="margin-top:.5rem">' + pillarChips(h.pillar ? [h.pillar] : []) + "</div></a>";
-          }).join("") + "</div>"
-        : '<div class="empty">All homework handed in. Well done!</div>');
-    bindFamilyAttendance();
+  /* ---- family page 1: upcoming sessions ---------------------------------
+     Each session shows one of three states for the chosen son: confirm
+     attendance, then pay, then confirmed and paid. Tapping a session opens
+     its timetable and what to bring. */
+  function payLinksReady() { return D.mode === "demo" || !!(CFG.stripe && (CFG.stripe.sessionLink || CFG.stripe.monthLink)); }
+  function sessionStep(boy, date, d) {
+    var r = rsvpOf(boy, date, d), cov = coverage(boy, date, d);
+    return { r: r, cov: cov, step: !r || !r.going ? 0 : cov.paid ? 2 : 1 };
   }
-
-  /* Homework now lives under the session it was set in. */
-  function familyHwAnswer(h, boy, subs, multi) {
-    var sub = subs.find(function (x) { return x.homework_id === h.id && x.student_id === boy.id; });
-    var st = hwStatus(h, sub);
-    var form =
-      '<form class="form hw-form inline-form" data-hw="' + esc(h.id) + '" data-boy="' + esc(boy.id) + '">' +
-        '<label class="field"><span>' + (multi ? esc(boy.first_name) + "'s answer" : "Your answer") + '</span><textarea name="answer" required rows="4">' + esc(sub ? sub.answer : "") + "</textarea></label>" +
-        '<div class="row"><button class="btn btn--primary btn--sm" type="submit">' + icon("check") + (sub ? "Update answer" : "Hand in") + "</button>" +
-        (sub && sub.status === "reviewed" ? '<span class="small muted">Updating sends it back to the coach.</span>' : "") + "</div>" +
-        '<p class="form-status" aria-live="polite"></p>' +
-      "</form>";
+  function sessionCard(u, d, boy, open) {
+    var plan = planFor(u.date, d.sessions);
+    var tt = plan && plan.timetable && plan.timetable.length ? plan.timetable : null;
+    var st = sessionStep(boy, u.date, d);
+    var key = ' data-boy="' + esc(boy.id) + '" data-date="' + esc(u.date) + '"';
+    var id = "sess-" + u.date;
+    var status;
+    if (st.step === 0) {
+      status = (st.r && !st.r.going ? '<span class="sess__note">Not coming' + (st.r.reason ? ": " + esc(st.r.reason) : "") + "</span>" : "") +
+        '<button class="btn btn--primary" type="button" data-action="rsvp-yes"' + key + ">" + icon("check") + "Confirm attendance</button>";
+    } else if (st.step === 1) {
+      status = badge("Attendance confirmed", "ok") +
+        (payLinksReady()
+          ? '<button class="btn btn--primary" type="button" data-action="pay" data-kind="session"' + key + ">Pay here · " + money(P.prices.sessionPence) + "</button>"
+          : '<span class="small soft">Please pay the coaches on the night.</span>');
+    } else {
+      status = badge("Attendance confirmed and paid", "ok") + '<span class="small soft">' + esc(st.cov.text) + "</span>";
+    }
     return (
-      '<div class="hw-answer">' +
-        '<div class="row row--between" style="margin-top:.5rem">' + (multi ? "<strong class=\"small\">" + esc(boy.first_name) + "</strong>" : "<span></span>") + badge(st.label, st.kind) + "</div>" +
-        (sub && sub.status === "reviewed"
-          ? '<div class="quote small">' + esc(sub.answer) + "</div>" +
-            (sub.coach_comment ? '<p class="label" style="margin-top:.6rem">From the coach</p><div class="quote quote--coach small">' + esc(sub.coach_comment) + "</div>" : "") +
-            '<details class="disclose"><summary>Edit answer</summary><div>' + form + "</div></details>"
-          : form) +
+      '<article class="card sess' + (open ? " is-open" : "") + '" id="' + id + '">' +
+        '<button type="button" class="sess__head" data-action="sess-toggle" data-target="' + id + '" aria-expanded="' + !!open + '" aria-controls="' + id + '-body">' +
+          '<span class="sess__when">' + esc(whenLabel(u)) + "</span>" +
+          '<span class="sess__meta">' + icon("clock") + esc(time12(u.slot.start) + " to " + time12(u.slot.end)) + " · " + esc(plan ? plan.location : (P.locations || []).join(" or ")) + "</span>" +
+          (plan && plan.title ? '<span class="sess__theme">' + esc(plan.title) + "</span>" : "") +
+          '<span class="sess__chev" aria-hidden="true"></span>' +
+        "</button>" +
+        '<div class="sess__status">' + status + "</div>" +
+        '<div class="sess__body" id="' + id + '-body"' + (open ? "" : " hidden") + ">" +
+          '<div class="plan-grid">' +
+            '<div><p class="label">Timetable</p>' + (tt ? timetableHtml(tt) : timetableHtml(P.defaultTimetable || []) + '<p class="small muted">The usual evening. The coaches will add the plan for this one nearer the time.</p>') + "</div>" +
+            '<div><p class="label">What to bring</p>' + bringHtml(plan, u.date) + "</div>" +
+          "</div>" +
+          calButtons(u, plan) +
+          (st.step === 1 && payLinksReady() ? '<p class="small soft" style="margin:.6rem 0 0">Coming every week? The <a href="#/account?pay=1">monthly pass</a> covers every session in the month for ' + money(P.prices.monthPence) + ".</p>" : "") +
+          (st.step
+            ? '<div class="sess__cancel"><button class="linklike small" type="button" data-action="rsvp-no"' + key + ">Can't make it after all?</button>" +
+                '<form class="form inline-form rsvp-form"' + key + " hidden>" +
+                  '<label class="field"><span>Reason (helps the coaches plan)</span><input type="text" name="reason"></label>' +
+                  '<div><button class="btn btn--sm" type="submit">Tell the coaches he can\'t come</button></div><p class="form-status" aria-live="polite"></p>' +
+                "</form></div>"
+            : "") +
+        "</div>" +
+      "</article>"
+    );
+  }
+  function pastRecap(s) {
+    return (
+      '<div class="past-item">' +
+        '<div class="card__meta"><span>' + esc(fmtDate(s.date, true)) + "</span>" + (s.location ? "<span>" + esc(s.location) + "</span>" : "") + "</div>" +
+        "<h3>" + esc(s.title) + "</h3>" +
+        (s.pillars && s.pillars.length ? '<div style="margin:.3rem 0 .5rem">' + pillarChips(s.pillars) + "</div>" : "") +
+        (s.recap ? '<p class="recap__body">' + esc(s.recap) + "</p>" : '<p class="muted small">The coaches haven\'t written this one up yet.</p>') +
+        ((s.takeaways || []).length ? '<p class="label" style="margin-top:.8rem">Worth remembering</p><ul class="takeaways">' +
+          s.takeaways.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>" : "") +
       "</div>"
     );
   }
-  function familyHwBlock(s, boys, hwList, subs) {
-    var items = hwList.filter(function (h) { return h.session_id === s.id; });
-    if (!items.length) return "";
-    var multi = boys.length > 1;
-    return '<hr class="divider"><p class="label">Homework</p>' + items.map(function (h) {
-      return (
-        '<div class="hw-item">' +
-          '<div class="row row--between"><strong>' + esc(h.title) + "</strong>" + (h.due_date ? '<span class="small muted">Due ' + esc(fmtDate(h.due_date)) + "</span>" : "") + "</div>" +
-          (h.pillar ? '<div style="margin:.3rem 0">' + pillarChips([h.pillar]) + "</div>" : "") +
-          '<p class="recap__body small">' + esc(h.instructions) + "</p>" +
-          boys.map(function (b) { return familyHwAnswer(h, b, subs, multi); }).join("") +
-        "</div>"
-      );
-    }).join("");
-  }
-  function bindFamilyHw() {
-    Array.prototype.forEach.call($main.querySelectorAll(".hw-form"), function (form) {
-      onSubmit(form, async function (f) {
-        if (!f.answer) throw new Error("Write something before handing in.");
-        var boyId = form.getAttribute("data-boy");
-        await D.upsert("submissions", {
-          homework_id: form.getAttribute("data-hw"), student_id: boyId, answer: f.answer,
-          status: "submitted", coach_comment: null, reviewed_at: null, submitted_at: new Date().toISOString(),
-        }, "homework_id,student_id");
-        toast("Handed in — nice work!");
-        render();
-      });
-    });
-  }
 
-  async function familySessions() {
-    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "payments", "rsvps", "attendance_reviews"]);
+  async function familyHome() {
+    var d = await load(["students", "sessions", "attendance", "payments", "rsvps", "notices"]);
     var boys = d.students;
-    var coming = upcomingDates(2);
-    var pending = pendingReviews(d, boys);
+    var switcher = boySwitcher(boys);
+    var boy = boys.find(function (b) { return b.id === state.activeBoy; }) || boys[0];
+    var coming = upcomingDates(6);
     var past = d.sessions.filter(function (s) { return s.published && isPast(s); });
 
-    var recaps = past.map(function (s) {
-      var checks = boys.filter(function (b) { return needsReview(s, b); }).map(function (b) { return reviewRow(s, b, reviewOf(s, b, d)); }).join("");
-      return (
-        '<article class="card card--art">' + recapArt(s) +
-          '<div class="card__meta"><span>' + esc(fmtDate(s.date, true)) + "</span><span>" + esc(s.location) + "</span></div>" +
-          "<h2>" + esc(s.title) + "</h2>" +
-          '<div style="margin-bottom:.7rem">' + pillarChips(s.pillars) + "</div>" +
-          (s.recap ? '<p class="recap__body">' + esc(s.recap) + "</p>" : '<p class="muted small">The coaches haven\'t written this one up yet.</p>') +
-          ((s.takeaways || []).length ? '<p class="label" style="margin-top:1rem">Worth remembering</p><ul class="takeaways">' +
-            s.takeaways.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>" : "") +
-          (checks ? '<hr class="divider"><p class="label">Register</p><div class="stack stack--tight">' + checks + "</div>" : "") +
-          familyHwBlock(s, boys, d.homework, d.submissions) +
-          '<div class="row" style="margin-top:1rem"><a class="btn btn--sm" href="#/feedback?session=' + esc(s.id) + '">' + icon("chat") + "Give feedback</a></div>" +
-        "</article>"
-      );
-    }).join("");
-
     $main.innerHTML =
-      '<div class="page-head"><div><h1>Sessions</h1><p class="sub">What\'s coming up, and what we got up to.</p></div>' +
-        '<button type="button" class="btn" data-action="cal-series">' + icon("calendar") + "Add every session to my calendar</button></div>" +
-      (pending.length
-        ? '<div class="card card--accent" style="margin-bottom:1rem"><h2>Please check the register</h2>' +
-            '<p class="soft small">Confirm each one is right, or tell us what\'s wrong.</p>' +
-            '<div class="stack stack--tight">' + pending.map(function (x) { return reviewRow(x.session, x.boy, x.rv, true); }).join("") + "</div></div>"
-        : "") +
-      '<h2 class="section-title" style="margin-top:0">Coming up</h2>' +
-      '<div class="stack">' + coming.map(function (u, i) { return upcomingCard(u, d, boys, i ? "After that" : "Next session"); }).join("") + "</div>" +
-      '<h2 class="section-title">Past sessions</h2>' +
-      (recaps ? '<div class="stack">' + recaps + "</div>" : '<div class="empty">No sessions yet. Check back after the first one.</div>');
+      '<div class="page-head"><div><h1>Upcoming sessions</h1><p class="sub">' +
+        (boy ? "Confirm which Mondays " + esc(boy.first_name) + " is coming. Tap a session to see the timetable and what to bring." : "") + "</p></div>" +
+        '<div class="row">' + switcher + '<button type="button" class="btn btn--sm" data-action="cal-series">' + icon("calendar") + "Add every session to my calendar</button></div></div>" +
+      familyNotices(d.notices) +
+      (boy
+        ? '<div class="stack">' + coming.map(function (u, i) { return sessionCard(u, d, boy, i === 0); }).join("") + "</div>"
+        : noBoys()) +
+      '<details class="card past-drop"><summary><span>Past sessions</span><span class="badge badge--mute">' + past.length + "</span></summary>" +
+        (past.length ? '<div class="past-list">' + past.map(pastRecap).join("") + "</div>" : '<p class="muted small" style="margin:.8rem 0 0">No sessions yet. Recaps appear here after each one.</p>') +
+      "</details>" +
+      sayingOfTheDay();
+
+    actions["sess-toggle"] = function (el) {
+      var card = document.getElementById(el.getAttribute("data-target"));
+      var body = card && card.querySelector(".sess__body");
+      if (!body) return;
+      body.hidden = !body.hidden;
+      card.classList.toggle("is-open", !body.hidden);
+      el.setAttribute("aria-expanded", String(!body.hidden));
+    };
     bindFamilyAttendance();
-    bindFamilyHw();
+    bindPay(d);
   }
 
   /* A formal confirmation that a boy is signed up for an evening and it's paid. */
@@ -1399,110 +1336,94 @@
     actions.print = function () { window.print(); };
   }
 
-  async function familyFeedback(params) {
-    var d = await load(["students", "sessions", "feedback"]);
-    var boys = d.students;
-    var sessions = byId(d.sessions);
-    var switcher = boySwitcher(boys);
-
-    var sessionOpts = '<option value="">General feedback (not about one session)</option>' +
-      d.sessions.slice(0, 12).map(function (s) {
-        return '<option value="' + esc(s.id) + '"' + (params.session === s.id ? " selected" : "") + ">" + esc(fmtDate(s.date) + " — " + s.title) + "</option>";
-      }).join("");
-    var starInputs = "";
+  /* ---- family page 2: history -------------------------------------------
+     The sessions the chosen son was at, the recap of each, and the feedback
+     given or still to give. */
+  function feedbackForm(sessionId, boyId) {
+    var key = sessionId || "general", stars = "";
     for (var i = 5; i >= 1; i--) {
-      starInputs += '<input type="radio" id="star' + i + '" name="rating" value="' + i + '"><label for="star' + i + '" title="' + i + ' star' + (i > 1 ? "s" : "") + '">★</label>';
+      stars += '<input type="radio" id="st-' + key + "-" + i + '" name="rating" value="' + i + '"><label for="st-' + key + "-" + i + '" title="' + i + " star" + (i > 1 ? "s" : "") + '">★</label>';
     }
+    return (
+      '<form class="form fb-form" data-session="' + esc(sessionId || "") + '" data-boy="' + esc(boyId || "") + '">' +
+        '<div class="field"><span>Rating <span class="req">*</span></span><div class="stars">' + stars + "</div></div>" +
+        '<label class="field"><span>What did he enjoy?</span><textarea name="enjoyed" rows="2"></textarea></label>' +
+        '<label class="field"><span>What could be better?</span><textarea name="improve" rows="2"></textarea></label>' +
+        '<label class="check"><input type="checkbox" name="anonymous"> Hide my name from the coaches</label>' +
+        '<div><button class="btn btn--primary btn--sm" type="submit">Send feedback</button></div>' +
+        '<p class="form-status" aria-live="polite"></p>' +
+      "</form>"
+    );
+  }
+  function feedbackShown(f) {
+    return (
+      '<div class="fb-given"><div class="row row--between"><span class="label" style="margin:0">Your feedback</span>' + starsStatic(f.rating) + "</div>" +
+        (f.enjoyed ? '<p class="small" style="margin:.4rem 0 0"><strong>Enjoyed:</strong> ' + esc(f.enjoyed) + "</p>" : "") +
+        (f.improve ? '<p class="small" style="margin:.2rem 0 0"><strong>Could be better:</strong> ' + esc(f.improve) + "</p>" : "") +
+      "</div>"
+    );
+  }
 
-    var history = d.feedback.map(function (f) {
-      var boy = boys.find(function (b) { return b.id === f.student_id; });
+  async function familyHistory() {
+    var d = await load(["students", "sessions", "attendance", "feedback", "payments"]);
+    var boys = d.students;
+    var switcher = boySwitcher(boys);
+    var boy = boys.find(function (b) { return b.id === state.activeBoy; }) || boys[0];
+    if (!boy) { $main.innerHTML = '<div class="page-head"><div><h1>History</h1></div></div>' + noBoys(); return; }
+
+    var present = {};
+    d.attendance.forEach(function (a) { if (a.student_id === boy.id && a.present) present[a.session_id] = true; });
+    var attended = d.sessions.filter(function (s) { return present[s.id]; });
+    var given = function (s) { return d.feedback.find(function (f) { return f.session_id === s.id && f.student_id === boy.id; }); };
+    var month = thisMonth(), st = payStatus(boy.id, month, d);
+    var toGive = attended.filter(function (s) { return !given(s); }).length;
+
+    var list = attended.map(function (s) {
+      var fb = given(s);
       return (
-        '<div class="card">' +
-          '<div class="row row--between">' + starsStatic(f.rating) + '<span class="small muted">' + esc(fmtStamp(f.created_at)) + "</span></div>" +
-          '<div class="card__meta" style="margin-top:.3rem"><span>' + esc(f.session_id && sessions[f.session_id] ? sessions[f.session_id].title : "General") + "</span>" +
-            (boy ? "<span>From " + esc(boy.first_name) + "</span>" : "") + (f.anonymous ? "<span>Name hidden</span>" : "") + "</div>" +
-          (f.enjoyed ? '<p class="small"><strong>Enjoyed:</strong> ' + esc(f.enjoyed) + "</p>" : "") +
-          (f.improve ? '<p class="small" style="margin:0"><strong>Could be better:</strong> ' + esc(f.improve) + "</p>" : "") +
-        "</div>"
+        '<article class="card">' +
+          '<div class="card__meta"><span>' + esc(fmtDate(s.date, true)) + "</span>" + (s.location ? "<span>" + esc(s.location) + "</span>" : "") + "</div>" +
+          '<h2 style="margin:.2rem 0 .4rem">' + esc(s.title) + "</h2>" +
+          (s.pillars && s.pillars.length ? '<div style="margin-bottom:.6rem">' + pillarChips(s.pillars) + "</div>" : "") +
+          (s.recap ? '<details class="disclose"><summary>Read the recap</summary><div><p class="recap__body">' + esc(s.recap) + "</p></div></details>" : "") +
+          '<hr class="divider">' +
+          (fb ? feedbackShown(fb) : '<details class="disclose"><summary>Give feedback on this session</summary><div>' + feedbackForm(s.id, boy.id) + "</div></details>") +
+        "</article>"
       );
     }).join("");
 
     $main.innerHTML =
-      '<div class="page-head"><div><h1>Feedback</h1><p class="sub">Tell us what worked and what didn\'t. We read every one.</p></div>' + switcher + "</div>" +
-      '<div class="grid grid-2" style="align-items:start">' +
-        '<form class="card card--accent form" id="feedback-form">' +
-          "<h2>How was it" + (state.activeBoy && boys.length ? ", " + esc((boys.find(function (b) { return b.id === state.activeBoy; }) || {}).first_name) : "") + "?</h2>" +
-          '<label class="field"><span>Which session?</span><select name="session_id">' + sessionOpts + "</select></label>" +
-          '<div class="field"><span>Rating <span class="req">*</span></span><div class="stars">' + starInputs + "</div></div>" +
-          '<label class="field"><span>What did you enjoy?</span><textarea name="enjoyed" rows="3"></textarea></label>' +
-          '<label class="field"><span>What could be better?</span><textarea name="improve" rows="3"></textarea></label>' +
-          '<label class="check"><input type="checkbox" name="anonymous"> Hide my name from the coaches</label>' +
-          '<button class="btn btn--primary" type="submit">Send feedback</button>' +
-          '<p class="form-status" aria-live="polite"></p>' +
-        "</form>" +
-        '<div><h2>Sent</h2><div class="stack">' + (history || '<div class="empty">Nothing sent yet.</div>') + "</div></div>" +
-      "</div>";
+      '<div class="page-head"><div><h1>History</h1><p class="sub">' + esc(boy.first_name) + "'s sessions and your feedback.</p></div>" + switcher + "</div>" +
+      '<div class="card boy-card history-stats">' +
+        '<div><div class="stat__num">' + attended.length + '</div><div class="stat__label">Sessions attended</div></div>' +
+        '<div><div class="stat__num">' + st.attended + '</div><div class="stat__label">In ' + esc(monthLabel(month).split(" ")[0]) + "</div></div>" +
+        '<div><div class="stat__num">' + toGive + '</div><div class="stat__label">Feedback to give</div></div>' +
+        (window.ZGarden ? ZGarden.svg(boy.id, attendedEver(boy.id, d)) : "") +
+      "</div>" +
+      '<h2 class="section-title">Sessions attended</h2>' +
+      (list ? '<div class="stack">' + list + "</div>" : '<div class="empty">No sessions yet. They appear here once ' + esc(boy.first_name) + " has been to one.</div>") +
+      '<details class="card past-drop" style="margin-top:1.4rem"><summary><span>Anything else to tell the coaches?</span></summary><div style="margin-top:.9rem">' + feedbackForm(null, boy.id) + "</div></details>";
 
-    onSubmit(document.getElementById("feedback-form"), async function (f) {
-      if (!f.rating) throw new Error("Pick a star rating.");
-      await D.insert("feedback", {
-        family_id: state.me.user.id, student_id: state.activeBoy || null, session_id: f.session_id || null,
-        rating: Number(f.rating), enjoyed: f.enjoyed, improve: f.improve, anonymous: f.anonymous,
+    Array.prototype.forEach.call($main.querySelectorAll(".fb-form"), function (form) {
+      onSubmit(form, async function (f) {
+        if (!f.rating) throw new Error("Pick a star rating.");
+        await D.insert("feedback", {
+          family_id: state.me.user.id, student_id: form.getAttribute("data-boy") || null, session_id: form.getAttribute("data-session") || null,
+          rating: Number(f.rating), enjoyed: f.enjoyed, improve: f.improve, anonymous: f.anonymous,
+        });
+        toast("Thank you. Your feedback has been sent.");
+        render();
       });
-      toast("Thank you — your feedback has been sent.");
-      go("#/feedback");
     });
   }
 
-  async function familyPayments(params) {
-    if (params.paid) toast("Thank you! Your payment can take a minute to appear here.");
-    var d = await load(["students", "sessions", "attendance", "payments"]);
-    var boys = d.students, month = thisMonth();
-    var focusBoy = params.boy;
-    var linksReady = D.mode === "demo" || (CFG.stripe && (CFG.stripe.sessionLink || CFG.stripe.monthLink));
-    var monthOpts = [0, 1].map(function (n) {
-      var m = addMonths(month, n);
-      return '<option value="' + m + '">' + esc(monthLabel(m)) + "</option>";
-    }).join("");
-
-    var cards = boys.map(function (b) {
-      var st = payStatus(b.id, month, d);
-      return (
-        '<div class="card' + (b.id === focusBoy ? " card--accent pay-focus" : "") + '" id="pay-' + esc(b.id) + '">' +
-          '<div class="row row--between"><h3 style="margin:0">' + esc(fullName(b)) + "</h3>" + payBadge(st) + "</div>" +
-          '<p class="small muted" style="margin:.4rem 0 .9rem">' + esc(monthLabel(month)) + ": attended " + st.attended + " session" + (st.attended === 1 ? "" : "s") +
-            (st.monthPaid ? " — covered by the monthly pass." : st.attended * P.prices.sessionPence > P.prices.monthPence ? " — a monthly pass would have been cheaper." : ".") + "</p>" +
-          (linksReady
-            ? '<div class="pay-actions">' +
-                '<button class="btn" type="button" data-action="pay" data-kind="session" data-boy="' + esc(b.id) + '">Pay as you go · ' + money(P.prices.sessionPence) + "/session</button>" +
-                '<div class="row"><select aria-label="Month for the monthly pass" data-month-for="' + esc(b.id) + '">' + monthOpts + "</select>" +
-                '<button class="btn btn--primary" type="button" data-action="pay" data-kind="month" data-boy="' + esc(b.id) + '">Monthly pass · ' + money(P.prices.monthPence) + "</button></div>" +
-              "</div>"
-            : '<p class="small soft" style="margin:0">Online payment isn\'t switched on yet — please pay the coaches in person.</p>') +
-        "</div>"
-      );
-    }).join("");
-
-    var boyNames = byId(boys);
-    var rows = d.payments.map(function (p) {
-      return "<tr><td>" + esc(fmtStamp(p.created_at)) + "</td><td>" + esc(boyNames[p.student_id] ? boyNames[p.student_id].first_name : "—") + "</td><td>" +
-        esc(p.kind === "month" ? "Monthly pass · " + monthLabel(p.period) : "Session · " + monthLabel(p.period)) + "</td><td>" +
-        money(p.amount_pence) + (p.status === "refunded" ? " " + badge("Refunded", "mute") : "") + "</td><td>" + esc(methodLabel(p.method)) + "</td></tr>";
-    }).join("");
-
-    $main.innerHTML =
-      '<div class="page-head"><div><h1>Payments</h1><p class="sub">' + money(P.prices.sessionPence) + " a session, or " + money(P.prices.monthPence) + ' for the whole month.</p></div></div>' +
-      (boys.length ? '<div class="grid grid-2">' + cards + "</div>" : noBoys()) +
-      '<h2 class="section-title">History</h2>' +
-      (rows ? '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Boy</th><th>For</th><th>Amount</th><th>Method</th></tr></thead><tbody>' + rows + "</tbody></table></div>"
-            : '<div class="empty">No payments yet.</div>');
-
+  /* ---- payments: shared by the session cards and the account page ------- */
+  function bindPay(d) {
     actions.pay = async function (el) {
       var kind = el.getAttribute("data-kind"), boyId = el.getAttribute("data-boy");
       var sel = $main.querySelector('[data-month-for="' + boyId + '"]');
-      var period = kind === "month" && sel ? sel.value : month;
+      var period = kind === "month" ? (sel ? sel.value : thisMonth()) : (el.getAttribute("data-date") || todayISO()).slice(0, 7);
       var amount = kind === "month" ? P.prices.monthPence : P.prices.sessionPence;
-
       if (D.mode === "demo") {
         if (!confirm("Demo mode: pretend to pay " + money(amount) + " by card?")) return;
         await D.insert("payments", { family_id: state.me.user.id, student_id: boyId, kind: kind, period: period, amount_pence: amount, method: "stripe", status: "paid" });
@@ -1510,12 +1431,46 @@
         return render();
       }
       var link = kind === "month" ? CFG.stripe.monthLink : CFG.stripe.sessionLink;
-      if (!link) throw new Error("That payment option isn't switched on yet — please pay the coaches in person.");
+      if (!link) throw new Error("That payment option isn't switched on yet. Please pay the coaches in person.");
       var url = new URL(link);
       url.searchParams.set("client_reference_id", boyId + "_" + period);
       url.searchParams.set("prefilled_email", state.me.user.email);
       location.href = url.toString();
     };
+  }
+  function paymentsSection(d, boys, focusBoy) {
+    var month = thisMonth();
+    var monthOpts = [0, 1].map(function (n) { var m = addMonths(month, n); return '<option value="' + m + '">' + esc(monthLabel(m)) + "</option>"; }).join("");
+    var cards = boys.map(function (b) {
+      var st = payStatus(b.id, month, d);
+      return (
+        '<div class="card' + (b.id === focusBoy ? " card--accent" : "") + '">' +
+          '<div class="row row--between"><h3 style="margin:0">' + esc(b.first_name) + "</h3>" + payBadge(st) + "</div>" +
+          '<p class="small muted" style="margin:.4rem 0 .9rem">' + esc(monthLabel(month)) + ": " + st.attended + " session" + (st.attended === 1 ? "" : "s") + " so far" +
+            (st.monthPaid ? ", covered by the monthly pass." : ".") + "</p>" +
+          (payLinksReady()
+            ? '<div class="row"><select aria-label="Month for the monthly pass" data-month-for="' + esc(b.id) + '">' + monthOpts + "</select>" +
+                '<button class="btn btn--primary btn--sm" type="button" data-action="pay" data-kind="month" data-boy="' + esc(b.id) + '">Monthly pass · ' + money(P.prices.monthPence) + "</button></div>" +
+              '<p class="small soft" style="margin:.5rem 0 0">Covers every session in that month. Or pay ' + money(P.prices.sessionPence) + " per session from the Sessions page.</p>"
+            : '<p class="small soft" style="margin:0">Online payment isn\'t switched on yet. Please pay the coaches in person.</p>') +
+        "</div>"
+      );
+    }).join("");
+    var names = byId(boys);
+    var rows = d.payments.map(function (p) {
+      return "<tr><td>" + esc(fmtStamp(p.created_at)) + "</td><td>" + esc(names[p.student_id] ? names[p.student_id].first_name : "—") + "</td><td>" +
+        esc(p.kind === "month" ? "Monthly pass · " + monthLabel(p.period) : "Session · " + monthLabel(p.period)) + "</td><td>" +
+        money(p.amount_pence) + (p.status === "refunded" ? " " + badge("Refunded", "mute") : "") + "</td><td>" + esc(methodLabel(p.method)) + "</td></tr>";
+    }).join("");
+    return (
+      '<section id="payments"><h2 class="section-title">Payments</h2>' +
+        '<p class="soft small" style="margin:-.4rem 0 1rem">' + money(P.prices.sessionPence) + " a session, or " + money(P.prices.monthPence) + " for the whole month.</p>" +
+        (boys.length ? '<div class="grid grid-2">' + cards + "</div>" : "") +
+        '<p class="label" style="margin-top:1.2rem">Payment history</p>' +
+        (rows ? '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Son</th><th>For</th><th>Amount</th><th>Method</th></tr></thead><tbody>' + rows + "</tbody></table></div>"
+              : '<div class="empty">No payments yet.</div>') +
+      "</section>"
+    );
   }
 
   /* ---- account (shared by families and coaches) ------------------------ */
@@ -1553,7 +1508,8 @@
 
   async function viewAccount(params) {
     var isCoach = state.me.profile.role === "coach";
-    var boys = isCoach ? [] : await D.list("students", { eq: { family_id: state.me.user.id }, order: "first_name" });
+    var pd = isCoach ? null : await load(["students", "sessions", "attendance", "payments"]);
+    var boys = isCoach ? [] : pd.students;
     var p = state.me.profile;
 
     $main.innerHTML =
@@ -1566,6 +1522,11 @@
             '<label class="field"><span>Mobile</span><input type="tel" name="phone" value="' + esc(p.phone) + '"></label>' +
             '<div><button class="btn btn--primary btn--sm" type="submit">Save</button></div>' +
             '<p class="form-status" aria-live="polite"></p></form>' +
+          '<form class="card form" id="email-form"><h2>Email</h2>' +
+            '<p class="soft small" style="margin-top:-.3rem">You sign in with this address.</p>' +
+            '<label class="field"><span>Email address</span><input type="email" name="email" required autocomplete="email" value="' + esc(state.me.user.email) + '"></label>' +
+            '<div><button class="btn btn--sm" type="submit">Change email</button></div>' +
+            '<p class="form-status" aria-live="polite"></p></form>' +
           '<form class="card form" id="password-form"><h2>Password</h2>' +
             '<label class="field"><span>New password</span><input type="password" name="password" required minlength="8" autocomplete="new-password"></label>' +
             '<div><button class="btn btn--sm" type="submit">Change password</button></div>' +
@@ -1573,16 +1534,30 @@
         "</div>" +
         (isCoach ? '<div class="card"><h2>Coach tools</h2><p class="soft">Plan sessions, write recaps, take the register and set homework in <a href="#/sessions">Sessions</a>. Keep the roster and payments in <a href="#/members">Members</a>.</p></div>' :
         '<div class="stack">' +
-          '<a class="card card--link card--accent" href="#/payments"><div class="row row--between"><div><h2 style="margin:0">Payments</h2><p class="soft small" style="margin:.2rem 0 0">Pay as you go or monthly, and see your history.</p></div><span class="btn btn--sm">Open</span></div></a>' +
-          '<h2 class="section-title" style="margin-top:.6rem">Your boys</h2>' +
+          '<h2 class="section-title" style="margin-top:0">Your sons</h2>' +
           boys.map(function (b) {
             return '<div class="card"><details class="disclose"><summary><strong>' + esc(fullName(b)) + "</strong> · Year " + esc(b.year_group) + "</summary><div>" + boyEditForm(b) + "</div></details></div>";
           }).join("") +
-          '<div class="card card--accent"><details class="disclose"' + (boys.length ? "" : " open") + "><summary><strong>Add a boy</strong></summary><div>" +
+          '<div class="card card--accent"><details class="disclose"' + (boys.length ? "" : " open") + "><summary><strong>Add a son</strong></summary><div>" +
             boyEditForm({ emergency_name: p.parent_name, emergency_phone: p.phone }) + "</div></details></div>" +
         "</div>") +
-      "</div>";
+      "</div>" +
+      (isCoach ? "" : paymentsSection(pd, boys, params.boy));
+    if (!isCoach) {
+      bindPay(pd);
+      if (params.pay || params.boy || parseHash().path === "payments") { var pay = document.getElementById("payments"); if (pay) pay.scrollIntoView(); }
+      if (params.paid) toast("Thank you! Your payment can take a minute to appear here.");
+    }
 
+    onSubmit(document.getElementById("email-form"), async function (f, form) {
+      var email = String(f.email || "").trim().toLowerCase();
+      if (!email || email === state.me.user.email) throw new Error("Enter the new email address.");
+      await D.updateEmail(email);
+      var s = form.querySelector(".form-status");
+      s.textContent = D.mode === "demo" ? "Email changed." : "Check both inboxes: we've sent a link to confirm the change.";
+      s.className = "form-status is-ok";
+      if (D.mode === "demo") { await D.refreshMe(); state.me = D.me(); }
+    });
     onSubmit(document.getElementById("profile-form"), async function (f, form) {
       await D.update("profiles", state.me.user.id, { parent_name: f.parent_name, phone: f.phone });
       await D.refreshMe();
@@ -2030,8 +2005,8 @@
   }
 
   FAMILY_VIEWS = {
-    home: familyHome, sessions: familySessions, confirmation: viewConfirmation,
-    feedback: familyFeedback, payments: familyPayments, account: viewAccount,
+    home: familyHome, sessions: familyHome, confirmation: viewConfirmation,
+    history: familyHistory, feedback: familyHistory, payments: viewAccount, account: viewAccount,
   };
   COACH_VIEWS = {
     home: coachHome, sessions: coachSessions,
