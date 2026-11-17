@@ -558,3 +558,12 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .history-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-bottom: .4rem; }
 .fb-given { padding: .2rem 0; }
 @media (prefers-reduced-motion: reduce) { .sess__chev { transition: none; } }
+
+/* landing: tells people there is more below the first screen */
+.lpA-cue { position: absolute; left: 50%; bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 2; display: flex; flex-direction: row-reverse; align-items: center; gap: .7rem; white-space: nowrap; padding: .4rem 1rem .4rem .45rem; border-radius: 999px; background: rgba(10,13,22,.45); border: 1px solid rgba(242,238,230,.25); background: none; border: 0; color: var(--ink); font: inherit; font-size: .82rem; letter-spacing: .18em; text-transform: uppercase; cursor: pointer; text-shadow: 0 2px 12px rgba(0,0,0,.6); transition: opacity .4s; }
+.lpA-cue i { width: 2rem; height: 2rem; border-radius: 50%; border: 1.5px solid rgba(242,238,230,.55); background: rgba(10,13,22,.35); display: grid; place-items: center; }
+.lpA-cue i::before { content: ""; width: .6rem; height: .6rem; border-right: 2px solid var(--ink); border-bottom: 2px solid var(--ink); transform: translateY(-2px) rotate(45deg); }
+.lpA-cue.is-gone { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { .lpA-cue i { animation: lpA-bob 1.8s ease-in-out infinite; } }
+@keyframes lpA-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+@media (max-width: 860px) { .lpA-cue { bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px)); font-size: .74rem; } }

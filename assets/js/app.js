@@ -1011,6 +1011,7 @@
         '<div class="lpA-stage">' +
           '<svg class="lpA-anim" aria-hidden="true"></svg>' +
         "</div>" +
+        '<button type="button" class="lpA-cue" data-action="lp-more"><span>Scroll to find out more</span><i aria-hidden="true"></i></button>' +
       "</div></section>" +
 
       '<section class="lpA-sec"><p class="lpA-kicker">Our purpose</p>' +
@@ -1038,7 +1039,12 @@
       { svg: $main.querySelector("svg.lpA-anim"), engine: window.ZWrestle, viewBox: "38 44 168 150" },   // frame the drawn action closely
     ], $main.querySelector(".lpA-track"), function (t) {
       spans.forEach(function (sp, i) { sp.classList.toggle("is-on", t >= i * 0.33 - 0.01); });
+      var cue = $main.querySelector(".lpA-cue"); if (cue) cue.classList.toggle("is-gone", t > 0.12);
     });
+    actions["lp-more"] = function () {
+      var next = $main.querySelector(".lpA-track + .lpA-sec");
+      if (next) next.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    };
   }
 
   function viewLanding(r) {
