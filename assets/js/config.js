@@ -59,7 +59,7 @@ window.ZULFIQAR = {
     // While false, families can register their sons but the member portal shows
     // "coming soon" (they can't use it yet). Coaches can still sign in at #/signin.
     // Set to true when the portal is ready.
-    portalOpen: false,
+    portalOpen: true,
   },
 
   /* ---- the four pillars ---------------------------------------------- */
