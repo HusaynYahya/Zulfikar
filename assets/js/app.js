@@ -1314,6 +1314,7 @@
           '<span class="sess__chev" aria-hidden="true"></span>' +
         "</button>" +
         '<div class="sess__status">' + status + "</div>" +
+        '<p class="sess__reg">' + icon("users") + '<span>All participants should have already registered via <a href="https://hujj.at/ahy" target="_blank" rel="noopener">hujj.at/ahy</a>.</span></p>' +
         '<div class="sess__body" id="' + id + '-body"' + (open ? "" : " hidden") + ">" +
           '<div class="plan-grid">' +
             '<div><p class="label">Timetable</p>' + (tt ? timetableHtml(tt) : timetableHtml(P.defaultTimetable || []) + '<p class="small muted">The usual evening. The coaches will add the plan for this one nearer the time.</p>') + "</div>" +
@@ -1360,8 +1361,7 @@
       sayingOfTheDay() +
       familyNotices(d.notices) +
       (boy
-        ? '<div class="stack">' + coming.map(function (u, i) { return sessionCard(u, d, boy, i === 0); }).join("") + "</div>" +
-          '<p class="reg-note">' + icon("users") + '<span>All participants should have already registered via <a href="https://hujj.at/ahy" target="_blank" rel="noopener">hujj.at/ahy</a>.</span></p>'
+        ? '<div class="stack">' + coming.map(function (u, i) { return sessionCard(u, d, boy, i === 0); }).join("") + "</div>"
         : noBoys()) +
       '<details class="card past-drop"><summary><span>Past sessions</span><span class="badge badge--mute">' + past.length + "</span></summary>" +
         (past.length ? '<div class="past-list">' + past.map(pastRecap).join("") + "</div>" : '<p class="muted small" style="margin:.8rem 0 0">No sessions yet. Recaps appear here after each one.</p>') +
