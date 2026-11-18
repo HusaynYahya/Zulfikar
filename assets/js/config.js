@@ -60,6 +60,9 @@ window.ZULFIQAR = {
     // "coming soon" (they can't use it yet). Coaches can still sign in at #/signin.
     // Set to true when the portal is ready.
     portalOpen: true,
+    // While false, nothing about money shows anywhere: no prices, pay buttons,
+    // payment pages or owed amounts. Set to true to bring payments back.
+    payments: false,
   },
 
   /* ---- the four pillars ---------------------------------------------- */

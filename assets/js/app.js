@@ -454,7 +454,7 @@
     return (
       '<div class="reply">' +
         '<div class="row row--between"><div class="row"><strong>' + esc(boy.first_name) + "</strong>" + stateLabel +
-          (confirmed ? badge("Booking confirmed", "ok") : "") + "</div>" +
+          (going && (confirmed || !paymentsOn()) ? badge("Booking confirmed", "ok") : "") + "</div>" +
           (answered ? '<button class="linklike small" type="button" data-action="rsvp-change"' + key + ">Change</button>" : "") +
         "</div>" +
         options +
@@ -463,7 +463,7 @@
           '<label class="field"><span>Reason (helps the coaches plan)</span><input type="text" name="reason" value="' + esc(r && r.reason) + '"></label>' +
           '<div><button class="btn btn--primary btn--sm" type="submit">Save</button></div><p class="form-status" aria-live="polite"></p>' +
         "</form>" +
-        (going
+        (going && paymentsOn()
           ? '<p class="small" style="margin:.6rem 0 0">' + (cov.paid
               ? '<span class="soft">' + esc(cov.text) + "</span>"
               : "<strong>" + esc(cov.text) + '</strong> · <a href="#/payments?boy=' + esc(boy.id) + '">Pay now</a>') +
@@ -1204,10 +1204,13 @@
      Each session shows one of three states for the chosen son: confirm
      attendance, then pay, then confirmed and paid. Tapping a session opens
      its timetable and what to bring. */
+  // Payments are switched off site-wide while programme.payments is false: no prices,
+  // pay buttons or payment pages. Turn it back on in config.js.
+  function paymentsOn() { return P.payments !== false; }
   function payLinksReady() { return D.mode === "demo" || !!(CFG.stripe && (CFG.stripe.sessionLink || CFG.stripe.monthLink)); }
   function sessionStep(boy, date, d) {
     var r = rsvpOf(boy, date, d), cov = coverage(boy, date, d);
-    return { r: r, cov: cov, step: !r || !r.going ? 0 : cov.paid ? 2 : 1 };
+    return { r: r, cov: cov, step: !r || !r.going ? 0 : (!paymentsOn() || cov.paid) ? 2 : 1 };
   }
   function sessionCard(u, d, boy, open) {
     var plan = planFor(u.date, d.sessions);
@@ -1225,7 +1228,7 @@
           ? '<button class="btn btn--primary" type="button" data-action="pay" data-kind="session"' + key + ">Pay here · " + money(P.prices.sessionPence) + "</button>"
           : '<span class="small soft">Please pay the coaches on the night.</span>');
     } else {
-      status = badge("Attendance confirmed and paid", "ok") + '<span class="small soft">' + esc(st.cov.text) + "</span>";
+      status = paymentsOn() ? badge("Attendance confirmed and paid", "ok") + '<span class="small soft">' + esc(st.cov.text) + "</span>" : badge("Attendance confirmed", "ok");
     }
     return (
       '<article class="card sess' + (open ? " is-open" : "") + '" id="' + id + '">' +
@@ -1310,14 +1313,14 @@
     var plan = planFor(date, d.sessions);
     var parent = d.profiles.find(function (p) { return p.id === boy.family_id; }) || state.me.profile;
     var r = rsvpOf(boy, date, d), cov = coverage(boy, date, d);
-    var signedUp = !!(r && r.going), ok = signedUp && cov.paid;
+    var signedUp = !!(r && r.going), ok = signedUp && (cov.paid || !paymentsOn());
     var row = function (k, v) { return "<div><dt>" + esc(k) + "</dt><dd>" + v + "</dd></div>"; };
 
     $main.innerHTML =
       '<div class="confirmation card card--strong">' +
         '<div class="confirmation__head">' +
           '<img src="assets/img/logo-small.png?v=7" alt="" width="72" height="72">' +
-          '<div><p class="label">Booking confirmation' + (P.initiative ? " · " + esc(P.initiative) : "") + "</p><h1>" + (ok ? "Signed up and paid" : "Not confirmed yet") + "</h1></div>" +
+          '<div><p class="label">Booking confirmation' + (P.initiative ? " · " + esc(P.initiative) : "") + "</p><h1>" + (ok ? (paymentsOn() ? "Signed up and paid" : "Signed up") : "Not confirmed yet") + "</h1></div>" +
           (ok ? badge("Confirmed", "ok") : badge("Action needed", "warn")) +
         "</div>" +
         '<dl class="confirmation__grid">' +
@@ -1328,14 +1331,14 @@
           row("Time", esc(time12(u.slot.start) + " to " + time12(u.slot.end))) +
           row("Place", esc(plan ? plan.location : (P.locations || []).join(" or "))) +
           row("Attending", signedUp ? "Yes, confirmed by " + esc(firstWord(parent.parent_name) || "parent") + " on " + esc(fmtStamp(r.updated_at)) : esc(r ? "No, not coming" : "Not confirmed yet")) +
-          row("Payment", esc(cov.text)) +
+          (paymentsOn() ? row("Payment", esc(cov.text)) : "") +
           row("Reference", "<strong>" + esc(bookingRef(boy, date)) + "</strong>") +
           row("Member since", esc(fmtDate(registeredOn(boy), true))) +
         "</dl>" +
         (ok
-          ? '<p class="confirmation__note">This confirms that ' + esc(boy.first_name) + " is signed up for this session and it has been paid for. Show this page if asked.</p>"
+          ? '<p class="confirmation__note">This confirms that ' + esc(boy.first_name) + " is signed up for this session" + (paymentsOn() ? " and it has been paid for" : "") + ". Show this page if asked.</p>"
           : '<p class="confirmation__note">To confirm this booking: ' +
-              [!signedUp ? 'tell us he\'s coming on the <a href="#/sessions">Sessions</a> page' : "", !cov.paid ? 'pay on the <a href="#/payments">Payments</a> page' : ""].filter(Boolean).join(", and ") + ".</p>") +
+              [!signedUp ? 'tell us he\'s coming on the <a href="#/sessions">Sessions</a> page' : "", !cov.paid && paymentsOn() ? 'pay on the <a href="#/payments">Payments</a> page' : ""].filter(Boolean).join(", and ") + ".</p>") +
         '<div class="row no-print"><button class="btn btn--primary" type="button" data-action="print">Print or save as PDF</button>' +
           '<a class="btn btn--ghost" href="#/sessions">Back to sessions</a></div>' +
       "</div>";
@@ -1548,7 +1551,7 @@
             boyEditForm({ emergency_name: p.parent_name, emergency_phone: p.phone }) + "</div></details></div>" +
         "</div>") +
       "</div>" +
-      (isCoach ? "" : paymentsSection(pd, boys, params.boy));
+      (isCoach || !paymentsOn() ? "" : paymentsSection(pd, boys, params.boy));
     if (!isCoach) {
       bindPay(pd);
       if (params.pay || params.boy || parseHash().path === "payments") { var pay = document.getElementById("payments"); if (pay) pay.scrollIntoView(); }
@@ -1612,7 +1615,7 @@
         '<a class="btn" href="#/sessions">' + icon("plus") + "Set homework</a></div></div>" +
       '<div class="grid grid-4">' +
         '<div class="card stat"><div class="stat__num">' + d.students.length + '</div><div class="stat__label">Boys registered</div></div>' +
-        '<a class="card stat" href="#/members" style="text-decoration:none;color:inherit"><div class="stat__num">' + money(sum(owing, "owed")) + '</div><div class="stat__label">Owed · ' + owing.length + " boy" + (owing.length === 1 ? "" : "s") + "</div></a>" +
+        (paymentsOn() ? '<a class="card stat" href="#/members" style="text-decoration:none;color:inherit"><div class="stat__num">' + money(sum(owing, "owed")) + '</div><div class="stat__label">Owed · ' + owing.length + " boy" + (owing.length === 1 ? "" : "s") + "</div></a>" : "") +
         '<a class="card stat" href="#/sessions" style="text-decoration:none;color:inherit"><div class="stat__num">' + toReview.length + '</div><div class="stat__label">Answers to review</div></a>' +
         '<a class="card stat" href="#/feedback" style="text-decoration:none;color:inherit"><div class="stat__num">' + avg + '</div><div class="stat__label">Avg rating · 30 days</div></a>' +
       "</div>" +
@@ -1925,8 +1928,8 @@
           "<td>" + esc(b.year_group) + "</td>" +
           "<td>" + esc(par.parent_name || "—") + '<br><span class="small muted">' + esc(par.phone || "") + "<br>" + esc(par.email || "") + "</span></td>" +
           "<td>" + st.attended + "</td>" +
-          "<td>" + payBadge(st) + "</td>" +
-          '<td><button class="btn btn--sm" type="button" data-action="record-for" data-id="' + esc(b.id) + '">Record payment</button></td>' +
+          (paymentsOn() ? "<td>" + payBadge(st) + "</td>" +
+          '<td><button class="btn btn--sm" type="button" data-action="record-for" data-id="' + esc(b.id) + '">Record payment</button></td>' : "") +
         "</tr>"
       );
     }).join("");
@@ -1940,9 +1943,9 @@
       '<div class="page-head"><div><h1>Members</h1><p class="sub">' + d.students.length + " boys registered</p></div>" +
         '<div class="row"><label class="field"><span>Month</span><input type="month" id="month-pick" value="' + month + '"></label>' +
         '<button class="btn" type="button" data-action="export" style="align-self:flex-end">' + icon("download") + "Export CSV</button></div></div>" +
-      (rows ? '<div class="table-wrap"><table><thead><tr><th>Boy</th><th>Year</th><th>Parent</th><th>Attended</th><th>' + esc(monthLabel(month)) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>"
+      (rows ? '<div class="table-wrap"><table><thead><tr><th>Boy</th><th>Year</th><th>Parent</th><th>Attended</th>' + (paymentsOn() ? "<th>" + esc(monthLabel(month)) + "</th><th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table></div>"
             : '<div class="empty">Nobody has registered yet. Share the portal link with families.</div>') +
-      '<div class="grid grid-2" style="margin-top:1.5rem;align-items:start">' +
+      (!paymentsOn() ? "" : '<div class="grid grid-2" style="margin-top:1.5rem;align-items:start">' +
         '<form class="card card--accent form" id="pay-form"><h2>Record a cash or bank payment</h2>' +
           '<label class="field"><span>Boy</span><select name="student_id" required><option value="">Choose…</option>' +
             boys.map(function (b) { return '<option value="' + esc(b.id) + '">' + esc(fullName(b)) + " (Y" + esc(b.year_group) + ")</option>"; }).join("") + "</select></label>" +
@@ -1959,10 +1962,10 @@
         '<div><h2>Payments for ' + esc(monthLabel(month)) + "</h2>" +
           (ledger ? '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Boy</th><th>For</th><th>Amount</th><th>Method</th><th></th></tr></thead><tbody>' + ledger + "</tbody></table></div>"
                   : '<div class="empty">No payments recorded for this month.</div>') + "</div>" +
-      "</div>";
+      "</div>");
 
     var payForm = document.getElementById("pay-form");
-    payForm.elements.kind.addEventListener("change", function (e) {
+    if (payForm) payForm.elements.kind.addEventListener("change", function (e) {
       payForm.elements.amount.value = (e.target.value === "month" ? P.prices.monthPence : P.prices.sessionPence) / 100;
     });
     document.getElementById("month-pick").addEventListener("change", function (e) {
@@ -1981,11 +1984,11 @@
       render();
     };
     actions.export = function () {
-      var head = ["First name", "Last name", "Year", "Date of birth", "School", "Medical", "Emergency contact", "Emergency phone", "Photo consent", "Parent", "Parent phone", "Parent email", "Attended " + month, "Owed " + month];
+      var head = ["First name", "Last name", "Year", "Date of birth", "School", "Medical", "Emergency contact", "Emergency phone", "Photo consent", "Parent", "Parent phone", "Parent email", "Attended " + month].concat(paymentsOn() ? ["Owed " + month] : []);
       var lines = [head].concat(boys.map(function (b) {
         var par = parents[b.family_id] || {}, st = payStatus(b.id, month, d);
         return [b.first_name, b.last_name, b.year_group, b.date_of_birth, b.school, b.medical_notes, b.emergency_name, b.emergency_phone,
-          b.photo_consent ? "yes" : "no", par.parent_name, par.phone, par.email, st.attended, (st.owed / 100).toFixed(2)];
+          b.photo_consent ? "yes" : "no", par.parent_name, par.phone, par.email, st.attended].concat(paymentsOn() ? [(st.owed / 100).toFixed(2)] : []);
       })).map(function (r) {
         return r.map(function (v) {
           var s = String(v == null ? "" : v);
@@ -1999,7 +2002,7 @@
       document.body.appendChild(a); a.click(); a.remove();
     };
 
-    onSubmit(payForm, async function (f) {
+    if (payForm) onSubmit(payForm, async function (f) {
       var b = students[f.student_id];
       if (!b) throw new Error("Choose a boy.");
       var pence = Math.round(parseFloat(f.amount) * 100);
