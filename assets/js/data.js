@@ -112,6 +112,12 @@
         if (res.error) throw new Error(res.error.message);
       },
       refreshMe: loadMe,
+      async createSonLogin(studentId, login, password) {
+        return check(await sb.rpc("create_son_login", { p_student: studentId, p_login: login, p_password: password }));
+      },
+      async removeSonLogin(studentId) {
+        check(await sb.rpc("remove_son_login", { p_student: studentId }));
+      },
 
       async list(table, opts) {
         opts = opts || {};
@@ -172,11 +178,14 @@
       if (!me) return false;
       var uid = me.user.id;
       if (me.profile.role === "coach") return true;
-      var mine = db.tables.students.filter(function (s) { return s.family_id === uid; })
+      var son = me.profile.role === "son", fam = me.profile.family_of || uid;
+      var mine = son ? [me.profile.student_id] : db.tables.students.filter(function (s) { return s.family_id === uid; })
         .map(function (s) { return s.id; });
+      if (son && (table === "feedback" || table === "payments" || table === "rsvps" || table === "attendance_reviews"))
+        return row.family_id === fam && mine.indexOf(row.student_id) !== -1;
       switch (table) {
-        case "profiles":    return row.id === uid;
-        case "students":    return row.family_id === uid;
+        case "profiles":    return row.id === uid || row.family_of === uid;
+        case "students":    return son ? row.id === me.profile.student_id : row.family_id === uid;
         case "sessions":    return row.published;
         case "homework":
         case "notices":     return true;
@@ -266,6 +275,26 @@
       },
       async remove(table, id) {
         db.tables[table] = db.tables[table].filter(function (x) { return x.id !== id; });
+        save();
+      },
+
+      async createSonLogin(studentId, login, password) {
+        var me = current(), boy = db.tables.students.find(function (b) { return b.id === studentId; });
+        if (!me || !boy || boy.family_id !== me.user.id) throw new Error("You can only create a login for your own son.");
+        if (db.tables.profiles.some(function (x) { return x.student_id === studentId; })) throw new Error("He already has a login.");
+        if (String(password || "").length < 8) throw new Error("Use at least 8 characters for the password.");
+        var email = String(login).toLowerCase(); if (email.indexOf("@") === -1) email += "@sons.projectdhulfiqar.org";
+        if (db.users.some(function (u) { return u.email === email; })) throw new Error("That email or username is already taken.");
+        var id = uuid();
+        db.users.push({ id: id, email: email, password: password });
+        db.tables.profiles.push({ id: id, email: email, parent_name: boy.first_name + " " + (boy.last_name || ""), role: "son", student_id: boy.id, family_of: boy.family_id, created_at: nowISO() });
+        save(); return email;
+      },
+      async removeSonLogin(studentId) {
+        var pr = db.tables.profiles.find(function (x) { return x.student_id === studentId; });
+        if (!pr) return;
+        db.tables.profiles = db.tables.profiles.filter(function (x) { return x !== pr; });
+        db.users = db.users.filter(function (u) { return u.id !== pr.id; });
         save();
       },
 

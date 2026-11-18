@@ -574,3 +574,8 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .disclaimer .label { color: var(--accent); margin-bottom: .45rem; }
 .reg-account > .field { grid-row: auto; align-self: start; }
 .reg-account .disclaimer, .reg-account .check:has([name=agree_risk]) { grid-column: 1 / -1; }
+
+/* sons' logins and the coach's "View as" preview */
+.son-login { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; }
+.viewas-banner { background: rgba(127, 178, 255, .16); border-bottom: 1px solid rgba(127, 178, 255, .35); }
+.viewas-banner button { margin-left: .4rem; }

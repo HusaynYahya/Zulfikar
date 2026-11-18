@@ -174,7 +174,7 @@
     }));
     var out = {};
     tables.forEach(function (t, i) { out[t] = lists[i]; });
-    return out;
+    return scopeToView(out);
   }
 
   /* ======================================================================
@@ -688,7 +688,7 @@
 
   /* Wire up the reply and review buttons and forms on a family screen. */
   function bindFamilyAttendance() {
-    var uid = state.me.user.id;
+    var uid = famId();
     function reveal(sel) {
       var form = $main.querySelector(sel);
       if (!form) return;
@@ -818,22 +818,55 @@
 
   // the member portal is closed to families until programme.portalOpen is true
   function portalClosed() { return P.portalOpen === false; }
+
+  /* A son without an email signs in with a username, stored as username + SON_DOMAIN. */
+  var SON_DOMAIN = "@sons.projectdhulfiqar.org";
+  function loginLabel(email) { email = String(email || ""); return email.slice(-SON_DOMAIN.length) === SON_DOMAIN ? email.slice(0, -SON_DOMAIN.length) : email; }
+  function realRole() { return state.me && state.me.profile && state.me.profile.role; }
+  /* Coaches can look at the portal as a parent or a son ("View as"). */
+  var VIEW_KEY = "zf-view-as";
+  try { state.viewAs = JSON.parse(sessionStorage.getItem(VIEW_KEY) || "null"); } catch (e) { state.viewAs = null; }
+  function previewing() { return !!(state.viewAs && realRole() === "coach"); }
+  function viewRole() { return previewing() ? state.viewAs.role : realRole(); }   // "coach" | "family" | "son"
+  function famId() { return previewing() ? state.viewAs.family : (state.me.profile.family_of || state.me.user.id); }
+  function setViewAs(v) {
+    state.viewAs = v; state.activeBoy = v && v.student ? v.student : null;
+    try { if (v) sessionStorage.setItem(VIEW_KEY, JSON.stringify(v)); else sessionStorage.removeItem(VIEW_KEY); } catch (e) {}
+  }
+  /* In "View as", keep only that family's (or that son's) rows; coaches can read everything. */
+  function scopeToView(out) {
+    if (!previewing()) return out;
+    var v = state.viewAs;
+    var ids = v.student ? [v.student] : (out.students || []).filter(function (b) { return b.family_id === v.family; }).map(function (b) { return b.id; });
+    Object.keys(out).forEach(function (t) {
+      var rows = out[t];
+      if (t === "students") out[t] = rows.filter(function (b) { return b.family_id === v.family && (!v.student || b.id === v.student); });
+      else if (t === "rsvps" || t === "feedback" || t === "payments" || t === "attendance_reviews")
+        out[t] = rows.filter(function (r) { return r.family_id === v.family && (!v.student || r.student_id === v.student); });
+      else if (t === "attendance" || t === "submissions") out[t] = rows.filter(function (r) { return ids.indexOf(r.student_id) !== -1; });
+      else if (t === "profiles") out[t] = rows.filter(function (r) { return r.id === v.family || r.family_of === v.family; });
+    });
+    return out;
+  }
   var SOON_TEXT = "The member portal, with all the session information, is coming soon.";
 
   function renderChrome(path) {
     var me = state.me;
-    var role = me && me.profile && me.profile.role;
-    var nav = role === "coach" ? COACH_NAV : role && !portalClosed() ? FAMILY_NAV : [];
+    var role = me && me.profile && viewRole();
+    var nav = role === "coach" ? COACH_NAV : role && (!portalClosed() || previewing()) ? FAMILY_NAV : [];
     // payments and confirmation live under Account now, so light that tab
     if (path === "payments" || path === "confirmation") path = "account";
-    if (role === "family" && path === "sessions") path = "home";
-    if (role === "family" && path === "feedback") path = "history";
+    if (role !== "coach" && path === "sessions") path = "home";
+    if (role !== "coach" && path === "feedback") path = "history";
     document.body.classList.toggle("has-nav", nav.length > 0);
 
-    document.getElementById("banner").innerHTML = D.mode === "demo"
+    document.getElementById("banner").innerHTML = (D.mode === "demo"
       ? '<div class="demo-banner">Demo mode — data is saved only in this browser. ' +
         '<button type="button" data-action="demo-reset">Reset demo data</button></div>'
-      : "";
+      : "") +
+      (previewing() ? '<div class="demo-banner viewas-banner">Viewing as ' + (state.viewAs.role === "son" ? "the son " : "the parent ") + "<strong>" + esc(state.viewAs.name) + "</strong>. " +
+        "Changes you make here are saved for them. " +
+        '<button type="button" data-action="view-as-pick">Switch</button> <button type="button" data-action="view-as-exit">Back to coach view</button></div>' : "");
 
     var html =
       '<div class="topbar__inner">' +
@@ -845,7 +878,8 @@
         return '<a href="#/' + n.path + '"' + (n.path === path ? ' aria-current="page"' : "") + ">" +
           icon(n.icon) + "<span>" + n.label + "</span></a>";
       }).join("") + "</nav>" +
-        '<div class="who"><span class="who__name">' + esc(role === "coach" ? "Coach" : me.profile.parent_name || me.user.email) + "</span>" +
+        '<div class="who">' + (realRole() === "coach" && !previewing() ? '<button class="btn btn--ghost btn--sm" type="button" data-action="view-as-pick">' + icon("users") + "View as</button>" : "") +
+          '<span class="who__name">' + esc(previewing() ? state.viewAs.name : role === "coach" ? "Coach" : me.profile.parent_name || loginLabel(me.user.email)) + "</span>" +
         '<button class="btn btn--ghost btn--sm" type="button" data-action="sign-out" aria-label="Sign out">' + icon("logout") + "</button></div>";
     }
     document.getElementById("topbar").innerHTML = html + "</div>";
@@ -856,7 +890,10 @@
       '<div class="values-line">' + esc((P.values || []).join(" · ")) + "</div>";
   }
 
+  actions["view-as-pick"] = function () { setViewAs(null); go("#/viewas"); };
+  actions["view-as-exit"] = function () { setViewAs(null); go("#/home"); };
   actions["sign-out"] = async function () {
+    setViewAs(null);
     await D.signOut();
     state.activeBoy = null;
     go("#/");
@@ -874,7 +911,7 @@
   var FAMILY_VIEWS, COACH_VIEWS;
 
   async function render() {
-    actions = { "sign-out": actions["sign-out"], "demo-reset": actions["demo-reset"], "cal-ics": actions["cal-ics"], "cal-series": actions["cal-series"] };
+    actions = { "view-as-pick": actions["view-as-pick"], "view-as-exit": actions["view-as-exit"], "sign-out": actions["sign-out"], "demo-reset": actions["demo-reset"], "cal-ics": actions["cal-ics"], "cal-series": actions["cal-series"] };
     var r = parseHash();
     state.me = D.me();
     renderChrome(r.path);
@@ -894,8 +931,8 @@
       $main.innerHTML = '<div class="card"><h1>Almost there</h1><p>Your account exists but its profile is missing. Please contact the coaches.</p></div>';
       return;
     }
-    if (state.me.profile.role !== "coach" && portalClosed()) return viewComingSoon();
-    var views = state.me.profile.role === "coach" ? COACH_VIEWS : FAMILY_VIEWS;
+    if (realRole() !== "coach" && portalClosed()) return viewComingSoon();
+    var views = viewRole() === "coach" ? COACH_VIEWS : FAMILY_VIEWS;
     var view = views[r.path] || views.home;
     $main.innerHTML = '<div class="loading">Loading…</div>';
     try {
@@ -1111,7 +1148,7 @@
       auth =
         "<h2>Sign in</h2>" +
         '<form class="form" id="signin-form">' +
-          '<label class="field"><span>Email</span><input type="email" name="email" required autocomplete="email"></label>' +
+          '<label class="field"><span>Email or username</span><input type="text" name="email" required autocomplete="username" autocapitalize="none" spellcheck="false"></label>' +
           '<label class="field"><span>Password</span><input type="password" name="password" required autocomplete="current-password"></label>' +
           '<button class="btn btn--primary btn--block" type="submit">Sign in</button>' +
           '<p class="form-status" aria-live="polite"></p>' +
@@ -1152,7 +1189,8 @@
     };
 
     onSubmit(document.getElementById("signin-form"), async function (f) {
-      await D.signIn(f.email, f.password);
+      var login = String(f.email || "").trim().toLowerCase();
+      await D.signIn(login.indexOf("@") === -1 ? login + SON_DOMAIN : login, f.password);
       go("#/home");
     });
 
@@ -1297,7 +1335,7 @@
 
     $main.innerHTML =
       '<div class="page-head"><div><h1>Upcoming sessions</h1><p class="sub">' +
-        (boy ? "Confirm which sessions " + esc(boy.first_name) + " is coming. Tap a session to see the timetable and what to bring." : "") + "</p></div>" +
+        (boy ? (viewRole() === "son" ? "Confirm which sessions you're coming to. Tap a session to see the timetable and what to bring." : "Confirm which sessions " + esc(boy.first_name) + " is coming. Tap a session to see the timetable and what to bring.") : "") + "</p></div>" +
         '<div class="row">' + switcher + '<button type="button" class="btn btn--sm" data-action="cal-series">' + icon("calendar") + "Add every session to my calendar</button></div></div>" +
       sayingOfTheDay() +
       familyNotices(d.notices) +
@@ -1419,7 +1457,7 @@
     }).join("");
 
     $main.innerHTML =
-      '<div class="page-head"><div><h1>History</h1><p class="sub">' + esc(boy.first_name) + "'s sessions and your feedback.</p></div>" + switcher + "</div>" +
+      '<div class="page-head"><div><h1>History</h1><p class="sub">' + esc(boy.first_name) + "'s sessions and " + (viewRole() === "son" ? "his" : "your") + " feedback.</p></div>" + switcher + "</div>" +
       '<div class="card boy-card history-stats">' +
         '<div><div class="stat__num">' + attended.length + '</div><div class="stat__label">Sessions attended</div></div>' +
         '<div><div class="stat__num">' + st.attended + '</div><div class="stat__label">In ' + esc(monthLabel(month).split(" ")[0]) + "</div></div>" +
@@ -1434,7 +1472,7 @@
       onSubmit(form, async function (f) {
         if (!f.rating) throw new Error("Pick a star rating.");
         await D.insert("feedback", {
-          family_id: state.me.user.id, student_id: form.getAttribute("data-boy") || null, session_id: form.getAttribute("data-session") || null,
+          family_id: famId(), student_id: form.getAttribute("data-boy") || null, session_id: form.getAttribute("data-session") || null,
           rating: Number(f.rating), enjoyed: f.enjoyed, improve: f.improve, anonymous: f.anonymous,
         });
         toast("Thank you. Your feedback has been sent.");
@@ -1452,7 +1490,7 @@
       var amount = kind === "month" ? P.prices.monthPence : P.prices.sessionPence;
       if (D.mode === "demo") {
         if (!confirm("Demo mode: pretend to pay " + money(amount) + " by card?")) return;
-        await D.insert("payments", { family_id: state.me.user.id, student_id: boyId, kind: kind, period: period, amount_pence: amount, method: "stripe", status: "paid" });
+        await D.insert("payments", { family_id: famId(), student_id: boyId, kind: kind, period: period, amount_pence: amount, method: "stripe", status: "paid" });
         toast("Demo payment recorded.");
         return render();
       }
@@ -1532,18 +1570,61 @@
     };
   }
 
+  /* A son's own login, managed by his parent from Account. */
+  function sonLoginBlock(b, prof) {
+    if (prof) {
+      return '<div class="son-login"><p class="small" style="margin:0">' + esc(b.first_name) + ' signs in with <strong>' + esc(loginLabel(prof.email)) + "</strong>.</p>" +
+        '<button type="button" class="btn btn--ghost btn--sm" data-action="son-login-remove" data-id="' + esc(b.id) + '" data-name="' + esc(b.first_name) + '">Remove his login</button></div>';
+    }
+    return '<details class="disclose"><summary>Give ' + esc(b.first_name) + ' his own login</summary><div>' +
+      '<form class="form son-login-form" data-id="' + esc(b.id) + '" data-name="' + esc(b.first_name) + '">' +
+        '<p class="small soft" style="margin:0">He\'ll see his sessions, confirm his own attendance, see his history and give feedback. He can\'t change the family\'s details.</p>' +
+        '<div class="cols-2">' +
+          '<label class="field"><span>His email, or a username</span><input type="text" name="login" required autocapitalize="none" spellcheck="false" placeholder="e.g. ' + esc(String(b.first_name || "ali").toLowerCase().replace(/[^a-z0-9]/g, "")) + '.dhulfiqar"></label>' +
+          '<label class="field"><span>Password for him</span><input type="text" name="password" required minlength="8" autocomplete="off"><small>At least 8 characters. Tell him it; he can change it later.</small></label>' +
+        "</div>" +
+        '<div><button class="btn btn--primary btn--sm" type="submit">Create his login</button></div><p class="form-status" aria-live="polite"></p>' +
+      "</form></div></details>";
+  }
+
   async function viewAccount(params) {
-    var isCoach = state.me.profile.role === "coach";
-    var pd = isCoach ? null : await load(["students", "sessions", "attendance", "payments"]);
+    var role = viewRole(), isCoach = role === "coach", isSon = role === "son", preview = previewing();
+    var pd = isCoach ? null : await load(["students", "sessions", "attendance", "payments", "profiles"]);
     var boys = isCoach ? [] : pd.students;
-    var p = state.me.profile;
+    var p = preview ? (pd.profiles.find(function (x) { return x.id === state.viewAs.family; }) || {}) : state.me.profile;
+
+    if (isSon) {
+      var me = boys[0] || {};
+      $main.innerHTML =
+        '<div class="page-head"><div><h1>Account</h1><p class="sub">' + (preview ? "Viewing as " + esc(state.viewAs.name) : "Signed in as " + esc(loginLabel(state.me.user.email))) + "</p></div></div>" +
+        '<div class="grid grid-2" style="align-items:start">' +
+          '<div class="card"><h2>You</h2><p style="margin:0"><strong>' + esc(fullName(me)) + '</strong></p><p class="soft small" style="margin:.2rem 0 0">Year ' + esc(me.year_group) + "</p>" +
+            '<p class="soft small">Your parent looks after your details. Ask them if anything needs changing.</p></div>' +
+          (preview ? '<div class="card"><h2>Password</h2><p class="soft small" style="margin:0">' + esc(state.viewAs.name) + " changes his password here.</p></div>"
+            : '<form class="card form" id="password-form"><h2>Password</h2>' +
+                '<label class="field"><span>New password</span><input type="password" name="password" required minlength="8" autocomplete="new-password"></label>' +
+                '<div><button class="btn btn--sm" type="submit">Change password</button></div>' +
+                '<p class="form-status" aria-live="polite"></p></form>') +
+        "</div>";
+      var pf = document.getElementById("password-form");
+      if (pf) onSubmit(pf, async function (f, form) {
+        if (f.password.length < 8) throw new Error("Use at least 8 characters.");
+        await D.updatePassword(f.password); form.reset();
+        var st = form.querySelector(".form-status"); st.textContent = "Password changed."; st.className = "form-status is-ok";
+      });
+      return;
+    }
+    var sonLogins = {};
+    (pd ? pd.profiles : []).forEach(function (x) { if (x.role === "son" && x.student_id) sonLogins[x.student_id] = x; });
 
     $main.innerHTML =
-      '<div class="page-head"><div><h1>Account</h1><p class="sub">Signed in as ' + esc(state.me.user.email) + "</p></div></div>" +
+      '<div class="page-head"><div><h1>Account</h1><p class="sub">' + (preview ? "Viewing as " + esc(state.viewAs.name) : "Signed in as " + esc(state.me.user.email)) + "</p></div></div>" +
       (params.recover ? '<div class="card card--accent" style="margin-bottom:1rem">Choose a new password below to finish resetting it.</div>' : "") +
       '<div class="grid grid-2" style="align-items:start">' +
         '<div class="stack">' +
-          '<form class="card form" id="profile-form"><h2>' + (isCoach ? "Your details" : "Parent / guardian") + "</h2>" +
+          (preview ? '<div class="card"><h2>Parent / guardian</h2><p style="margin:0"><strong>' + esc(p.parent_name || "—") + '</strong></p><p class="soft small" style="margin:.3rem 0 0">' + esc(p.phone || "") + "<br>" + esc(p.email || "") + "</p>" +
+              '<p class="small muted">Their name, email and password are only changed by them.</p></div>' : "") +
+          (preview ? "" : '<form class="card form" id="profile-form"><h2>' + (isCoach ? "Your details" : "Parent / guardian") + "</h2>" +
             '<label class="field"><span>Name</span><input type="text" name="parent_name" required value="' + esc(p.parent_name) + '"></label>' +
             '<label class="field"><span>Mobile</span><input type="tel" name="phone" value="' + esc(p.phone) + '"></label>' +
             '<div><button class="btn btn--primary btn--sm" type="submit">Save</button></div>' +
@@ -1556,13 +1637,14 @@
           '<form class="card form" id="password-form"><h2>Password</h2>' +
             '<label class="field"><span>New password</span><input type="password" name="password" required minlength="8" autocomplete="new-password"></label>' +
             '<div><button class="btn btn--sm" type="submit">Change password</button></div>' +
-            '<p class="form-status" aria-live="polite"></p></form>' +
+            '<p class="form-status" aria-live="polite"></p></form>') +
         "</div>" +
         (isCoach ? '<div class="card"><h2>Coach tools</h2><p class="soft">Plan sessions, write recaps, take the register and set homework in <a href="#/sessions">Sessions</a>. Keep the roster and payments in <a href="#/members">Members</a>.</p></div>' :
         '<div class="stack">' +
           '<h2 class="section-title" style="margin-top:0">Your sons</h2>' +
           boys.map(function (b) {
-            return '<div class="card"><details class="disclose"><summary><strong>' + esc(fullName(b)) + "</strong> · Year " + esc(b.year_group) + "</summary><div>" + boyEditForm(b) + "</div></details></div>";
+            return '<div class="card"><details class="disclose"><summary><strong>' + esc(fullName(b)) + "</strong> · Year " + esc(b.year_group) + "</summary><div>" + boyEditForm(b) + "</div></details>" +
+              '<hr class="divider">' + sonLoginBlock(b, sonLogins[b.id]) + "</div>";
           }).join("") +
           '<div class="card card--accent"><details class="disclose"' + (boys.length ? "" : " open") + "><summary><strong>Add a son</strong></summary><div>" +
             boyEditForm({ emergency_name: p.parent_name, emergency_phone: p.phone }) + "</div></details></div>" +
@@ -1575,7 +1657,24 @@
       if (params.paid) toast("Thank you! Your payment can take a minute to appear here.");
     }
 
-    onSubmit(document.getElementById("email-form"), async function (f, form) {
+    Array.prototype.forEach.call($main.querySelectorAll(".son-login-form"), function (form) {
+      onSubmit(form, async function (f) {
+        var login = String(f.login || "").trim().toLowerCase();
+        if (!login) throw new Error("Enter his email or a username.");
+        if (String(f.password || "").length < 8) throw new Error("Use at least 8 characters for the password.");
+        await D.createSonLogin(form.getAttribute("data-id"), login, f.password);
+        toast(form.getAttribute("data-name") + " can now sign in with " + login + ".");
+        render();
+      });
+    });
+    actions["son-login-remove"] = async function (el) {
+      if (!confirm("Remove " + el.getAttribute("data-name") + "'s login? He won't be able to sign in. His sessions and history stay on your account.")) return;
+      await D.removeSonLogin(el.getAttribute("data-id"));
+      toast("Login removed.");
+      render();
+    };
+    var ef = document.getElementById("email-form");
+    if (ef) onSubmit(ef, async function (f, form) {
       var email = String(f.email || "").trim().toLowerCase();
       if (!email || email === state.me.user.email) throw new Error("Enter the new email address.");
       await D.updateEmail(email);
@@ -1584,14 +1683,16 @@
       s.className = "form-status is-ok";
       if (D.mode === "demo") { await D.refreshMe(); state.me = D.me(); }
     });
-    onSubmit(document.getElementById("profile-form"), async function (f, form) {
+    var prf = document.getElementById("profile-form");
+    if (prf) onSubmit(prf, async function (f, form) {
       await D.update("profiles", state.me.user.id, { parent_name: f.parent_name, phone: f.phone });
       await D.refreshMe();
       state.me = D.me();
       renderChrome("account");
       var s = form.querySelector(".form-status"); s.textContent = "Saved."; s.className = "form-status is-ok";
     });
-    onSubmit(document.getElementById("password-form"), async function (f, form) {
+    var pwf = document.getElementById("password-form");
+    if (pwf) onSubmit(pwf, async function (f, form) {
       if (f.password.length < 8) throw new Error("Use at least 8 characters.");
       await D.updatePassword(f.password);
       form.reset();
@@ -1602,7 +1703,7 @@
         if (!f.first_name || !f.last_name || !f.year_group) throw new Error("Name and school year are required.");
         var id = form.getAttribute("data-id");
         if (id) await D.update("students", id, boyRow(f));
-        else await D.insert("students", Object.assign({ family_id: state.me.user.id }, boyRow(f)));
+        else await D.insert("students", Object.assign({ family_id: famId() }, boyRow(f)));
         toast(id ? "Saved." : f.first_name + " has been added.");
         render();
       });
@@ -2034,8 +2135,30 @@
     home: familyHome, sessions: familyHome, confirmation: viewConfirmation,
     history: familyHistory, feedback: familyHistory, payments: viewAccount, account: viewAccount,
   };
+  async function coachViewAs() {
+    var d = await load(["profiles", "students"]);
+    var families = d.profiles.filter(function (x) { return x.role === "family"; });
+    var logins = {};
+    d.profiles.forEach(function (x) { if (x.role === "son" && x.student_id) logins[x.student_id] = x; });
+    $main.innerHTML =
+      '<div class="page-head"><div><h1>View as</h1><p class="sub">See the portal exactly as a parent or a son sees it. You stay signed in as a coach.</p></div></div>' +
+      (families.length ? '<div class="stack">' + families.map(function (f) {
+        var boys = d.students.filter(function (b) { return b.family_id === f.id; });
+        return '<div class="card"><div class="row row--between"><div><h3 style="margin:0">' + esc(f.parent_name || f.email) + '</h3><p class="small muted" style="margin:.2rem 0 0">' + esc(f.email) + "</p></div>" +
+          '<button class="btn btn--primary btn--sm" type="button" data-action="view-as" data-role="family" data-family="' + esc(f.id) + '" data-name="' + esc(f.parent_name || f.email) + '">View as parent</button></div>' +
+          (boys.length ? '<div class="row" style="margin-top:.8rem;gap:.5rem">' + boys.map(function (b) {
+            return '<button class="btn btn--sm" type="button" data-action="view-as" data-role="son" data-family="' + esc(f.id) + '" data-student="' + esc(b.id) + '" data-name="' + esc(b.first_name) + '">View as ' + esc(b.first_name) +
+              (logins[b.id] ? "" : ' <span class="muted small">(no login yet)</span>') + "</button>";
+          }).join("") + "</div>" : "") + "</div>";
+      }).join("") + "</div>" : '<div class="empty">No families have registered yet.</div>');
+    actions["view-as"] = function (el) {
+      setViewAs({ role: el.getAttribute("data-role"), family: el.getAttribute("data-family"), student: el.getAttribute("data-student") || null, name: el.getAttribute("data-name") });
+      go("#/home");
+    };
+  }
+
   COACH_VIEWS = {
-    home: coachHome, sessions: coachSessions,
+    home: coachHome, sessions: coachSessions, viewas: coachViewAs,
     feedback: coachFeedback, members: coachMembers, account: viewAccount, confirmation: viewConfirmation,
   };
 
