@@ -1073,6 +1073,13 @@
           "</div>" +
           '<fieldset class="reg-account"><legend>Account</legend>' +
             '<label class="field"><span>Password <span class="req">*</span></span><input type="password" name="password" required minlength="8" autocomplete="new-password"><small>At least 8 characters.' + (portalClosed() ? " You'll use this to sign in when the member portal opens." : "") + "</small></label>" +
+            '<div class="disclaimer" role="note"><p class="label">Physical activity disclaimer</p>' +
+              "<p>" + esc(P.initiative || "Our sessions") + " is a contact sport. Like any physical activity, it carries a risk of injury, including sprains, strains, bruising and, rarely, more serious injury. " +
+              "Sessions are led by an experienced coach, with a warm-up and close supervision, but injuries can still happen.</p>" +
+              "<p>By registering, you confirm that your son is fit and healthy enough to take part, that you have told us above about any medical condition, injury or allergy, and that you will tell the coaches if this changes. " +
+              "Your son should stop and tell a coach straight away if he feels unwell or is hurt.</p>" +
+              "<p>You accept that your son takes part at his own risk, and that " + esc(P.name) + " and its coaches are not responsible for injury, loss or damage, except where caused by our negligence.</p></div>" +
+            '<label class="check"><input type="checkbox" name="agree_risk" required> I have read the physical activity disclaimer and accept the risks of taking part.</label>' +
             '<label class="check"><input type="checkbox" name="agree_values" required> My son agrees to uphold the programme values: ' + esc((P.values || []).join(", ")) + ".</label>" +
             '<label class="check"><input type="checkbox" name="agree_medical" required> I confirm the details above are correct and consent to first aid being given if needed.</label>' +
           "</fieldset>" +
