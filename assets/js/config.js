@@ -32,8 +32,8 @@ window.ZULFIQAR = {
     initiative: "Youth Grappling",   // the weekly sessions, Project Dhulfiqar's first initiative
     arabic: "ذوالفقار",
     tagline: "Physical, Spiritual and Intellectual holistic growth for our youth.",
-    ages: "Year 7 – Year 10 (Boys)",
-    yearGroups: [7, 8, 9, 10],
+    ages: "Year 7 – Year 11 (Boys)",
+    yearGroups: [7, 8, 9, 10, 11],
     // Weekly schedule. day: 0 = Sunday … 6 = Saturday. Times are 24-hour.
     schedule: [
       { day: 1, start: "19:00", end: "21:30" },  // Monday

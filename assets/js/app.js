@@ -1030,7 +1030,7 @@
       '<section class="lpA-sec lpA-info">' +
         (P.initiative ? '<div class="lpA-initiative"><p class="lpA-kicker">Our first initiative</p><h2 class="lpA-h2">' + esc(P.initiative) + "</h2>" +
           '<p class="lpA-purpose"><span class="lpA-kicker">The purpose of this initiative</span>To create a group of young men who are <em>disciplined, resilient and talented</em>, through holistic growth, brotherhood and mentorship.</p></div>' : "") +
-        '<div class="lpA-facts">' + [["users", "Who", "Boys, Years 7–10"], ["calendar", "When", F.days], ["clock", "Time", F.time], ["pin", "Where", F.where]].map(function (f) {
+        '<div class="lpA-facts">' + [["users", "Who", "Boys, Years 7–11"], ["calendar", "When", F.days], ["clock", "Time", F.time], ["pin", "Where", F.where]].map(function (f) {
           return '<div class="lpA-fact">' + icon(f[0]) + '<div><p class="lpA-kicker">' + f[1] + "</p><p>" + esc(f[2]) + "</p></div></div>";
         }).join("") + "</div>" +
         ((P.evening || []).length ? '<div class="lpA-evening">' + P.evening.map(function (e) {

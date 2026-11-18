@@ -31,7 +31,7 @@ create table public.students (
   family_id       uuid not null references public.profiles (id) on delete cascade,
   first_name      text not null,
   last_name       text not null,
-  year_group      int  not null check (year_group between 7 and 10),
+  year_group      int  not null check (year_group between 7 and 11),
   date_of_birth   date,
   school          text,
   medical_notes   text,

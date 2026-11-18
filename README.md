@@ -1,6 +1,6 @@
 # Project ذوالفقار — member portal
 
-The portal for families of boys on **Project Dhulfiqar** (Year 7 – Year 10,
+The portal for families of boys on **Project Dhulfiqar** (Year 7 – Year 11,
 Monday evenings at Hujjat Stanmore). It is plain HTML, CSS and JavaScript,
 with no build step, so it can be hosted free on GitHub Pages.
 
