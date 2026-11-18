@@ -38,6 +38,15 @@ window.ZULFIQAR = {
     schedule: [
       { day: 1, start: "19:00", end: "21:30" },  // Monday
     ],
+    // The sessions families can sign up to. When this list is set, only these
+    // dates are offered (the weekly schedule above is ignored). Remove it to go
+    // back to every week.
+    dates: [
+      { date: "2026-11-23", start: "19:00", end: "21:30" },
+      { date: "2026-12-01", start: "19:00", end: "21:30" },
+      { date: "2026-12-07", start: "19:00", end: "21:30" },
+      { date: "2026-12-14", start: "19:00", end: "21:30" },
+    ],
     locations: ["Hujjat Stanmore"],
     prices: { sessionPence: 1500, monthPence: 5000 },
     values: ["Integrity", "Respect", "Discipline", "Brotherhood"],

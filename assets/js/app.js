@@ -347,6 +347,14 @@
   /* The next n scheduled evenings that haven't finished yet. */
   function upcomingDates(n) {
     var now = new Date(), out = [];
+    if ((P.dates || []).length) {   // a fixed list of sessions
+      var today = todayISO();
+      P.dates.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (x) {
+        var d = parseDate(x.date), end = new Date(d); end.setHours(+x.end.slice(0, 2), +x.end.slice(3, 5));
+        if (end > now && out.length < n) out.push({ date: x.date, slot: { day: d.getDay(), start: x.start, end: x.end }, today: x.date === today });
+      });
+      return out;
+    }
     var slots = (P.schedule || []).slice().sort(function (a, b) { return a.start < b.start ? -1 : 1; });
     for (var i = 0; i < 60 && out.length < n; i++) {
       var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
@@ -583,6 +591,7 @@
   }
   // Every scheduled evening, repeating weekly, in one file.
   function seriesEvents() {
+    if ((P.dates || []).length) return upcomingDates(50).map(function (u) { return sessionEvent(u.date, u.slot, null); });
     return (P.schedule || []).map(function (slot) {
       var d = new Date();
       while (d.getDay() !== slot.day) d.setDate(d.getDate() + 1);
@@ -1287,7 +1296,7 @@
 
     $main.innerHTML =
       '<div class="page-head"><div><h1>Upcoming sessions</h1><p class="sub">' +
-        (boy ? "Confirm which Mondays " + esc(boy.first_name) + " is coming. Tap a session to see the timetable and what to bring." : "") + "</p></div>" +
+        (boy ? "Confirm which sessions " + esc(boy.first_name) + " is coming. Tap a session to see the timetable and what to bring." : "") + "</p></div>" +
         '<div class="row">' + switcher + '<button type="button" class="btn btn--sm" data-action="cal-series">' + icon("calendar") + "Add every session to my calendar</button></div></div>" +
       familyNotices(d.notices) +
       (boy
