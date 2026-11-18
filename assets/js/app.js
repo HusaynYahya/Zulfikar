@@ -837,7 +837,7 @@
 
     var html =
       '<div class="topbar__inner">' +
-        '<a class="brand" href="#/home" aria-label="' + esc(P.name) + ' home">' +
+        '<a class="brand" href="#/welcome" aria-label="' + esc(P.name) + ': the main page">' +
           '<img class="brand__logo" src="assets/img/logo-small.png?v=7" alt="" width="44" height="44">' +
           '<span class="brand__word">' + esc(P.name) + "</span></a>";
     if (nav.length) {
@@ -880,11 +880,12 @@
     renderChrome(r.path);
     var where = (state.me ? "in:" : "out:") + r.path;
     if (where !== state.lastPath) window.scrollTo(0, 0);
-    setScene(state.me ? r.path : (({ signin: 1, register: 1, forgot: 1 }[r.path]) ? "landing" : "marketing"));
+    setScene(state.me && r.path !== "welcome" ? r.path : (({ signin: 1, register: 1, forgot: 1 }[r.path]) ? "landing" : "marketing"));
     // random weather over the scenery on every page, the portal included (weather.js)
     if (window.ZWeather) ZWeather.start();
     state.lastPath = where;
 
+    if (r.path === "welcome") return viewMarketing();   // the main page, even when signed in (the logo links here)
     if (!state.me) {
       if ({ signin: 1, register: 1, forgot: 1 }[r.path]) return viewLanding(r);
       return viewMarketing();
@@ -1015,7 +1016,7 @@
         '<div class="lpA-copy">' +
           '<h1 class="lpA-h1">' + lines.map(function (l, i) { return '<span data-line="' + i + '">' + l + "</span>"; }).join("") + "</h1>" +
           '<p class="lpA-lede">' + "Weekly coaching sessions for our Mahdawi youth.</p>" +
-          '<div class="row lpA-actions"><a class="btn btn--primary" href="#/register">Register your son</a>' + (portalClosed() ? '<span class="lpA-soon">Member portal coming soon</span>' : '<a class="btn btn--ghost" href="#/signin">Member sign in</a>') + "</div>" +
+          '<div class="row lpA-actions"><a class="btn btn--primary" href="#/register">Register your son</a>' + (portalClosed() ? '<span class="lpA-soon">Member portal coming soon</span>' : (state.me ? '<a class="btn btn--ghost" href="#/home">Go to your portal</a>' : '<a class="btn btn--ghost" href="#/signin">Member sign in</a>')) + "</div>" +
         "</div>" +
         '<div class="lpA-stage">' +
           '<svg class="lpA-anim" aria-hidden="true"></svg>' +
