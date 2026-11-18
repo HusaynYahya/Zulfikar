@@ -1298,14 +1298,14 @@
       '<div class="page-head"><div><h1>Upcoming sessions</h1><p class="sub">' +
         (boy ? "Confirm which sessions " + esc(boy.first_name) + " is coming. Tap a session to see the timetable and what to bring." : "") + "</p></div>" +
         '<div class="row">' + switcher + '<button type="button" class="btn btn--sm" data-action="cal-series">' + icon("calendar") + "Add every session to my calendar</button></div></div>" +
+      sayingOfTheDay() +
       familyNotices(d.notices) +
       (boy
         ? '<div class="stack">' + coming.map(function (u, i) { return sessionCard(u, d, boy, i === 0); }).join("") + "</div>"
         : noBoys()) +
       '<details class="card past-drop"><summary><span>Past sessions</span><span class="badge badge--mute">' + past.length + "</span></summary>" +
         (past.length ? '<div class="past-list">' + past.map(pastRecap).join("") + "</div>" : '<p class="muted small" style="margin:.8rem 0 0">No sessions yet. Recaps appear here after each one.</p>') +
-      "</details>" +
-      sayingOfTheDay();
+      "</details>";
 
     actions["sess-toggle"] = function (el) {
       var card = document.getElementById(el.getAttribute("data-target"));
