@@ -745,15 +745,20 @@
     var coming = [], notComing = [], none = [];
     boys.forEach(function (b) {
       var r = rsvpOf(b, date, d);
-      if (!r) none.push(b); else if (r.going) coming.push(b); else notComing.push({ b: b, r: r });
+      if (!r) none.push(b); else if (r.going) coming.push({ b: b, r: r }); else notComing.push({ b: b, r: r });
     });
+    // a name with a small button to take him off the list
+    var chip = function (x, extra) {
+      return '<span class="name-chip">' + esc(fullName(x.b)) + (extra || "") +
+        '<button type="button" class="name-chip__x" data-action="rsvp-remove" data-id="' + esc(x.r.id) + '" data-name="' + esc(fullName(x.b)) + '" aria-label="Remove ' + esc(fullName(x.b)) + ' from this session" title="Remove">×</button></span>';
+    };
     return (
       '<div class="row">' + badge(coming.length + " coming", "ok") + badge(notComing.length + " not coming", "mute") + badge(none.length + " no reply", none.length ? "warn" : "mute") + "</div>" +
       (boys.length ? '<details class="disclose" style="margin-top:.5rem"><summary>Who\'s coming</summary><div class="small">' +
-        (coming.length ? "<p><strong>Coming:</strong> " + esc(coming.map(fullName).join(", ")) + "</p>" : "") +
-        (notComing.length ? "<p><strong>Not coming:</strong> " + notComing.map(function (x) {
-          return esc(fullName(x.b)) + (x.r.reason ? ' <span class="muted">(' + esc(x.r.reason) + ")</span>" : "");
-        }).join(", ") + "</p>" : "") +
+        (coming.length ? '<p><strong>Coming:</strong> <span class="name-chips">' + coming.map(function (x) { return chip(x); }).join("") + "</span></p>" : "") +
+        (notComing.length ? '<p><strong>Not coming:</strong> <span class="name-chips">' + notComing.map(function (x) {
+          return chip(x, x.r.reason ? ' <span class="muted">(' + esc(x.r.reason) + ")</span>" : "");
+        }).join("") + "</span></p>" : "") +
         (none.length ? '<p style="margin:0"><strong>No reply:</strong> ' + esc(none.map(fullName).join(", ")) + "</p>" : "") +
       "</div></details>" : "")
     );
@@ -891,6 +896,21 @@
   }
 
   actions["view-as-pick"] = function () { setViewAs(null); go("#/viewas"); };
+  // coach: take a boy off a session's list (his reply is deleted; he can sign up again)
+  actions["rsvp-remove"] = async function (el) {
+    if (!confirm("Remove " + el.getAttribute("data-name") + " from this session's list?")) return;
+    await D.remove("rsvps", el.getAttribute("data-id"));
+    toast(el.getAttribute("data-name") + " removed from the list.");
+    render();
+  };
+  // coach: remove a registered boy and everything recorded for him
+  actions["boy-remove"] = async function (el) {
+    var name = el.getAttribute("data-name");
+    if (!confirm("Remove " + name + " from the programme? His registration, session replies, attendance and his own login (if he has one) will be deleted. This can't be undone.")) return;
+    await D.remove("students", el.getAttribute("data-id"));
+    toast(name + " has been removed.");
+    render();
+  };
   actions["view-as-exit"] = function () { setViewAs(null); go("#/home"); };
   actions["sign-out"] = async function () {
     setViewAs(null);
@@ -911,7 +931,7 @@
   var FAMILY_VIEWS, COACH_VIEWS;
 
   async function render() {
-    actions = { "view-as-pick": actions["view-as-pick"], "view-as-exit": actions["view-as-exit"], "sign-out": actions["sign-out"], "demo-reset": actions["demo-reset"], "cal-ics": actions["cal-ics"], "cal-series": actions["cal-series"] };
+    actions = { "rsvp-remove": actions["rsvp-remove"], "boy-remove": actions["boy-remove"], "view-as-pick": actions["view-as-pick"], "view-as-exit": actions["view-as-exit"], "sign-out": actions["sign-out"], "demo-reset": actions["demo-reset"], "cal-ics": actions["cal-ics"], "cal-series": actions["cal-series"] };
     var r = parseHash();
     state.me = D.me();
     renderChrome(r.path);
@@ -2046,6 +2066,7 @@
           "<td>" + esc(b.year_group) + "</td>" +
           "<td>" + esc(par.parent_name || "—") + '<br><span class="small muted">' + esc(par.phone || "") + "<br>" + esc(par.email || "") + "</span></td>" +
           "<td>" + st.attended + "</td>" +
+          '<td><button class="btn btn--ghost btn--sm" type="button" data-action="boy-remove" data-id="' + esc(b.id) + '" data-name="' + esc(fullName(b)) + '">Remove</button></td>' +
           (paymentsOn() ? "<td>" + payBadge(st) + "</td>" +
           '<td><button class="btn btn--sm" type="button" data-action="record-for" data-id="' + esc(b.id) + '">Record payment</button></td>' : "") +
         "</tr>"
@@ -2058,10 +2079,10 @@
     }).join("");
 
     $main.innerHTML =
-      '<div class="page-head"><div><h1>Members</h1><p class="sub">' + d.students.length + " boys registered</p></div>" +
+      '<div class="page-head"><div><h1>Members</h1><p class="sub">' + d.students.length + (d.students.length === 1 ? " boy" : " boys") + " registered</p></div>" +
         '<div class="row"><label class="field"><span>Month</span><input type="month" id="month-pick" value="' + month + '"></label>' +
         '<button class="btn" type="button" data-action="export" style="align-self:flex-end">' + icon("download") + "Export CSV</button></div></div>" +
-      (rows ? '<div class="table-wrap"><table><thead><tr><th>Boy</th><th>Year</th><th>Parent</th><th>Attended</th>' + (paymentsOn() ? "<th>" + esc(monthLabel(month)) + "</th><th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table></div>"
+      (rows ? '<div class="table-wrap"><table><thead><tr><th>Boy</th><th>Year</th><th>Parent</th><th>Attended</th><th></th>' + (paymentsOn() ? "<th>" + esc(monthLabel(month)) + "</th><th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table></div>"
             : '<div class="empty">Nobody has registered yet. Share the portal link with families.</div>') +
       (!paymentsOn() ? "" : '<div class="grid grid-2" style="margin-top:1.5rem;align-items:start">' +
         '<form class="card card--accent form" id="pay-form"><h2>Record a cash or bank payment</h2>' +

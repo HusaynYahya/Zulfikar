@@ -579,3 +579,9 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .son-login { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; }
 .viewas-banner { background: rgba(127, 178, 255, .16); border-bottom: 1px solid rgba(127, 178, 255, .35); }
 .viewas-banner button { margin-left: .4rem; }
+
+/* coach: names on a session list, each removable */
+.name-chips { display: inline-flex; flex-wrap: wrap; gap: .35rem; vertical-align: middle; }
+.name-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .25rem .15rem .6rem; border-radius: 999px; background: var(--glass-light, rgba(255,255,255,.06)); border: 1px solid var(--hair); }
+.name-chip__x { width: 1.35rem; height: 1.35rem; border-radius: 50%; border: 0; background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 1rem; line-height: 1; }
+.name-chip__x:hover, .name-chip__x:focus-visible { background: rgba(241,154,138,.2); color: var(--bad); }
