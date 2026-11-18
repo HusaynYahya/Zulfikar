@@ -585,3 +585,7 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .name-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .25rem .15rem .6rem; border-radius: 999px; background: var(--glass-light, rgba(255,255,255,.06)); border: 1px solid var(--hair); }
 .name-chip__x { width: 1.35rem; height: 1.35rem; border-radius: 50%; border: 0; background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 1rem; line-height: 1; }
 .name-chip__x:hover, .name-chip__x:focus-visible { background: rgba(241,154,138,.2); color: var(--bad); }
+
+/* family sessions: reminder under the list */
+.reg-note { display: flex; align-items: center; gap: .6rem; margin: 1rem 0 0; padding: .8rem 1rem; border-radius: 12px; border: 1px dashed rgba(233,180,111,.5); background: rgba(14,18,30,.78); font-size: .92rem; }
+.reg-note svg { width: 1.2rem; height: 1.2rem; color: var(--accent); flex: none; }
