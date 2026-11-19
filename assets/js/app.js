@@ -702,7 +702,13 @@
       toast("Attendance confirmed.");
       render();
     };
-    actions["rsvp-no"] = function (el) {
+    actions["rsvp-no"] = async function (el) {
+      await D.upsert("rsvps", { family_id: uid, student_id: el.getAttribute("data-boy"), date: el.getAttribute("data-date"),
+        going: false, reason: null, updated_at: new Date().toISOString() }, "student_id,date");
+      toast("Thanks for letting us know.");
+      render();
+    };
+    actions["rsvp-no-old"] = function (el) {
       // make sure the choices are visible, then open the reason box
       var opts = $main.querySelector('.rsvp-options[data-boy="' + el.getAttribute("data-boy") + '"][data-date="' + el.getAttribute("data-date") + '"]');
       if (opts) opts.classList.remove("is-collapsed");
@@ -1330,8 +1336,9 @@
     var id = "sess-" + u.date;
     var status;
     if (st.step === 0) {
-      status = (st.r && !st.r.going ? '<span class="sess__note">Not coming' + (st.r.reason ? ": " + esc(st.r.reason) : "") + "</span>" : "") +
-        '<button class="btn btn--primary" type="button" data-action="rsvp-yes"' + key + ">" + icon("check") + "Confirm attendance</button>";
+      status = (st.r && !st.r.going ? badge("Not coming this week", "mute") : "") +
+        '<button class="btn btn--primary" type="button" data-action="rsvp-yes"' + key + ">" + icon("check") + "Confirm attendance</button>" +
+        (st.r && !st.r.going ? "" : '<button class="btn btn--ghost" type="button" data-action="rsvp-no"' + key + ">Not coming this week</button>");
     } else if (st.step === 1) {
       status = badge("Attendance confirmed", "ok") +
         (payLinksReady()
@@ -1358,11 +1365,7 @@
           calButtons(u, plan) +
           (st.step === 1 && payLinksReady() ? '<p class="small soft" style="margin:.6rem 0 0">Coming every week? The <a href="#/account?pay=1">monthly pass</a> covers every session in the month for ' + money(P.prices.monthPence) + ".</p>" : "") +
           (st.step
-            ? '<div class="sess__cancel"><button class="linklike small" type="button" data-action="rsvp-no"' + key + ">Can't make it after all?</button>" +
-                '<form class="form inline-form rsvp-form"' + key + " hidden>" +
-                  '<label class="field"><span>Reason (helps the coaches plan)</span><input type="text" name="reason"></label>' +
-                  '<div><button class="btn btn--sm" type="submit">Tell the coaches he can\'t come</button></div><p class="form-status" aria-live="polite"></p>' +
-                "</form></div>"
+            ? '<div class="sess__cancel"><button class="linklike small" type="button" data-action="rsvp-no"' + key + ">Can't make it after all?</button></div>"
             : "") +
         "</div>" +
       "</article>"
