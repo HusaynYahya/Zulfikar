@@ -760,8 +760,36 @@
           return chip(x, x.r.reason ? ' <span class="muted">(' + esc(x.r.reason) + ")</span>" : "");
         }).join("") + "</span></p>" : "") +
         (none.length ? '<p style="margin:0"><strong>No reply:</strong> ' + esc(none.map(fullName).join(", ")) + "</p>" : "") +
-      "</div></details>" : "")
+      "</div></details>" : "") +
+      emailButtons(date, d, coming.map(function (x) { return x.b; }), none)
     );
+  }
+
+  /* Email the parents of the boys coming, or nudge those who haven't replied.
+     Opens the coach's own email app with the parents in BCC (they can't see each other). */
+  function parentEmails(boys, d) {
+    var seen = {}, out = [];
+    boys.forEach(function (b) {
+      var p = (d.profiles || []).find(function (x) { return x.id === b.family_id; });
+      var e = p && p.email && String(p.email).indexOf("@") > 0 && String(p.email).slice(-SON_DOMAIN.length) !== SON_DOMAIN ? p.email : null;
+      if (e && !seen[e]) { seen[e] = 1; out.push(e); }
+    });
+    return out;
+  }
+  function emailButtons(date, d, coming, none) {
+    if (!d.profiles) return "";
+    var when = fmtDate(date, true), link = location.href.split("#")[0];
+    var a = parentEmails(coming, d), r = parentEmails(none, d);
+    var btn = function (emails, label, subject, body) {
+      if (!emails.length) return "";
+      return '<button type="button" class="btn btn--sm" data-action="mail-group" data-emails="' + esc(emails.join(",")) + '" data-subject="' + esc(subject) + '" data-body="' + esc(body) + '">' + icon("chat") + esc(label) + " (" + emails.length + ")</button>";
+    };
+    var html =
+      btn(a, "Email those coming", (P.initiative || P.name) + " on " + when,
+        "Assalamu alaykum,\n\nA message about " + (P.initiative || "the session") + " on " + when + ", " + (P.locations || [])[0] + ", 7:00–9:30pm.\n\n\n\nJazakAllah khair,\n" + P.name) +
+      btn(r, "Remind those who haven't replied", "Is your son coming on " + when + "?",
+        "Assalamu alaykum,\n\nPlease let us know if your son is coming to " + (P.initiative || "the session") + " on " + when + " (" + (P.locations || [])[0] + ", 7:00–9:30pm).\n\nConfirm attendance, or say he can't make it, here: " + link + "\n\nJazakAllah khair,\n" + P.name);
+    return html ? '<div class="row mail-row">' + html + "</div>" : "";
   }
 
   /* Coach view of parents' register checks for one past session. */
@@ -896,6 +924,13 @@
   }
 
   actions["view-as-pick"] = function () { setViewAs(null); go("#/viewas"); };
+  // coach: open their own email app, parents in BCC; the addresses are also copied
+  actions["mail-group"] = function (el) {
+    var emails = el.getAttribute("data-emails");
+    try { navigator.clipboard.writeText(emails.split(",").join(", ")); } catch (e) {}
+    location.href = "mailto:?bcc=" + encodeURIComponent(emails) + "&subject=" + encodeURIComponent(el.getAttribute("data-subject")) + "&body=" + encodeURIComponent(el.getAttribute("data-body"));
+    toast("Opening your email app. The addresses are also copied, in case it doesn't open.");
+  };
   // coach: take a boy off a session's list (his reply is deleted; he can sign up again)
   actions["rsvp-remove"] = async function (el) {
     if (!confirm("Remove " + el.getAttribute("data-name") + " from this session's list?")) return;
@@ -931,7 +966,7 @@
   var FAMILY_VIEWS, COACH_VIEWS;
 
   async function render() {
-    actions = { "rsvp-remove": actions["rsvp-remove"], "boy-remove": actions["boy-remove"], "view-as-pick": actions["view-as-pick"], "view-as-exit": actions["view-as-exit"], "sign-out": actions["sign-out"], "demo-reset": actions["demo-reset"], "cal-ics": actions["cal-ics"], "cal-series": actions["cal-series"] };
+    actions = { "mail-group": actions["mail-group"], "rsvp-remove": actions["rsvp-remove"], "boy-remove": actions["boy-remove"], "view-as-pick": actions["view-as-pick"], "view-as-exit": actions["view-as-exit"], "sign-out": actions["sign-out"], "demo-reset": actions["demo-reset"], "cal-ics": actions["cal-ics"], "cal-series": actions["cal-series"] };
     var r = parseHash();
     state.me = D.me();
     renderChrome(r.path);
@@ -1735,7 +1770,7 @@
      COACH screens
      ====================================================================== */
   async function coachHome() {
-    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "feedback", "payments", "rsvps", "attendance_reviews", "notices"]);
+    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "feedback", "payments", "rsvps", "attendance_reviews", "notices", "profiles"]);
     var month = thisMonth();
     var next = upcomingDates(1)[0];
     var nextPlan = next ? planFor(next.date, d.sessions) : null;
@@ -1801,7 +1836,7 @@
   }
 
   async function coachSessions(params) {
-    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "rsvps", "attendance_reviews"]);
+    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "rsvps", "attendance_reviews", "profiles"]);
     var editing = params.edit ? d.sessions.find(function (s) { return s.id === params.edit; }) : null;
     var showEditor = params.new || editing;
     var hwEditing = params.hwedit ? d.homework.find(function (h) { return h.id === params.hwedit; }) : null;
