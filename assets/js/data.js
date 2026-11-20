@@ -88,7 +88,11 @@
             emailRedirectTo: location.origin + location.pathname,
           },
         });
-        if (res.error) throw new Error(res.error.message);
+        if (res.error) {
+          if (/rate limit/i.test(res.error.message) || res.error.status === 429)
+            throw new Error("Lots of families are registering right now, so we couldn't send your confirmation email. Please wait a few minutes and try again. If it keeps happening, message us and we'll set up your account by hand.");
+          throw new Error(res.error.message);
+        }
         if (!res.data.session) return { needsConfirmation: true };
         await loadMe();
         return { needsConfirmation: false };
