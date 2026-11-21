@@ -944,11 +944,54 @@
 
   actions["view-as-pick"] = function () { setViewAs(null); go("#/viewas"); };
   // coach: open their own email app, parents in BCC; the addresses are also copied
-  actions["mail-group"] = function (el) {
-    var emails = el.getAttribute("data-emails");
+  // coach: group email. Opens a short preview; Send goes out from the programme
+  // Gmail (send-group-email function). Falls back to the coach's own email app.
+  function openMailApp(emails, subject, body) {
     try { navigator.clipboard.writeText(emails.split(",").join(", ")); } catch (e) {}
-    location.href = "mailto:?bcc=" + encodeURIComponent(emails) + "&subject=" + encodeURIComponent(el.getAttribute("data-subject")) + "&body=" + encodeURIComponent(el.getAttribute("data-body"));
+    location.href = "mailto:?bcc=" + encodeURIComponent(emails) + "&subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
     toast("Opening your email app. The addresses are also copied, in case it doesn't open.");
+  }
+  actions["mail-group"] = function (el) {
+    var emails = el.getAttribute("data-emails"), list = emails.split(",");
+    var old = document.getElementById("mail-dialog"); if (old) old.remove();
+    var dlg = document.createElement("dialog");
+    dlg.id = "mail-dialog"; dlg.className = "mail-dialog";
+    dlg.innerHTML =
+      '<form method="dialog" class="form">' +
+        "<h2>" + esc(el.textContent.replace(/\s*\(\d+\)\s*$/, "")) + "</h2>" +
+        '<p class="small soft">To ' + list.length + (list.length === 1 ? " parent" : " parents") + ", in BCC (they can't see each other)." +
+          '<details class="disclose"><summary>Who</summary><span class="small muted">' + esc(list.join(", ")) + "</span></details></p>" +
+        '<label class="field"><span>Subject</span><input type="text" name="subject" required maxlength="200" value="' + esc(el.getAttribute("data-subject")) + '"></label>' +
+        '<label class="field"><span>Message</span><textarea name="body" rows="11" required>' + esc(el.getAttribute("data-body")) + "</textarea></label>" +
+        '<p class="form-status" aria-live="polite"></p>' +
+        '<div class="row">' +
+          '<button class="btn btn--primary" type="submit" value="send">' + icon("chat") + "Send now</button>" +
+          '<button class="btn btn--ghost" type="button" data-x="app">Use my email app</button>' +
+          '<button class="btn btn--ghost" type="button" data-x="close">Cancel</button>' +
+        "</div>" +
+      "</form>";
+    document.body.appendChild(dlg);
+    var form = dlg.querySelector("form"), status = dlg.querySelector(".form-status");
+    var val = function (n) { return form.elements[n].value.trim(); };
+    dlg.querySelector('[data-x="close"]').onclick = function () { dlg.close(); dlg.remove(); };
+    dlg.querySelector('[data-x="app"]').onclick = function () { openMailApp(emails, val("subject"), val("body")); dlg.close(); dlg.remove(); };
+    form.addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      var btn = form.querySelector('[type="submit"]');
+      btn.disabled = true; status.textContent = "Sending…"; status.classList.remove("is-error");
+      try {
+        var res = await D.sendGroupEmail(list, val("subject"), val("body"));
+        dlg.close(); dlg.remove();
+        toast("Sent to " + res.sent + (res.sent === 1 ? " parent" : " parents") + (res.demo ? " (demo: nothing really sent)." : "."));
+      } catch (err) {
+        btn.disabled = false;
+        status.classList.add("is-error");
+        status.textContent = err.notConfigured
+          ? "Sending from the portal isn't switched on yet. Use your email app for now."
+          : "Couldn't send: " + err.message;
+      }
+    });
+    dlg.showModal();
   };
   // coach: take a boy off a session's list (his reply is deleted; he can sign up again)
   actions["rsvp-remove"] = async function (el) {

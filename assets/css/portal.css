@@ -600,3 +600,9 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .sess__paid svg { width: 1em; height: 1em; flex: none; }
 .sess__paid--no { color: var(--warn, #b7791f); }
 .sess__paid a { color: inherit; text-decoration: underline; }
+
+/* coach group-email preview */
+.mail-dialog { width: min(640px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; padding: 1.4rem; border: 1px solid var(--glass-edge); border-radius: var(--radius); background: #141a26; color: var(--ink); }
+.mail-dialog::backdrop { background: rgba(5, 8, 14, .7); backdrop-filter: blur(4px); }
+.mail-dialog h2 { margin: 0 0 .3rem; }
+.mail-dialog textarea { width: 100%; font: inherit; }

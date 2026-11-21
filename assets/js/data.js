@@ -116,6 +116,18 @@
         if (res.error) throw new Error(res.error.message);
       },
       refreshMe: loadMe,
+      // coach group email, sent from the programme Gmail by the send-group-email function
+      async sendGroupEmail(to, subject, body) {
+        var res = await sb.functions.invoke("send-group-email", { body: { to: to, subject: subject, body: body } });
+        if (res.error) {
+          var info = null;
+          try { info = await res.error.context.json(); } catch (e) { /* not JSON */ }
+          var err = new Error((info && (info.message || info.error)) || res.error.message);
+          if (info && info.error === "not_configured") err.notConfigured = true;
+          throw err;
+        }
+        return res.data;
+      },
       async createSonLogin(studentId, login, password) {
         return check(await sb.rpc("create_son_login", { p_student: studentId, p_login: login, p_password: password }));
       },
@@ -294,6 +306,9 @@
         db.users.push({ id: id, email: email, password: password });
         db.tables.profiles.push({ id: id, email: email, parent_name: boy.first_name + " " + (boy.last_name || ""), role: "son", student_id: boy.id, family_of: boy.family_id, created_at: nowISO() });
         save(); return email;
+      },
+      async sendGroupEmail(to) {   // demo: pretend it went
+        return { sent: to.length, demo: true };
       },
       async removeSonLogin(studentId) {
         var pr = db.tables.profiles.find(function (x) { return x.student_id === studentId; });
