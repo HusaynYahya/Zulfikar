@@ -160,13 +160,14 @@
     feedback: { order: "created_at", desc: true },
     payments: { order: "created_at", desc: true },
     rsvps: { order: "date" },
+    bookings: { order: "date" },
     attendance_reviews: { order: "reviewed_at", desc: true },
     students: { order: "first_name" },
     notices: { order: "created_at", desc: true },
   };
   // Tables added after launch: if the database hasn't been updated yet, the
   // screens carry on without them rather than failing to load.
-  var OPTIONAL = { notices: 1 };
+  var OPTIONAL = { notices: 1, bookings: 1 };
   async function load(tables) {
     var lists = await Promise.all(tables.map(function (t) {
       var q = D.list(t, ORDER[t]);
@@ -437,6 +438,16 @@
   }
   function rsvpOf(boy, date, d) {
     return d.rsvps.find(function (r) { return r.student_id === boy.id && r.date === date; }) || null;
+  }
+  // Paid through the Hujjat booking system (hujj.at/ahy). Separate from attendance.
+  function paidFor(boy, date, d) {
+    return (d.bookings || []).find(function (b) { return b.student_id === boy.id && b.date === date; }) || null;
+  }
+  function paidSummary(boy, d) {
+    var mine = (d.bookings || []).filter(function (x) { return x.student_id === boy.id; });
+    if (!mine.length) return badge("Not paid", "warn");
+    if (mine.some(function (x) { return x.booking_type === "block"; })) return badge("4-week block", "ok");
+    return badge("Paid: " + mine.map(function (x) { return fmtDate(x.date); }).join(", "), "ok");
   }
   function bookingRef(boy, date) {
     return "ZF-" + date.replace(/-/g, "").slice(2) + "-" + String(boy.id).replace(/[^a-z0-9]/gi, "").slice(-4).toUpperCase();
@@ -754,18 +765,20 @@
       if (!r) none.push(b); else if (r.going) coming.push({ b: b, r: r }); else notComing.push({ b: b, r: r });
     });
     // a name with a small button to take him off the list
+    var paidTag = function (b) { return paidFor(b, date, d) ? ' <span class="paid-tag">paid</span>' : ' <span class="paid-tag paid-tag--no">not paid</span>'; };
+    var paidN = boys.filter(function (b) { return paidFor(b, date, d); }).length;
     var chip = function (x, extra) {
-      return '<span class="name-chip">' + esc(fullName(x.b)) + (extra || "") +
+      return '<span class="name-chip">' + esc(fullName(x.b)) + paidTag(x.b) + (extra || "") +
         '<button type="button" class="name-chip__x" data-action="rsvp-remove" data-id="' + esc(x.r.id) + '" data-name="' + esc(fullName(x.b)) + '" aria-label="Remove ' + esc(fullName(x.b)) + ' from this session" title="Remove">×</button></span>';
     };
     return (
-      '<div class="row">' + badge(coming.length + " coming", "ok") + badge(notComing.length + " not coming", "mute") + badge(none.length + " no reply", none.length ? "warn" : "mute") + "</div>" +
+      '<div class="row">' + badge(coming.length + " coming", "ok") + badge(notComing.length + " not coming", "mute") + badge(none.length + " no reply", none.length ? "warn" : "mute") + badge(paidN + " paid", "ok") + "</div>" +
       (boys.length ? '<details class="disclose" style="margin-top:.5rem"><summary>Who\'s coming</summary><div class="small">' +
         (coming.length ? '<p><strong>Coming:</strong> <span class="name-chips">' + coming.map(function (x) { return chip(x); }).join("") + "</span></p>" : "") +
         (notComing.length ? '<p><strong>Not coming:</strong> <span class="name-chips">' + notComing.map(function (x) {
           return chip(x, x.r.reason ? ' <span class="muted">(' + esc(x.r.reason) + ")</span>" : "");
         }).join("") + "</span></p>" : "") +
-        (none.length ? '<p style="margin:0"><strong>No reply:</strong> ' + esc(none.map(fullName).join(", ")) + "</p>" : "") +
+        (none.length ? '<p style="margin:0"><strong>No reply:</strong> ' + none.map(function (b) { return esc(fullName(b)) + paidTag(b); }).join(", ") + "</p>" : "") +
       "</div></details>" : "") +
       emailButtons(date, d, coming.map(function (x) { return x.b; }), none)
     );
@@ -880,7 +893,7 @@
     Object.keys(out).forEach(function (t) {
       var rows = out[t];
       if (t === "students") out[t] = rows.filter(function (b) { return b.family_id === v.family && (!v.student || b.id === v.student); });
-      else if (t === "rsvps" || t === "feedback" || t === "payments" || t === "attendance_reviews")
+      else if (t === "rsvps" || t === "bookings" || t === "feedback" || t === "payments" || t === "attendance_reviews")
         out[t] = rows.filter(function (r) { return r.family_id === v.family && (!v.student || r.student_id === v.student); });
       else if (t === "attendance" || t === "submissions") out[t] = rows.filter(function (r) { return ids.indexOf(r.student_id) !== -1; });
       else if (t === "profiles") out[t] = rows.filter(function (r) { return r.id === v.family || r.family_of === v.family; });
@@ -1356,6 +1369,8 @@
           '<span class="sess__chev" aria-hidden="true"></span>' +
         "</button>" +
         '<div class="sess__status">' + status + "</div>" +
+        (d.bookings ? (paidFor(boy, u.date, d) ? '<p class="sess__paid">' + icon("check") + "<span>Paid for this session</span></p>"
+          : '<p class="sess__paid sess__paid--no">' + icon("card") + '<span>Not paid yet. Book and pay at <a href="https://hujj.at/ahy" target="_blank" rel="noopener">hujj.at/ahy</a>.</span></p>') : "") +
         '<p class="sess__reg">' + icon("users") + '<span>All participants should have already registered via <a href="https://hujj.at/ahy" target="_blank" rel="noopener">hujj.at/ahy</a>.</span></p>' +
         '<div class="sess__body" id="' + id + '-body"' + (open ? "" : " hidden") + ">" +
           '<div class="plan-grid">' +
@@ -1385,7 +1400,7 @@
   }
 
   async function familyHome() {
-    var d = await load(["students", "sessions", "attendance", "payments", "rsvps", "notices"]);
+    var d = await load(["students", "sessions", "attendance", "payments", "rsvps", "bookings", "notices"]);
     var boys = d.students;
     var switcher = boySwitcher(boys);
     var boy = boys.find(function (b) { return b.id === state.activeBoy; }) || boys[0];
@@ -1773,7 +1788,7 @@
      COACH screens
      ====================================================================== */
   async function coachHome() {
-    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "feedback", "payments", "rsvps", "attendance_reviews", "notices", "profiles"]);
+    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "feedback", "payments", "rsvps", "bookings", "attendance_reviews", "notices", "profiles"]);
     var month = thisMonth();
     var next = upcomingDates(1)[0];
     var nextPlan = next ? planFor(next.date, d.sessions) : null;
@@ -1839,7 +1854,7 @@
   }
 
   async function coachSessions(params) {
-    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "rsvps", "attendance_reviews", "profiles"]);
+    var d = await load(["students", "sessions", "attendance", "homework", "submissions", "rsvps", "bookings", "attendance_reviews", "profiles"]);
     var editing = params.edit ? d.sessions.find(function (s) { return s.id === params.edit; }) : null;
     var showEditor = params.new || editing;
     var hwEditing = params.hwedit ? d.homework.find(function (h) { return h.id === params.hwedit; }) : null;
@@ -2082,7 +2097,7 @@
   }
 
   async function coachMembers(params) {
-    var d = await load(["students", "profiles", "sessions", "attendance", "payments"]);
+    var d = await load(["students", "profiles", "sessions", "attendance", "payments", "bookings"]);
     var month = /^\d{4}-\d{2}$/.test(params.month || "") ? params.month : thisMonth();
     var parents = byId(d.profiles);
     var boys = sortBoys(d.students);
@@ -2105,6 +2120,7 @@
           "<td>" + esc(b.year_group) + "</td>" +
           "<td>" + esc(par.parent_name || "—") + '<br><span class="small muted">' + esc(par.phone || "") + "<br>" + esc(par.email || "") + "</span></td>" +
           "<td>" + st.attended + "</td>" +
+          "<td>" + paidSummary(b, d) + "</td>" +
           '<td><button class="btn btn--ghost btn--sm" type="button" data-action="boy-remove" data-id="' + esc(b.id) + '" data-name="' + esc(fullName(b)) + '">Remove</button></td>' +
           (paymentsOn() ? "<td>" + payBadge(st) + "</td>" +
           '<td><button class="btn btn--sm" type="button" data-action="record-for" data-id="' + esc(b.id) + '">Record payment</button></td>' : "") +
@@ -2121,7 +2137,7 @@
       '<div class="page-head"><div><h1>Members</h1><p class="sub">' + d.students.length + (d.students.length === 1 ? " boy" : " boys") + " registered</p></div>" +
         '<div class="row"><label class="field"><span>Month</span><input type="month" id="month-pick" value="' + month + '"></label>' +
         '<button class="btn" type="button" data-action="export" style="align-self:flex-end">' + icon("download") + "Export CSV</button></div></div>" +
-      (rows ? '<div class="table-wrap"><table><thead><tr><th>Boy</th><th>Year</th><th>Parent</th><th>Attended</th><th></th>' + (paymentsOn() ? "<th>" + esc(monthLabel(month)) + "</th><th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table></div>"
+      (rows ? '<div class="table-wrap"><table><thead><tr><th>Boy</th><th>Year</th><th>Parent</th><th>Attended</th><th>Paid</th><th></th>' + (paymentsOn() ? "<th>" + esc(monthLabel(month)) + "</th><th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table></div>"
             : '<div class="empty">Nobody has registered yet. Share the portal link with families.</div>') +
       (!paymentsOn() ? "" : '<div class="grid grid-2" style="margin-top:1.5rem;align-items:start">' +
         '<form class="card card--accent form" id="pay-form"><h2>Record a cash or bank payment</h2>' +

@@ -592,3 +592,11 @@ body.has-nav .foot { padding-bottom: 7rem; }
 .sess__reg { display: flex; align-items: center; gap: .5rem; margin: -.4rem 1.2rem 1rem; font-size: .85rem; color: var(--ink-soft); }
 .sess__reg svg { width: 1rem; height: 1rem; color: var(--accent); flex: none; }
 .mail-row { gap: .5rem; margin-top: .7rem; flex-wrap: wrap; }
+
+/* paid status from the Hujjat booking system (separate from attendance) */
+.paid-tag { font-size: .7em; letter-spacing: .04em; text-transform: uppercase; color: var(--ok, #3f8f5a); margin-left: .25em; }
+.paid-tag--no { color: var(--warn, #b7791f); }
+.sess__paid { display: flex; align-items: center; gap: .4rem; margin: .35rem 0 0; font-size: .85rem; color: var(--ok, #3f8f5a); }
+.sess__paid svg { width: 1em; height: 1em; flex: none; }
+.sess__paid--no { color: var(--warn, #b7791f); }
+.sess__paid a { color: inherit; text-decoration: underline; }

@@ -163,7 +163,7 @@
       try { db = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { db = null; }
       if (!db || !db.tables) { db = seed(); save(); }
       // demo data saved by an older version may lack newer tables
-      ["rsvps", "attendance_reviews", "notices"].forEach(function (t) { db.tables[t] = db.tables[t] || []; });
+      ["rsvps", "bookings", "attendance_reviews", "notices"].forEach(function (t) { db.tables[t] = db.tables[t] || []; });
       db.tables.sessions.forEach(function (s) {
         if (s.register_taken === undefined) s.register_taken = s.date < isoDate(new Date());
         s.timetable = s.timetable || [];
@@ -185,7 +185,7 @@
       var son = me.profile.role === "son", fam = me.profile.family_of || uid;
       var mine = son ? [me.profile.student_id] : db.tables.students.filter(function (s) { return s.family_id === uid; })
         .map(function (s) { return s.id; });
-      if (son && (table === "feedback" || table === "payments" || table === "rsvps" || table === "attendance_reviews"))
+      if (son && (table === "feedback" || table === "payments" || table === "rsvps" || table === "bookings" || table === "attendance_reviews"))
         return row.family_id === fam && mine.indexOf(row.student_id) !== -1;
       switch (table) {
         case "profiles":    return row.id === uid || row.family_of === uid;
@@ -198,6 +198,7 @@
         case "feedback":
         case "payments":
         case "rsvps":
+        case "bookings":
         case "attendance_reviews": return row.family_id === uid;
         default:            return false;
       }
